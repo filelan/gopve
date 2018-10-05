@@ -82,7 +82,7 @@ func (c *Client) authenticate(user string, password string) error {
 func (c *Client) request(method string, endpoint string, data url.Values) (*http.Response, error) {
 	url := c.apiURI + endpoint
 
-	buf = bytes.NewBufferString(data.Encode())
+	buf := bytes.NewBufferString(data.Encode())
 	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func (c *Client) Get(endpoint string) (interface{}, error) {
 	return out["data"], nil
 }
 
-func (c *Client) Post(endpoint string, data url.Values) (map[string]interface{}, error) {
+func (c *Client) Post(endpoint string, data url.Values) (interface{}, error) {
 	res, err := c.request("POST", endpoint, data)
 	if err != nil {
 		return nil, err

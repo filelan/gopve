@@ -7,7 +7,8 @@ import (
 )
 
 type StorageServiceProvider interface {
-	List() (StorageList, error)
+	List() (*StorageList, error)
+	Get(storage string) (*Storage, error)
 }
 
 type StorageService struct {
@@ -27,21 +28,37 @@ func NewStorageService(c *internal.Client) *StorageService {
 	return storage
 }
 
-func (s *StorageService) List() (StorageList, error) {
+func (s *StorageService) List() (*StorageList, error) {
 	data, err := s.client.Get("storage")
 	if err != nil {
 		return nil, err
 	}
 
-	var storages StorageList
+	var res StorageList
 	for _, storage := range data.([]interface{}) {
-		value := storage.(map[string]interface{})
-		storages = append(storages, Storage{
-			Storage: value["storage"].(string),
-			Type:    value["type"].(string),
-			Content: strings.Split(value["content"].(string), ","),
+		val := storage.(map[string]interface{})
+		res = append(res, Storage{
+			Storage: val["storage"].(string),
+			Type:    val["type"].(string),
+			Content: strings.Split(val["content"].(string), ","),
 		})
 	}
 
-	return storages, nil
+	return &res, nil
+}
+
+func (s *StorageService) Get(storage string) (*Storage, error) {
+	data, err := s.client.Get("storage/" + storage)
+	if err != nil {
+		return nil, err
+	}
+
+	val := data.(map[string]interface{})
+	res := Storage{
+		Storage: val["storage"].(string),
+		Type:    val["type"].(string),
+		Content: strings.Split(val["content"].(string), ","),
+	}
+
+	return &res, nil
 }
