@@ -112,6 +112,8 @@ func (c *Client) Get(endpoint string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	defer res.Body.Close()
+
 	var out map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&out)
 	if err != nil {
@@ -126,6 +128,8 @@ func (c *Client) Post(endpoint string, data url.Values) (map[string]interface{},
 	if err != nil {
 		return nil, err
 	}
+
+	defer res.Body.Close()
 
 	var out map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&out)

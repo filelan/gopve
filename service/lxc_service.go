@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/xabinapal/gopve/internal"
 )
 
@@ -13,6 +15,7 @@ type LXCServiceProvider interface {
 
 type LXCService struct {
 	client *internal.Client
+	node   NodeServiceProvider
 }
 
 type LXC struct {
@@ -25,14 +28,27 @@ type LXC struct {
 	MemorySwap  int
 }
 
+func NewLXCService(c *internal.Client, n NodeServiceProvider) *LXCService {
+	lxc := &LXCService{
+		client: c,
+		node:   n,
+	}
+
+	return lxc
+}
+
 func (lxc *LXCService) Create() error {
+	return errors.New("Not yet implemented")
 }
 
 func (lxc *LXCService) Update() error {
+	return errors.New("Not yet implemented")
 }
 
 func (lxc *LXCService) Delete() error {
+	return errors.New("Not yet implemented")
 }
 
 func (lxc *LXCService) Clone() error {
+	return errors.New("Not yet implemented")
 }
