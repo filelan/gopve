@@ -56,9 +56,11 @@ func (c *Client) authenticate(user string, password string) error {
 		return err
 	}
 
+	authData := data.(map[string]interface{})
+
 	authCookie := &http.Cookie{
 		Name:  "PVEAuthCookie",
-		Value: data["ticket"].(string),
+		Value: authData["ticket"].(string),
 	}
 
 	c.client.Jar, err = cookiejar.New(nil)
@@ -70,8 +72,9 @@ func (c *Client) authenticate(user string, password string) error {
 	if err != nil {
 		return err
 	}
+
 	c.client.Jar.SetCookies(cookieURI, []*http.Cookie{authCookie})
-	c.csrfToken = data["CSRFPreventionToken"].(string)
+	c.csrfToken = authData["CSRFPreventionToken"].(string)
 
 	return nil
 }
@@ -79,11 +82,7 @@ func (c *Client) authenticate(user string, password string) error {
 func (c *Client) request(method string, endpoint string, data url.Values) (*http.Response, error) {
 	url := c.apiURI + endpoint
 
-	var buf *bytes.Buffer
-	if data != nil {
-		buf = bytes.NewBufferString(data.Encode())
-	}
-
+	buf = bytes.NewBufferString(data.Encode())
 	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
 		return nil, err
@@ -106,7 +105,7 @@ func (c *Client) request(method string, endpoint string, data url.Values) (*http
 	return res, nil
 }
 
-func (c *Client) Get(endpoint string) (map[string]interface{}, error) {
+func (c *Client) Get(endpoint string) (interface{}, error) {
 	res, err := c.request("GET", endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -120,11 +119,11 @@ func (c *Client) Get(endpoint string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	return out, nil
+	return out["data"], nil
 }
 
 func (c *Client) Post(endpoint string, data url.Values) (map[string]interface{}, error) {
-	res, err := c.request("POST", endpoint, nil)
+	res, err := c.request("POST", endpoint, data)
 	if err != nil {
 		return nil, err
 	}
@@ -137,5 +136,5 @@ func (c *Client) Post(endpoint string, data url.Values) (map[string]interface{},
 		return nil, err
 	}
 
-	return out, nil
+	return out["data"], nil
 }

@@ -34,7 +34,7 @@ func (s *StorageService) List() (StorageList, error) {
 	}
 
 	var storages StorageList
-	for _, storage := range data {
+	for _, storage := range data.([]interface{}) {
 		value := storage.(map[string]interface{})
 		storages = append(storages, Storage{
 			Storage: value["storage"].(string),
