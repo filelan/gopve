@@ -2,11 +2,14 @@ package service
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/xabinapal/gopve/internal"
 )
 
 type QEMUServiceProvider interface {
+	List() (*QEMUList, error)
+	Get(int) (*QEMU, error)
 	Start() error
 	Create() error
 	Update() error
@@ -16,46 +19,135 @@ type QEMUServiceProvider interface {
 
 type QEMUService struct {
 	client *internal.Client
-	node   NodeServiceProvider
+	node   *Node
 }
 
-type QEMU struct {
-	VMID             int
-	Name             string
-	CPUSockets       int
-	CPUCores         int
-	CPULimit         int
-	CPUUnits         int
-	MemoryTotal      int
-	MemoryMinimum    int
-	MemoryBallooning bool
+type QEMUServiceProviderFactory interface {
+	Create(*Node) QEMUServiceProvider
 }
 
-func NewQEMUService(c *internal.Client, n NodeServiceProvider) *QEMUService {
-	qemu := &QEMUService{
-		client: c,
-		node:   n,
+type QEMUServiceFactory struct {
+	client    *internal.Client
+	providers map[string]QEMUServiceProvider
+}
+
+func NewQEMUServiceProviderFactory(c *internal.Client) QEMUServiceProviderFactory {
+	return &QEMUServiceFactory{
+		client:    c,
+		providers: make(map[string]QEMUServiceProvider),
+	}
+}
+
+func (factory *QEMUServiceFactory) Create(node *Node) QEMUServiceProvider {
+	provider, ok := factory.providers[node.Node]
+	if !ok {
+		provider = &QEMUService{
+			client: factory.client,
+			node:   node,
+		}
+
+		factory.providers[node.Node] = provider
 	}
 
-	return qemu
+	return provider
 }
 
-func (qemu *QEMUService) Start() error {
+func (s *QEMUService) List() (*QEMUList, error) {
+	data, err := s.client.Get("nodes/" + s.node.Node + "/qemu")
+	if err != nil {
+		return nil, err
+	}
+
+	var res QEMUList
+	for _, qemu := range data.([]interface{}) {
+		val := qemu.(map[string]interface{})
+		vmid, _ := strconv.Atoi(val["vmid"].(string))
+		row := &QEMU{
+			provider: s,
+
+			VMID:        vmid,
+			Name:        val["name"].(string),
+			Status:      val["status"].(string),
+			CPU:         int(val["cpus"].(float64)),
+			MemoryTotal: int(val["maxmem"].(float64)),
+		}
+
+		ballooning, ok := val["balloon_min"]
+		if ok {
+			row.MemoryMinimum = int(ballooning.(float64))
+			row.MemoryBallooning = true
+		} else {
+			row.MemoryMinimum = row.MemoryTotal
+			row.MemoryBallooning = false
+		}
+
+		res = append(res, row)
+	}
+
+	return &res, nil
+}
+
+func (s *QEMUService) Get(id int) (*QEMU, error) {
+	data, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(id) + "/config")
+	if err != nil {
+		return nil, err
+	}
+
+	val := data.(map[string]interface{})
+	res := &QEMU{
+		provider: s,
+
+		VMID:        id,
+		Name:        val["name"].(string),
+		CPUSockets:  int(val["sockets"].(float64)),
+		CPUCores:    int(val["cores"].(float64)),
+		MemoryTotal: int(val["memory"].(float64)),
+	}
+
+	res.CPU = res.CPUSockets * res.CPUCores
+
+	cpuLimit, ok := val["cpulimit"]
+	if ok {
+		res.CPULimit = int(cpuLimit.(float64))
+	} else {
+		res.CPULimit = 0
+	}
+
+	cpuUnits, ok := val["cpuunits"]
+	if ok {
+		res.CPUUnits = int(cpuUnits.(float64))
+	} else {
+		res.CPUUnits = 1000
+	}
+
+	ballooning := int(val["balloon"].(float64))
+	if ballooning == 0 {
+		res.MemoryMinimum = res.MemoryTotal
+		res.MemoryBallooning = false
+	} else {
+		res.MemoryMinimum = ballooning
+		res.MemoryBallooning = true
+	}
+
+	return res, nil
+}
+
+func (s *QEMUService) Start() error {
 	return errors.New("Not yet implemented")
 }
 
-func (qemu *QEMUService) Create() error {
+func (s *QEMUService) Create() error {
 	return errors.New("Not yet implemented")
 }
 
-func (qemu *QEMUService) Update() error {
+func (s *QEMUService) Update() error {
 	return errors.New("Not yet implemented")
 }
 
-func (qemu *QEMUService) Delete() error {
+func (s *QEMUService) Delete() error {
 	return errors.New("Not yet implemented")
 }
 
-func (qemu *QEMUService) Clone() error {
+func (s *QEMUService) Clone() error {
 	return errors.New("Not yet implemented")
 }

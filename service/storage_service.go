@@ -15,14 +15,6 @@ type StorageService struct {
 	client *internal.Client
 }
 
-type Storage struct {
-	Storage string
-	Type    string
-	Content []string
-}
-
-type StorageList []Storage
-
 func NewStorageService(c *internal.Client) *StorageService {
 	storage := &StorageService{client: c}
 	return storage
@@ -37,11 +29,13 @@ func (s *StorageService) List() (*StorageList, error) {
 	var res StorageList
 	for _, storage := range data.([]interface{}) {
 		val := storage.(map[string]interface{})
-		res = append(res, Storage{
+		row := &Storage{
 			Storage: val["storage"].(string),
 			Type:    val["type"].(string),
 			Content: strings.Split(val["content"].(string), ","),
-		})
+		}
+
+		res = append(res, row)
 	}
 
 	return &res, nil

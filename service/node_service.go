@@ -8,7 +8,7 @@ import (
 
 type NodeServiceProvider interface {
 	List() (*NodeList, error)
-	Get(node string) (*Node, error)
+	Get(string) (*Node, error)
 	Reboot(node string) error
 	Shutdown(node string) error
 }
@@ -16,14 +16,14 @@ type NodeServiceProvider interface {
 type NodeService struct {
 	client *internal.Client
 
-	QEMU QEMUServiceProvider
-	LXC  LXCServiceProvider
+	qemuFactory QEMUServiceProviderFactory
+	lxcFactory  LXCServiceProviderFactory
 }
 
 func NewNodeService(c *internal.Client) *NodeService {
 	node := &NodeService{client: c}
-	node.QEMU = NewQEMUService(c, node)
-	node.LXC = NewLXCService(c, node)
+	node.qemuFactory = NewQEMUServiceProviderFactory(c)
+	node.lxcFactory = NewLXCServiceProviderFactory(c)
 	return node
 }
 
@@ -36,7 +36,7 @@ func (s *NodeService) List() (*NodeList, error) {
 	var res NodeList
 	for _, node := range data.([]interface{}) {
 		val := node.(map[string]interface{})
-		res = append(res, Node{
+		row := &Node{
 			provider: s,
 
 			Node:          val["node"].(string),
@@ -48,7 +48,11 @@ func (s *NodeService) List() (*NodeList, error) {
 			MemUsed:       int(val["mem"].(float64)),
 			DiskTotal:     int(val["maxdisk"].(float64)),
 			DiskUsed:      int(val["disk"].(float64)),
-		})
+		}
+
+		row.QEMU = s.qemuFactory.Create(row)
+		row.LXC = s.lxcFactory.Create(row)
+		res = append(res, row)
 	}
 
 	return &res, nil
@@ -65,7 +69,7 @@ func (s *NodeService) Get(node string) (*Node, error) {
 	mem := val["memory"].(map[string]interface{})
 	disk := val["rootfs"].(map[string]interface{})
 
-	res := Node{
+	res := &Node{
 		provider: s,
 
 		Node:          node,
@@ -79,7 +83,9 @@ func (s *NodeService) Get(node string) (*Node, error) {
 		DiskUsed:      int(disk["used"].(float64)),
 	}
 
-	return &res, nil
+	res.QEMU = s.qemuFactory.Create(res)
+	res.LXC = s.lxcFactory.Create(res)
+	return res, nil
 }
 
 func (s *NodeService) power(node string, command string) error {

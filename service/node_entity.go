@@ -2,6 +2,8 @@ package service
 
 type Node struct {
 	provider NodeServiceProvider
+	QEMU     QEMUServiceProvider
+	LXC      LXCServiceProvider
 
 	Node          string
 	Status        string
@@ -14,7 +16,7 @@ type Node struct {
 	DiskUsed      int
 }
 
-type NodeList []Node
+type NodeList []*Node
 
 func (n *Node) Reboot() error {
 	return n.provider.Reboot(n.Node)
