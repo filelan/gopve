@@ -18,10 +18,10 @@ type Node struct {
 
 type NodeList []*Node
 
-func (n *Node) Reboot() error {
-	return n.provider.Reboot(n.Node)
+func (e *Node) Reboot() error {
+	return e.provider.Reboot(e.Node)
 }
 
-func (n *Node) Shutdown() error {
-	return n.provider.Shutdown(n.Node)
+func (e *Node) Shutdown() error {
+	return e.provider.Shutdown(e.Node)
 }

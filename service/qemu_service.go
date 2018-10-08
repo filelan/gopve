@@ -10,7 +10,12 @@ import (
 type QEMUServiceProvider interface {
 	List() (*QEMUList, error)
 	Get(int) (*QEMU, error)
-	Start() error
+	Start(int) error
+	Stop(int) error
+	Reset(int) error
+	Shutdown(int) error
+	Suspend(int) error
+	Resume(int) error
 	Create() error
 	Update() error
 	Delete() error
@@ -87,8 +92,8 @@ func (s *QEMUService) List() (*QEMUList, error) {
 	return &res, nil
 }
 
-func (s *QEMUService) Get(id int) (*QEMU, error) {
-	data, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(id) + "/config")
+func (s *QEMUService) Get(vmid int) (*QEMU, error) {
+	data, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/config")
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +102,7 @@ func (s *QEMUService) Get(id int) (*QEMU, error) {
 	res := &QEMU{
 		provider: s,
 
-		VMID:        id,
+		VMID:        vmid,
 		Name:        val["name"].(string),
 		CPUSockets:  int(val["sockets"].(float64)),
 		CPUCores:    int(val["cores"].(float64)),
@@ -132,8 +137,33 @@ func (s *QEMUService) Get(id int) (*QEMU, error) {
 	return res, nil
 }
 
-func (s *QEMUService) Start() error {
-	return errors.New("Not yet implemented")
+func (s *QEMUService) power(vmid int, command string) error {
+	_, err := s.client.Post("nodes/"+s.node.Node+"/qemu/"+strconv.Itoa(vmid)+"/status/"+command, nil)
+	return err
+}
+
+func (s *QEMUService) Start(vmid int) error {
+	return s.power(vmid, "start")
+}
+
+func (s *QEMUService) Stop(vmid int) error {
+	return s.power(vmid, "stop")
+}
+
+func (s *QEMUService) Reset(vmid int) error {
+	return s.power(vmid, "reset")
+}
+
+func (s *QEMUService) Shutdown(vmid int) error {
+	return s.power(vmid, "shutdown")
+}
+
+func (s *QEMUService) Suspend(vmid int) error {
+	return s.power(vmid, "suspend")
+}
+
+func (s *QEMUService) Resume(vmid int) error {
+	return s.power(vmid, "resume")
 }
 
 func (s *QEMUService) Create() error {

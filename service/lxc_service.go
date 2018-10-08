@@ -10,6 +10,12 @@ import (
 type LXCServiceProvider interface {
 	List() (*LXCList, error)
 	Get(int) (*LXC, error)
+	Start(int) error
+	Stop(int) error
+	Reset(int) error
+	Shutdown(int) error
+	Suspend(int) error
+	Resume(int) error
 	Create() error
 	Update() error
 	Delete() error
@@ -78,14 +84,13 @@ func (s *LXCService) List() (*LXCList, error) {
 	return &res, nil
 }
 
-func (s *LXCService) Get(id int) (*LXC, error) {
-	data, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(id) + "/status/current")
+func (s *LXCService) Get(ctid int) (*LXC, error) {
+	data, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(ctid) + "/status/current")
 	if err != nil {
 		return nil, err
 	}
 
 	val := data.(map[string]interface{})
-	ctid, _ := strconv.Atoi(val["vmid"].(string))
 	res := &LXC{
 		provider: s,
 
@@ -98,6 +103,35 @@ func (s *LXCService) Get(id int) (*LXC, error) {
 	}
 
 	return res, nil
+}
+
+func (s *LXCService) power(ctid int, command string) error {
+	_, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(ctid)+"/status/"+command, nil)
+	return err
+}
+
+func (s *LXCService) Start(ctid int) error {
+	return s.power(ctid, "start")
+}
+
+func (s *LXCService) Stop(ctid int) error {
+	return s.power(ctid, "stop")
+}
+
+func (s *LXCService) Reset(ctid int) error {
+	return s.power(ctid, "reset")
+}
+
+func (s *LXCService) Shutdown(ctid int) error {
+	return s.power(ctid, "shutdown")
+}
+
+func (s *LXCService) Suspend(ctid int) error {
+	return s.power(ctid, "suspend")
+}
+
+func (s *LXCService) Resume(ctid int) error {
+	return s.power(ctid, "resume")
 }
 
 func (s *LXCService) Create() error {
