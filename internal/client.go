@@ -8,6 +8,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -102,11 +103,18 @@ func (c *Client) request(method string, endpoint string, data url.Values) (*http
 		return nil, err
 	}
 
+	if res.StatusCode != http.StatusOK {
+		var msg string
+		msg = strings.TrimPrefix(res.Status, strconv.Itoa(res.StatusCode))
+		msg = strings.TrimSpace(msg)
+		return nil, NewPVEError(res.StatusCode, msg)
+	}
+
 	return res, nil
 }
 
 func (c *Client) Get(endpoint string) (interface{}, error) {
-	res, err := c.request("GET", endpoint, nil)
+	res, err := c.request(http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +131,7 @@ func (c *Client) Get(endpoint string) (interface{}, error) {
 }
 
 func (c *Client) Post(endpoint string, data url.Values) (interface{}, error) {
-	res, err := c.request("POST", endpoint, data)
+	res, err := c.request(http.MethodPost, endpoint, data)
 	if err != nil {
 		return nil, err
 	}
