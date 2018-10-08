@@ -15,6 +15,11 @@ type LXC struct {
 
 type LXCList []*LXC
 
+const (
+	LXC_DEFAULT_CPU_LIMIT = 0
+	LXC_DEFAULT_CPU_UNITS = 1000
+)
+
 func (e *LXC) Start() error {
 	return e.provider.Start(e.CTID)
 }

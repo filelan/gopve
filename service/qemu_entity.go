@@ -18,6 +18,11 @@ type QEMU struct {
 
 type QEMUList []*QEMU
 
+const (
+	QEMU_DEFAULT_CPU_LIMIT = 0
+	QEMU_DEFAULT_CPU_UNITS = 1000
+)
+
 func (e QEMU) Start() error {
 	return e.provider.Start(e.VMID)
 }

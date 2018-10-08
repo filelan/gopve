@@ -93,39 +93,48 @@ func (s *QEMUService) List() (*QEMUList, error) {
 }
 
 func (s *QEMUService) Get(vmid int) (*QEMU, error) {
-	data, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/config")
+	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/config")
 	if err != nil {
 		return nil, err
 	}
 
-	val := data.(map[string]interface{})
+	dataStatus, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/status/current")
+	if err != nil {
+		return nil, err
+	}
+
+	valConfig := dataConfig.(map[string]interface{})
+	valStatus := dataStatus.(map[string]interface{})
+
 	res := &QEMU{
 		provider: s,
 
 		VMID:        vmid,
-		Name:        val["name"].(string),
-		CPUSockets:  int(val["sockets"].(float64)),
-		CPUCores:    int(val["cores"].(float64)),
-		MemoryTotal: int(val["memory"].(float64)),
+		Name:        valStatus["name"].(string),
+		Status:      valStatus["status"].(string),
+		CPUSockets:  int(valConfig["sockets"].(float64)),
+		CPUCores:    int(valConfig["cores"].(float64)),
+		MemoryTotal: int(valConfig["memory"].(float64)),
 	}
 
 	res.CPU = res.CPUSockets * res.CPUCores
 
-	cpuLimit, ok := val["cpulimit"]
+	cpuLimit, ok := valConfig["cpulimit"]
 	if ok {
-		res.CPULimit = int(cpuLimit.(float64))
+		cpuLimit, _ := strconv.Atoi(cpuLimit.(string))
+		res.CPULimit = cpuLimit
 	} else {
-		res.CPULimit = 0
+		res.CPULimit = QEMU_DEFAULT_CPU_LIMIT
 	}
 
-	cpuUnits, ok := val["cpuunits"]
+	cpuUnits, ok := valConfig["cpuunits"]
 	if ok {
 		res.CPUUnits = int(cpuUnits.(float64))
 	} else {
-		res.CPUUnits = 1000
+		res.CPUUnits = QEMU_DEFAULT_CPU_UNITS
 	}
 
-	ballooning := int(val["balloon"].(float64))
+	ballooning := int(valConfig["balloon"].(float64))
 	if ballooning == 0 {
 		res.MemoryMinimum = res.MemoryTotal
 		res.MemoryBallooning = false

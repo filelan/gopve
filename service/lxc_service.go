@@ -85,21 +85,43 @@ func (s *LXCService) List() (*LXCList, error) {
 }
 
 func (s *LXCService) Get(ctid int) (*LXC, error) {
-	data, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(ctid) + "/status/current")
+	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(ctid) + "/config")
 	if err != nil {
 		return nil, err
 	}
 
-	val := data.(map[string]interface{})
+	dataStatus, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(ctid) + "/status/current")
+	if err != nil {
+		return nil, err
+	}
+
+	valConfig := dataConfig.(map[string]interface{})
+	valStatus := dataStatus.(map[string]interface{})
+
 	res := &LXC{
 		provider: s,
 
 		CTID:        ctid,
-		Name:        val["name"].(string),
-		Status:      val["status"].(string),
-		CPU:         int(val["cpus"].(float64)),
-		MemoryTotal: int(val["maxmem"].(float64)),
-		MemorySwap:  int(val["maxswap"].(float64)),
+		Name:        valStatus["name"].(string),
+		Status:      valStatus["status"].(string),
+		CPU:         int(valConfig["cores"].(float64)),
+		MemoryTotal: int(valConfig["memory"].(float64)),
+		MemorySwap:  int(valConfig["swap"].(float64)),
+	}
+
+	cpuLimit, ok := valConfig["cpulimit"]
+	if ok {
+		cpuLimit, _ := strconv.Atoi(cpuLimit.(string))
+		res.CPULimit = cpuLimit
+	} else {
+		res.CPULimit = LXC_DEFAULT_CPU_LIMIT
+	}
+
+	cpuUnits, ok := valConfig["cpuunits"]
+	if ok {
+		res.CPUUnits = int(cpuUnits.(float64))
+	} else {
+		res.CPUUnits = LXC_DEFAULT_CPU_UNITS
 	}
 
 	return res, nil
