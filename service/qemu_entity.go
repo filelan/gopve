@@ -23,8 +23,8 @@ type QEMUConfig struct {
 type QEMUList []*QEMU
 
 const (
-	QEMU_DEFAULT_CPU_LIMIT = 0
-	QEMU_DEFAULT_CPU_UNITS = 1000
+	QEMUDefaultCPULimit = 0
+	QEMUDefaultCPUUnits = 1000
 )
 
 func (e QEMU) Start() error {

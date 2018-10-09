@@ -119,14 +119,14 @@ func (s *LXCService) Get(vmid int) (*LXC, error) {
 		cpuLimit, _ := strconv.Atoi(cpuLimit.(string))
 		res.CPULimit = cpuLimit
 	} else {
-		res.CPULimit = LXC_DEFAULT_CPU_LIMIT
+		res.CPULimit = LXCDefaultCPULimit
 	}
 
 	cpuUnits, ok := valConfig["cpuunits"]
 	if ok {
 		res.CPUUnits = int(cpuUnits.(float64))
 	} else {
-		res.CPUUnits = LXC_DEFAULT_CPU_UNITS
+		res.CPUUnits = LXCDefaultCPUUnits
 	}
 
 	return res, nil
@@ -166,7 +166,11 @@ func (s *LXCService) Create() error {
 }
 
 func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
-	return errors.New("Not yet implemented")
+	form := url.Values{}
+	internal.AddStructToForm(&form, cfg, []string{"n"})
+
+	_, err := s.client.Put("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/config", form)
+	return err
 }
 
 func (s *LXCService) Delete() error {
@@ -179,9 +183,5 @@ func (s *LXCService) Clone(vmid int, full bool, opts *VMCreateOptions) error {
 	internal.AddStructToForm(&form, opts, []string{"ct_c_n", "ct_n", "c_n", "n"})
 
 	_, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/clone", form)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

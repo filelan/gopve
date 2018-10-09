@@ -10,18 +10,18 @@ type LXC struct {
 }
 
 type LXCConfig struct {
-	CPU         int
-	CPULimit    int
-	CPUUnits    int
-	MemoryTotal int
-	MemorySwap  int
+	CPU         int `n:"cores"`
+	CPULimit    int `n:"cpulimit"`
+	CPUUnits    int `n:"cpuunits"`
+	MemoryTotal int `n:"memory"`
+	MemorySwap  int `n:"swap"`
 }
 
 type LXCList []*LXC
 
 const (
-	LXC_DEFAULT_CPU_LIMIT = 0
-	LXC_DEFAULT_CPU_UNITS = 1000
+	LXCDefaultCPULimit = 0
+	LXCDefaultCPUUnits = 1000
 )
 
 func (e *LXC) Start() error {

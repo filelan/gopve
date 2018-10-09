@@ -27,19 +27,19 @@ func AddStructToForm(form *url.Values, s interface{}, names []string) {
 		switch field.Interface().(type) {
 		case int:
 			nativeVal := field.Int()
-			if nativeVal == 0 && ignoreDefault == "true" {
+			if nativeVal == 0 && ignoreDefault != "f" {
 				continue
 			}
 			value = strconv.FormatInt(nativeVal, 10)
 		case bool:
 			nativeVal := field.Bool()
-			if nativeVal == false && ignoreDefault == "true" {
+			if nativeVal == false && ignoreDefault != "f" {
 				continue
 			}
 			value = BoolToForm(nativeVal)
 		case string:
 			value = field.String()
-			if value == "" && ignoreDefault == "true" {
+			if value == "" && ignoreDefault != "f" {
 				continue
 			}
 		}

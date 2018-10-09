@@ -128,14 +128,14 @@ func (s *QEMUService) Get(vmid int) (*QEMU, error) {
 		cpuLimit, _ := strconv.Atoi(cpuLimit.(string))
 		res.CPULimit = cpuLimit
 	} else {
-		res.CPULimit = QEMU_DEFAULT_CPU_LIMIT
+		res.CPULimit = QEMUDefaultCPULimit
 	}
 
 	cpuUnits, ok := valConfig["cpuunits"]
 	if ok {
 		res.CPUUnits = int(cpuUnits.(float64))
 	} else {
-		res.CPUUnits = QEMU_DEFAULT_CPU_UNITS
+		res.CPUUnits = QEMUDefaultCPUUnits
 	}
 
 	ballooning := int(valConfig["balloon"].(float64))
