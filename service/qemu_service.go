@@ -17,9 +17,9 @@ type QEMUServiceProvider interface {
 	Suspend(int) error
 	Resume(int) error
 	Create() error
+	Clone() error
 	Update() error
 	Delete() error
-	Clone() error
 }
 
 type QEMUService struct {
@@ -183,14 +183,14 @@ func (s *QEMUService) Create() error {
 	return errors.New("Not yet implemented")
 }
 
+func (s *QEMUService) Clone() error {
+	return errors.New("Not yet implemented")
+}
+
 func (s *QEMUService) Update() error {
 	return errors.New("Not yet implemented")
 }
 
 func (s *QEMUService) Delete() error {
-	return errors.New("Not yet implemented")
-}
-
-func (s *QEMUService) Clone() error {
 	return errors.New("Not yet implemented")
 }
