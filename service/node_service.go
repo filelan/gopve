@@ -16,14 +16,16 @@ type NodeServiceProvider interface {
 type NodeService struct {
 	client *internal.Client
 
-	qemuFactory QEMUServiceProviderFactory
-	lxcFactory  LXCServiceProviderFactory
+	qemuFactory QEMUServiceFactoryProvider
+	lxcFactory  LXCServiceFactoryProvider
+	taskFactory TaskServiceFactoryProvider
 }
 
 func NewNodeService(c *internal.Client) *NodeService {
 	node := &NodeService{client: c}
-	node.qemuFactory = NewQEMUServiceProviderFactory(c)
-	node.lxcFactory = NewLXCServiceProviderFactory(c)
+	node.qemuFactory = NewQEMUServiceFactoryProvider(c)
+	node.lxcFactory = NewLXCServiceFactoryProvider(c)
+	node.taskFactory = NewTaskServiceFactoryProvider(c)
 	return node
 }
 
@@ -52,6 +54,7 @@ func (s *NodeService) List() (*NodeList, error) {
 
 		row.QEMU = s.qemuFactory.Create(row)
 		row.LXC = s.lxcFactory.Create(row)
+		row.Task = s.taskFactory.Create(row)
 		res = append(res, row)
 	}
 

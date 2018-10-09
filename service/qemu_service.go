@@ -27,7 +27,7 @@ type QEMUService struct {
 	node   *Node
 }
 
-type QEMUServiceProviderFactory interface {
+type QEMUServiceFactoryProvider interface {
 	Create(*Node) QEMUServiceProvider
 }
 
@@ -36,7 +36,7 @@ type QEMUServiceFactory struct {
 	providers map[string]QEMUServiceProvider
 }
 
-func NewQEMUServiceProviderFactory(c *internal.Client) QEMUServiceProviderFactory {
+func NewQEMUServiceFactoryProvider(c *internal.Client) QEMUServiceFactoryProvider {
 	return &QEMUServiceFactory{
 		client:    c,
 		providers: make(map[string]QEMUServiceProvider),

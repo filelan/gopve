@@ -4,6 +4,7 @@ type Node struct {
 	provider NodeServiceProvider
 	QEMU     QEMUServiceProvider
 	LXC      LXCServiceProvider
+	Task     TaskServiceProvider
 
 	Node          string
 	Status        string

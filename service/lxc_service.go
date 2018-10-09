@@ -17,10 +17,10 @@ type LXCServiceProvider interface {
 	Shutdown(int) error
 	Suspend(int) error
 	Resume(int) error
-	Create() error
-	Clone(int, bool, *VMCreateOptions) error
+	Create() (*Task, error)
+	Clone(int, bool, *VMCreateOptions) (*Task, error)
 	Update(int, *LXCConfig) error
-	Delete(int) error
+	Delete(int) (*Task, error)
 }
 
 type LXCService struct {
@@ -28,7 +28,7 @@ type LXCService struct {
 	node   *Node
 }
 
-type LXCServiceProviderFactory interface {
+type LXCServiceFactoryProvider interface {
 	Create(*Node) LXCServiceProvider
 }
 
@@ -37,7 +37,7 @@ type LXCServiceFactory struct {
 	providers map[string]LXCServiceProvider
 }
 
-func NewLXCServiceProviderFactory(c *internal.Client) LXCServiceProviderFactory {
+func NewLXCServiceFactoryProvider(c *internal.Client) LXCServiceFactoryProvider {
 	return &LXCServiceFactory{
 		client:    c,
 		providers: make(map[string]LXCServiceProvider),
@@ -161,17 +161,21 @@ func (s *LXCService) Resume(vmid int) error {
 	return s.power(vmid, "resume")
 }
 
-func (s *LXCService) Create() error {
-	return errors.New("Not yet implemented")
+func (s *LXCService) Create() (*Task, error) {
+	return nil, errors.New("Not yet implemented")
 }
 
-func (s *LXCService) Clone(vmid int, full bool, opts *VMCreateOptions) error {
+func (s *LXCService) Clone(vmid int, full bool, opts *VMCreateOptions) (*Task, error) {
 	form := url.Values{}
 	form.Set("full", internal.BoolToForm(full))
 	internal.AddStructToForm(&form, opts, []string{"ct_c_n", "ct_n", "c_n", "n"})
 
-	_, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/clone", form)
-	return err
+	task, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/clone", form)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Task{provider: s.node.Task, UPID: task.(string)}, nil
 }
 
 func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
@@ -182,8 +186,11 @@ func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
 	return err
 }
 
-func (s *LXCService) Delete(vmid int) error {
-	_, err := s.client.Delete("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid), nil)
-	return err
-	return errors.New("Not yet implemented")
+func (s *LXCService) Delete(vmid int) (*Task, error) {
+	task, err := s.client.Delete("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Task{provider: s.node.Task, UPID: task.(string)}, nil
 }
