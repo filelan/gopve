@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"time"
 
 	"github.com/xabinapal/gopve/internal"
@@ -49,16 +48,52 @@ func (factory *TaskServiceFactory) Create(node *Node) TaskServiceProvider {
 }
 
 func (s *TaskService) List() (*TaskList, error) {
-	return nil, errors.New("Not yet implemented")
+	data, err := s.client.Get("nodes/" + s.node.Node + "/tasks")
+	if err != nil {
+		return nil, err
+	}
+
+	var res TaskList
+	for _, task := range data.([]interface{}) {
+		val := task.(map[string]interface{})
+		row := &Task{
+			provider: s,
+			upid:     val["upid"].(string),
+		}
+
+		res = append(res, row)
+	}
+
+	return &res, nil
 }
 
 func (s *TaskService) Get(upid string) (*Task, error) {
-	return nil, errors.New("Not yet implemented")
+	data, err := s.client.Get("nodes/" + s.node.Node + "/tasks/" + upid + "/status")
+	if err != nil {
+		return nil, err
+	}
+
+	val := data.(map[string]interface{})
+	res := &Task{
+		provider: s,
+		filled:   true,
+		upid:     upid,
+		taskType: val["type"].(string),
+		status:   val["status"].(string),
+	}
+
+	exitStatus, ok := val["exitstatus"]
+	if ok {
+		res.exitStatus = exitStatus.(string)
+	}
+
+	return res, nil
 }
 
 func (s *TaskService) Wait(upid string) error {
 	ch := make(chan error, 1)
 	go func() {
+		defer close(ch)
 		for {
 			data, err := s.client.Get("nodes/" + s.node.Node + "/tasks/" + upid + "/status")
 			if err != nil {
@@ -68,12 +103,6 @@ func (s *TaskService) Wait(upid string) error {
 
 			val := data.(map[string]interface{})
 			if val["status"].(string) == "stopped" {
-				exitStatus := val["exitstatus"].(string)
-				if exitStatus != "OK" {
-					ch <- errors.New(exitStatus)
-					return
-				}
-
 				ch <- nil
 				return
 			}
@@ -83,6 +112,5 @@ func (s *TaskService) Wait(upid string) error {
 	}()
 
 	res := <-ch
-	close(ch)
 	return res
 }
