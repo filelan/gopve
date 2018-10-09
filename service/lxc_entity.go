@@ -3,9 +3,13 @@ package service
 type LXC struct {
 	provider LXCServiceProvider
 
-	CTID        int
-	Name        string
-	Status      string
+	VMID   int
+	Name   string
+	Status string
+	LXCConfig
+}
+
+type LXCConfig struct {
 	CPU         int
 	CPULimit    int
 	CPUUnits    int
@@ -21,25 +25,25 @@ const (
 )
 
 func (e *LXC) Start() error {
-	return e.provider.Start(e.CTID)
+	return e.provider.Start(e.VMID)
 }
 
 func (e *LXC) Stop() error {
-	return e.provider.Stop(e.CTID)
+	return e.provider.Stop(e.VMID)
 }
 
 func (e *LXC) Reset() error {
-	return e.provider.Reset(e.CTID)
+	return e.provider.Reset(e.VMID)
 }
 
 func (e *LXC) Shutdown() error {
-	return e.provider.Shutdown(e.CTID)
+	return e.provider.Shutdown(e.VMID)
 }
 
 func (e *LXC) Suspend() error {
-	return e.provider.Suspend(e.CTID)
+	return e.provider.Suspend(e.VMID)
 }
 
 func (e *LXC) Resume() error {
-	return e.provider.Resume(e.CTID)
+	return e.provider.Resume(e.VMID)
 }

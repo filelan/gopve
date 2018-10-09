@@ -80,7 +80,7 @@ func (c *Client) authenticate(user string, password string) error {
 	return nil
 }
 
-func (c *Client) request(method string, endpoint string, data url.Values) (*http.Response, error) {
+func (c *Client) request(method string, endpoint string, data url.Values) (interface{}, error) {
 	url := c.apiURI + endpoint
 
 	buf := bytes.NewBufferString(data.Encode())
@@ -110,39 +110,29 @@ func (c *Client) request(method string, endpoint string, data url.Values) (*http
 		return nil, NewPVEError(res.StatusCode, msg)
 	}
 
-	return res, nil
+	defer res.Body.Close()
+
+	var out map[string]interface{}
+	err = json.NewDecoder(res.Body).Decode(&out)
+	if err != nil {
+		return nil, err
+	}
+
+	return out["data"], nil
 }
 
 func (c *Client) Get(endpoint string) (interface{}, error) {
-	res, err := c.request(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	var out map[string]interface{}
-	err = json.NewDecoder(res.Body).Decode(&out)
-	if err != nil {
-		return nil, err
-	}
-
-	return out["data"], nil
+	return c.request(http.MethodGet, endpoint, nil)
 }
 
 func (c *Client) Post(endpoint string, data url.Values) (interface{}, error) {
-	res, err := c.request(http.MethodPost, endpoint, data)
-	if err != nil {
-		return nil, err
-	}
+	return c.request(http.MethodPost, endpoint, data)
+}
 
-	defer res.Body.Close()
+func (c *Client) Put(endpoint string, data url.Values) (interface{}, error) {
+	return c.request(http.MethodPut, endpoint, data)
+}
 
-	var out map[string]interface{}
-	err = json.NewDecoder(res.Body).Decode(&out)
-	if err != nil {
-		return nil, err
-	}
-
-	return out["data"], nil
+func (c *Client) Delete(endpoint string, data url.Values) (interface{}, error) {
+	return c.request(http.MethodDelete, endpoint, data)
 }

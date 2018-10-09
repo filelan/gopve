@@ -3,9 +3,13 @@ package service
 type QEMU struct {
 	provider QEMUServiceProvider
 
-	VMID             int
-	Name             string
-	Status           string
+	VMID   int
+	Name   string
+	Status string
+	QEMUConfig
+}
+
+type QEMUConfig struct {
 	CPU              int
 	CPUSockets       int
 	CPUCores         int

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"net/url"
 	"strconv"
 
 	"github.com/xabinapal/gopve/internal"
@@ -17,9 +18,9 @@ type LXCServiceProvider interface {
 	Suspend(int) error
 	Resume(int) error
 	Create() error
-	Update() error
+	Update(int, *LXCConfig) error
 	Delete() error
-	Clone() error
+	Clone(int, bool, *VMCreateOptions) error
 }
 
 type LXCService struct {
@@ -66,16 +67,18 @@ func (s *LXCService) List() (*LXCList, error) {
 	var res LXCList
 	for _, lxc := range data.([]interface{}) {
 		val := lxc.(map[string]interface{})
-		ctid, _ := strconv.Atoi(val["vmid"].(string))
+		vmid, _ := strconv.Atoi(val["vmid"].(string))
 		row := &LXC{
 			provider: s,
 
-			CTID:        ctid,
-			Name:        val["name"].(string),
-			Status:      val["status"].(string),
-			CPU:         int(val["cpus"].(float64)),
-			MemoryTotal: int(val["maxmem"].(float64)),
-			MemorySwap:  int(val["maxswap"].(float64)),
+			VMID:   vmid,
+			Name:   val["name"].(string),
+			Status: val["status"].(string),
+			LXCConfig: LXCConfig{
+				CPU:         int(val["cpus"].(float64)),
+				MemoryTotal: int(val["maxmem"].(float64)),
+				MemorySwap:  int(val["maxswap"].(float64)),
+			},
 		}
 
 		res = append(res, row)
@@ -84,13 +87,13 @@ func (s *LXCService) List() (*LXCList, error) {
 	return &res, nil
 }
 
-func (s *LXCService) Get(ctid int) (*LXC, error) {
-	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(ctid) + "/config")
+func (s *LXCService) Get(vmid int) (*LXC, error) {
+	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(vmid) + "/config")
 	if err != nil {
 		return nil, err
 	}
 
-	dataStatus, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(ctid) + "/status/current")
+	dataStatus, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(vmid) + "/status/current")
 	if err != nil {
 		return nil, err
 	}
@@ -101,12 +104,14 @@ func (s *LXCService) Get(ctid int) (*LXC, error) {
 	res := &LXC{
 		provider: s,
 
-		CTID:        ctid,
-		Name:        valStatus["name"].(string),
-		Status:      valStatus["status"].(string),
-		CPU:         int(valConfig["cores"].(float64)),
-		MemoryTotal: int(valConfig["memory"].(float64)),
-		MemorySwap:  int(valConfig["swap"].(float64)),
+		VMID:   vmid,
+		Name:   valStatus["name"].(string),
+		Status: valStatus["status"].(string),
+		LXCConfig: LXCConfig{
+			CPU:         int(valConfig["cores"].(float64)),
+			MemoryTotal: int(valConfig["memory"].(float64)),
+			MemorySwap:  int(valConfig["swap"].(float64)),
+		},
 	}
 
 	cpuLimit, ok := valConfig["cpulimit"]
@@ -127,40 +132,40 @@ func (s *LXCService) Get(ctid int) (*LXC, error) {
 	return res, nil
 }
 
-func (s *LXCService) power(ctid int, command string) error {
-	_, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(ctid)+"/status/"+command, nil)
+func (s *LXCService) power(vmid int, command string) error {
+	_, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/status/"+command, nil)
 	return err
 }
 
-func (s *LXCService) Start(ctid int) error {
-	return s.power(ctid, "start")
+func (s *LXCService) Start(vmid int) error {
+	return s.power(vmid, "start")
 }
 
-func (s *LXCService) Stop(ctid int) error {
-	return s.power(ctid, "stop")
+func (s *LXCService) Stop(vmid int) error {
+	return s.power(vmid, "stop")
 }
 
-func (s *LXCService) Reset(ctid int) error {
-	return s.power(ctid, "reset")
+func (s *LXCService) Reset(vmid int) error {
+	return s.power(vmid, "reset")
 }
 
-func (s *LXCService) Shutdown(ctid int) error {
-	return s.power(ctid, "shutdown")
+func (s *LXCService) Shutdown(vmid int) error {
+	return s.power(vmid, "shutdown")
 }
 
-func (s *LXCService) Suspend(ctid int) error {
-	return s.power(ctid, "suspend")
+func (s *LXCService) Suspend(vmid int) error {
+	return s.power(vmid, "suspend")
 }
 
-func (s *LXCService) Resume(ctid int) error {
-	return s.power(ctid, "resume")
+func (s *LXCService) Resume(vmid int) error {
+	return s.power(vmid, "resume")
 }
 
 func (s *LXCService) Create() error {
 	return errors.New("Not yet implemented")
 }
 
-func (s *LXCService) Update() error {
+func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
 	return errors.New("Not yet implemented")
 }
 
@@ -168,6 +173,15 @@ func (s *LXCService) Delete() error {
 	return errors.New("Not yet implemented")
 }
 
-func (s *LXCService) Clone() error {
-	return errors.New("Not yet implemented")
+func (s *LXCService) Clone(vmid int, full bool, opts *VMCreateOptions) error {
+	form := url.Values{}
+	form.Set("full", internal.BoolToForm(full))
+	internal.AddStructToForm(&form, opts, []string{"ct_c_n", "ct_n", "c_n", "n"})
+
+	_, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/clone", form)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

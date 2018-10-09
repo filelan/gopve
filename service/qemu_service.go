@@ -70,11 +70,13 @@ func (s *QEMUService) List() (*QEMUList, error) {
 		row := &QEMU{
 			provider: s,
 
-			VMID:        vmid,
-			Name:        val["name"].(string),
-			Status:      val["status"].(string),
-			CPU:         int(val["cpus"].(float64)),
-			MemoryTotal: int(val["maxmem"].(float64)),
+			VMID:   vmid,
+			Name:   val["name"].(string),
+			Status: val["status"].(string),
+			QEMUConfig: QEMUConfig{
+				CPU:         int(val["cpus"].(float64)),
+				MemoryTotal: int(val["maxmem"].(float64)),
+			},
 		}
 
 		ballooning, ok := val["balloon_min"]
@@ -109,12 +111,14 @@ func (s *QEMUService) Get(vmid int) (*QEMU, error) {
 	res := &QEMU{
 		provider: s,
 
-		VMID:        vmid,
-		Name:        valStatus["name"].(string),
-		Status:      valStatus["status"].(string),
-		CPUSockets:  int(valConfig["sockets"].(float64)),
-		CPUCores:    int(valConfig["cores"].(float64)),
-		MemoryTotal: int(valConfig["memory"].(float64)),
+		VMID:   vmid,
+		Name:   valStatus["name"].(string),
+		Status: valStatus["status"].(string),
+		QEMUConfig: QEMUConfig{
+			CPUSockets:  int(valConfig["sockets"].(float64)),
+			CPUCores:    int(valConfig["cores"].(float64)),
+			MemoryTotal: int(valConfig["memory"].(float64)),
+		},
 	}
 
 	res.CPU = res.CPUSockets * res.CPUCores
