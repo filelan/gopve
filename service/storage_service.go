@@ -27,12 +27,12 @@ func (s *StorageService) List() (*StorageList, error) {
 	}
 
 	var res StorageList
-	for _, storage := range data.([]interface{}) {
-		val := storage.(map[string]interface{})
+	for _, storage := range internal.NewJArray(data) {
+		val := internal.NewJObject(storage)
 		row := &Storage{
-			Storage: val["storage"].(string),
-			Type:    val["type"].(string),
-			Content: strings.Split(val["content"].(string), ","),
+			Storage: val.GetString("storage"),
+			Type:    val.GetString("type"),
+			Content: strings.Split(val.GetString("content"), ","),
 		}
 
 		res = append(res, row)
@@ -47,11 +47,11 @@ func (s *StorageService) Get(storage string) (*Storage, error) {
 		return nil, err
 	}
 
-	val := data.(map[string]interface{})
+	val := internal.NewJObject(data)
 	res := Storage{
-		Storage: val["storage"].(string),
-		Type:    val["type"].(string),
-		Content: strings.Split(val["content"].(string), ","),
+		Storage: val.GetString("storage"),
+		Type:    val.GetString("type"),
+		Content: strings.Split(val.GetString("content"), ","),
 	}
 
 	return &res, nil

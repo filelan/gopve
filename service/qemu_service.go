@@ -17,9 +17,9 @@ type QEMUServiceProvider interface {
 	Suspend(int) error
 	Resume(int) error
 	Create() error
-	Clone() error
-	Update() error
-	Delete() error
+	Clone(vmid int, opts *VMCreateOptions) (*Task, error)
+	Update(int, *QEMUConfig) error
+	Delete(int) (*Task, error)
 }
 
 type QEMUService struct {
@@ -64,28 +64,27 @@ func (s *QEMUService) List() (*QEMUList, error) {
 	}
 
 	var res QEMUList
-	for _, qemu := range data.([]interface{}) {
-		val := qemu.(map[string]interface{})
-		vmid, _ := strconv.Atoi(val["vmid"].(string))
+	for _, qemu := range internal.NewJArray(data) {
+		val := internal.NewJObject(qemu)
+		vmid, _ := strconv.Atoi(val.GetString("vmid"))
 		row := &QEMU{
 			provider: s,
 
 			VMID:   vmid,
-			Name:   val["name"].(string),
-			Status: val["status"].(string),
+			Name:   val.GetString("name"),
+			Status: val.GetString("status"),
 			QEMUConfig: QEMUConfig{
-				CPU:         int(val["cpus"].(float64)),
-				MemoryTotal: int(val["maxmem"].(float64)),
+				CPU:           val.GetInt("cpus"),
+				MemoryTotal:   val.GetInt("maxmem"),
+				MemoryMinimum: val.GetIntDefault("balloon_min", 0),
 			},
 		}
 
-		ballooning, ok := val["balloon_min"]
-		if ok {
-			row.MemoryMinimum = int(ballooning.(float64))
-			row.MemoryBallooning = true
-		} else {
+		if row.MemoryMinimum == 0 {
 			row.MemoryMinimum = row.MemoryTotal
 			row.MemoryBallooning = false
+		} else {
+			row.MemoryBallooning = true
 		}
 
 		res = append(res, row)
@@ -105,45 +104,32 @@ func (s *QEMUService) Get(vmid int) (*QEMU, error) {
 		return nil, err
 	}
 
-	valConfig := dataConfig.(map[string]interface{})
-	valStatus := dataStatus.(map[string]interface{})
+	valConfig := internal.NewJObject(dataConfig)
+	valStatus := internal.NewJObject(dataStatus)
 
 	res := &QEMU{
 		provider: s,
 
 		VMID:   vmid,
-		Name:   valStatus["name"].(string),
-		Status: valStatus["status"].(string),
+		Name:   valStatus.GetString("name"),
+		Status: valStatus.GetString("status"),
 		QEMUConfig: QEMUConfig{
-			CPUSockets:  int(valConfig["sockets"].(float64)),
-			CPUCores:    int(valConfig["cores"].(float64)),
-			MemoryTotal: int(valConfig["memory"].(float64)),
+			OSType:        valConfig.GetString("ostype"),
+			CPUSockets:    valConfig.GetInt("sockets"),
+			CPUCores:      valConfig.GetInt("cores"),
+			CPULimit:      valConfig.GetIntDefault("cpulimit", QEMUDefaultCPULimit),
+			CPUUnits:      valConfig.GetIntDefault("cpuunits", QEMUDefaultCPUUnits),
+			MemoryTotal:   valConfig.GetInt("memory"),
+			MemoryMinimum: valConfig.GetInt("balloon"),
+			IsNUMAAware:   valConfig.GetBool("numa"),
 		},
 	}
 
 	res.CPU = res.CPUSockets * res.CPUCores
-
-	cpuLimit, ok := valConfig["cpulimit"]
-	if ok {
-		cpuLimit, _ := strconv.Atoi(cpuLimit.(string))
-		res.CPULimit = cpuLimit
-	} else {
-		res.CPULimit = QEMUDefaultCPULimit
-	}
-
-	cpuUnits, ok := valConfig["cpuunits"]
-	if ok {
-		res.CPUUnits = int(cpuUnits.(float64))
-	} else {
-		res.CPUUnits = QEMUDefaultCPUUnits
-	}
-
-	ballooning := int(valConfig["balloon"].(float64))
-	if ballooning == 0 {
+	if res.MemoryMinimum == 0 {
 		res.MemoryMinimum = res.MemoryTotal
 		res.MemoryBallooning = false
 	} else {
-		res.MemoryMinimum = ballooning
 		res.MemoryBallooning = true
 	}
 
@@ -183,14 +169,32 @@ func (s *QEMUService) Create() error {
 	return errors.New("Not yet implemented")
 }
 
-func (s *QEMUService) Clone() error {
-	return errors.New("Not yet implemented")
+func (s *QEMUService) Clone(vmid int, opts *VMCreateOptions) (*Task, error) {
+	form := internal.StructToForm(opts, []string{"vm_c_n", "vm_n", "c_n", "n"})
+	task, err := s.client.Post("nodes/"+s.node.Node+"/qemu/"+strconv.Itoa(vmid)+"/clone", form)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Task{provider: s.node.Task, upid: task.(string)}, nil
 }
 
-func (s *QEMUService) Update() error {
-	return errors.New("Not yet implemented")
+func (s *QEMUService) Update(vmid int, cfg *QEMUConfig) error {
+	norm := *cfg
+	if !norm.MemoryBallooning {
+		norm.MemoryMinimum = 0
+	}
+
+	form := internal.StructToForm(norm, []string{"n"})
+	_, err := s.client.Put("nodes/"+s.node.Node+"/qemu/"+strconv.Itoa(vmid)+"/config", form)
+	return err
 }
 
-func (s *QEMUService) Delete() error {
-	return errors.New("Not yet implemented")
+func (s *QEMUService) Delete(vmid int) (*Task, error) {
+	task, err := s.client.Delete("nodes/"+s.node.Node+"/qemu/"+strconv.Itoa(vmid), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Task{provider: s.node.Task, upid: task.(string)}, nil
 }

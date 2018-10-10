@@ -47,7 +47,7 @@ func NewClient(uri string, user string, password string, invalidCert bool) (*Cli
 }
 
 func (c *Client) authenticate(user string, password string) error {
-	form := url.Values{
+	form := &url.Values{
 		"username": {user},
 		"password": {password},
 	}
@@ -80,18 +80,22 @@ func (c *Client) authenticate(user string, password string) error {
 	return nil
 }
 
-func (c *Client) request(method string, endpoint string, data url.Values) (interface{}, error) {
-	url := c.apiURI + endpoint
+func (c *Client) request(method string, endpoint string, form *url.Values) (interface{}, error) {
 
-	buf := bytes.NewBufferString(data.Encode())
-	req, err := http.NewRequest(method, url, buf)
+	var enc string
+	if form != nil && len(*form) > 0 {
+		enc = form.Encode()
+	}
+
+	buf := bytes.NewBufferString(enc)
+	req, err := http.NewRequest(method, c.apiURI+endpoint, buf)
 	if err != nil {
 		return nil, err
 	}
 
-	if data != nil {
+	if enc != "" {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+		req.Header.Add("Content-Length", strconv.Itoa(len(enc)))
 	}
 
 	if c.csrfToken != "" {
@@ -125,14 +129,14 @@ func (c *Client) Get(endpoint string) (interface{}, error) {
 	return c.request(http.MethodGet, endpoint, nil)
 }
 
-func (c *Client) Post(endpoint string, data url.Values) (interface{}, error) {
-	return c.request(http.MethodPost, endpoint, data)
+func (c *Client) Post(endpoint string, form *url.Values) (interface{}, error) {
+	return c.request(http.MethodPost, endpoint, form)
 }
 
-func (c *Client) Put(endpoint string, data url.Values) (interface{}, error) {
-	return c.request(http.MethodPut, endpoint, data)
+func (c *Client) Put(endpoint string, form *url.Values) (interface{}, error) {
+	return c.request(http.MethodPut, endpoint, form)
 }
 
-func (c *Client) Delete(endpoint string, data url.Values) (interface{}, error) {
-	return c.request(http.MethodDelete, endpoint, data)
+func (c *Client) Delete(endpoint string, form *url.Values) (interface{}, error) {
+	return c.request(http.MethodDelete, endpoint, form)
 }

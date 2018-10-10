@@ -6,6 +6,10 @@ import (
 	"strconv"
 )
 
+func FormToBool(b interface{}) bool {
+	return b.(float64) == 1
+}
+
 func BoolToForm(b bool) string {
 	if b {
 		return "1"
@@ -14,32 +18,38 @@ func BoolToForm(b bool) string {
 	}
 }
 
-func AddStructToForm(form *url.Values, s interface{}, names []string) {
+func StructToForm(s interface{}, names []string) *url.Values {
+	form := &url.Values{}
+
 	structVal := reflect.ValueOf(s).Elem()
 	structType := structVal.Type()
 
 	for i := 0; i < structVal.NumField(); i++ {
 		field := structVal.Field(i)
 		fieldType := structType.Field(i)
-		ignoreDefault := fieldType.Tag.Get("i")
+		ignore := fieldType.Tag.Get("i")
+
+		if ignore == "always" {
+			continue
+		}
 
 		var value string
 		switch field.Interface().(type) {
 		case int:
 			nativeVal := field.Int()
-			if nativeVal == 0 && ignoreDefault != "f" {
+			if nativeVal == 0 && ignore == "default" {
 				continue
 			}
 			value = strconv.FormatInt(nativeVal, 10)
 		case bool:
 			nativeVal := field.Bool()
-			if nativeVal == false && ignoreDefault != "f" {
+			if nativeVal == false && ignore == "default" {
 				continue
 			}
 			value = BoolToForm(nativeVal)
 		case string:
 			value = field.String()
-			if value == "" && ignoreDefault != "f" {
+			if value == "" && ignore == "default" {
 				continue
 			}
 		}
@@ -47,6 +57,8 @@ func AddStructToForm(form *url.Values, s interface{}, names []string) {
 		name := getFieldName(fieldType, names)
 		form.Set(name, value)
 	}
+
+	return form
 }
 
 func getFieldName(f reflect.StructField, names []string) string {

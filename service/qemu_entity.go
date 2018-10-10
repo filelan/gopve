@@ -10,14 +10,16 @@ type QEMU struct {
 }
 
 type QEMUConfig struct {
-	CPU              int
-	CPUSockets       int
-	CPUCores         int
-	CPULimit         int
-	CPUUnits         int
-	MemoryTotal      int
-	MemoryMinimum    int
-	MemoryBallooning bool
+	OSType           string `n:"ostype"`
+	CPU              int    `i:"always"`
+	CPUSockets       int    `i:"always"`
+	CPUCores         int    `n:"cores"`
+	CPULimit         int    `n:"cpulimit"`
+	CPUUnits         int    `n:"cpuunits"`
+	MemoryTotal      int    `n:"memory"`
+	MemoryMinimum    int    `n:"balloon"`
+	MemoryBallooning bool   `i:"always"`
+	IsNUMAAware      bool   `n:"numa"`
 }
 
 type QEMUList []*QEMU

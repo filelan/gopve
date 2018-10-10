@@ -54,11 +54,11 @@ func (s *TaskService) List() (*TaskList, error) {
 	}
 
 	var res TaskList
-	for _, task := range data.([]interface{}) {
-		val := task.(map[string]interface{})
+	for _, task := range internal.NewJArray(data) {
+		val := internal.NewJObject(task)
 		row := &Task{
 			provider: s,
-			upid:     val["upid"].(string),
+			upid:     val.GetString("upid"),
 		}
 
 		res = append(res, row)
@@ -73,18 +73,14 @@ func (s *TaskService) Get(upid string) (*Task, error) {
 		return nil, err
 	}
 
-	val := data.(map[string]interface{})
+	val := internal.NewJObject(data)
 	res := &Task{
 		provider: s,
 		filled:   true,
 		upid:     upid,
-		taskType: val["type"].(string),
-		status:   val["status"].(string),
-	}
-
-	exitStatus, ok := val["exitstatus"]
-	if ok {
-		res.exitStatus = exitStatus.(string)
+		taskType: val.GetString("type"),
+		status:   val.GetString("status"),
+		exitStatus: val.GetStringDefault("exitstatus", ""),
 	}
 
 	return res, nil
@@ -101,8 +97,8 @@ func (s *TaskService) Wait(upid string) error {
 				return
 			}
 
-			val := data.(map[string]interface{})
-			if val["status"].(string) == "stopped" {
+			val := internal.NewJObject(data)
+			if val.GetString("status") == "stopped" {
 				ch <- nil
 				return
 			}

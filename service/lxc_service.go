@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"net/url"
 	"strconv"
 
 	"github.com/xabinapal/gopve/internal"
@@ -18,7 +17,7 @@ type LXCServiceProvider interface {
 	Suspend(int) error
 	Resume(int) error
 	Create() (*Task, error)
-	Clone(int, bool, *VMCreateOptions) (*Task, error)
+	Clone(int, *VMCreateOptions) (*Task, error)
 	Update(int, *LXCConfig) error
 	Delete(int) (*Task, error)
 }
@@ -65,19 +64,19 @@ func (s *LXCService) List() (*LXCList, error) {
 	}
 
 	var res LXCList
-	for _, lxc := range data.([]interface{}) {
-		val := lxc.(map[string]interface{})
-		vmid, _ := strconv.Atoi(val["vmid"].(string))
+	for _, lxc := range internal.NewJArray(data) {
+		val := internal.NewJObject(lxc)
+		vmid, _ := strconv.Atoi(val.GetString("vmid"))
 		row := &LXC{
 			provider: s,
 
 			VMID:   vmid,
-			Name:   val["name"].(string),
-			Status: val["status"].(string),
+			Name:   val.GetString("name"),
+			Status: val.GetString("status"),
 			LXCConfig: LXCConfig{
-				CPU:         int(val["cpus"].(float64)),
-				MemoryTotal: int(val["maxmem"].(float64)),
-				MemorySwap:  int(val["maxswap"].(float64)),
+				CPU:         val.GetInt("cpus"),
+				MemoryTotal: val.GetInt("maxmem"),
+				MemorySwap:  val.GetInt("maxswap"),
 			},
 		}
 
@@ -98,35 +97,25 @@ func (s *LXCService) Get(vmid int) (*LXC, error) {
 		return nil, err
 	}
 
-	valConfig := dataConfig.(map[string]interface{})
-	valStatus := dataStatus.(map[string]interface{})
+	valConfig := internal.NewJObject(dataConfig)
+	valStatus := internal.NewJObject(dataStatus)
 
 	res := &LXC{
 		provider: s,
 
 		VMID:   vmid,
-		Name:   valStatus["name"].(string),
-		Status: valStatus["status"].(string),
+		Name:   valStatus.GetString("name"),
+		Description: valConfig.GetString("description"),
+		Status: valStatus.GetString("status"),
 		LXCConfig: LXCConfig{
-			CPU:         int(valConfig["cores"].(float64)),
-			MemoryTotal: int(valConfig["memory"].(float64)),
-			MemorySwap:  int(valConfig["swap"].(float64)),
+			Architecture: valConfig.GetString("arch"),
+			OSType:       valConfig.GetString("ostype"),
+			CPU:          valConfig.GetInt("cores"),
+			CPULimit:     valConfig.GetIntDefault("cpulimit", LXCDefaultCPULimit),
+			CPUUnits:     valConfig.GetIntDefault("cpuunits", LXCDefaultCPUUnits),
+			MemoryTotal:  valConfig.GetInt("memory"),
+			MemorySwap:   valConfig.GetInt("swap"),
 		},
-	}
-
-	cpuLimit, ok := valConfig["cpulimit"]
-	if ok {
-		cpuLimit, _ := strconv.Atoi(cpuLimit.(string))
-		res.CPULimit = cpuLimit
-	} else {
-		res.CPULimit = LXCDefaultCPULimit
-	}
-
-	cpuUnits, ok := valConfig["cpuunits"]
-	if ok {
-		res.CPUUnits = int(cpuUnits.(float64))
-	} else {
-		res.CPUUnits = LXCDefaultCPUUnits
 	}
 
 	return res, nil
@@ -165,11 +154,8 @@ func (s *LXCService) Create() (*Task, error) {
 	return nil, errors.New("Not yet implemented")
 }
 
-func (s *LXCService) Clone(vmid int, full bool, opts *VMCreateOptions) (*Task, error) {
-	form := url.Values{}
-	form.Set("full", internal.BoolToForm(full))
-	internal.AddStructToForm(&form, opts, []string{"ct_c_n", "ct_n", "c_n", "n"})
-
+func (s *LXCService) Clone(vmid int, opts *VMCreateOptions) (*Task, error) {
+	form := internal.StructToForm(opts, []string{"ct_c_n", "ct_n", "c_n", "n"})
 	task, err := s.client.Post("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/clone", form)
 	if err != nil {
 		return nil, err
@@ -179,9 +165,7 @@ func (s *LXCService) Clone(vmid int, full bool, opts *VMCreateOptions) (*Task, e
 }
 
 func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
-	form := url.Values{}
-	internal.AddStructToForm(&form, cfg, []string{"n"})
-
+	form := internal.StructToForm(cfg, []string{"n"})
 	_, err := s.client.Put("nodes/"+s.node.Node+"/lxc/"+strconv.Itoa(vmid)+"/config", form)
 	return err
 }
