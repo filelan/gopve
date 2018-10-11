@@ -10,11 +10,13 @@ type LXC struct {
 	LXCConfig
 }
 
+type LXCList = []*LXC
+
 type LXCConfig struct {
 	Architecture   string               `n:"arch"`
 	OSType         string               `n:"ostype"`
 	CPU            int                  `n:"cores"`
-	CPULimit       int                  `n:"cpulimit"`
+	CPULimit       float64              `n:"cpulimit"`
 	CPUUnits       int                  `n:"cpuunits"`
 	MemoryTotal    int                  `n:"memory"`
 	MemorySwap     int                  `n:"swap"`
@@ -29,8 +31,6 @@ type LXCConfig struct {
 	IsTemplate     bool                 `n:"template"`
 	IsUnprivileged bool                 `n:"unprivileged"`
 }
-
-type LXCList = []*LXC
 
 type LXCMountPoint struct {
 	Volume         string `n:",volume"`
@@ -55,18 +55,18 @@ type LXCNetworkDevice struct {
 	Gateway     string `n:"gw"`
 	IPv6Address string `n:"ip6"`
 	GatewayIPv6 string `n:"gw6"`
-	HasFirewall bool   `n:"firewall"`
 	MTU         int    `n:"mtu"`
 	Rate        int    `n:"rate"`
 	VLANTag     int    `n:"tag"`
 	Trunks      []int  `n:"trunks"`
+	HasFirewall bool   `n:"firewall"`
 }
 
 type LXCNetworkDeviceDict = map[int]*LXCNetworkDevice
 
 const (
-	LXCDefaultCPULimit      = 0
-	LXCDefaultCPUUnits      = 1000
+	LXCDefaultCPULimit      = 0.0
+	LXCDefaultCPUUnits      = 1024
 	LXCMinimumMountPoint    = 0
 	LXCMaximumMountPoint    = 9
 	LXCMinimumNetworkDevice = 0

@@ -110,7 +110,7 @@ func (s *LXCService) Get(vmid int) (*LXC, error) {
 			Architecture: internal.JString(valConfig, "arch"),
 			OSType:       internal.JString(valConfig, "ostype"),
 			CPU:          internal.JInt(valConfig, "cores"),
-			CPULimit:     internal.JIntDefault(valConfig, "cpulimit", LXCDefaultCPULimit),
+			CPULimit:     internal.JFloatDefault(valConfig, "cpulimit", LXCDefaultCPULimit),
 			CPUUnits:     internal.JIntDefault(valConfig, "cpuunits", LXCDefaultCPUUnits),
 			MemoryTotal:  internal.JInt(valConfig, "memory"),
 			MemorySwap:   internal.JInt(valConfig, "swap"),
@@ -119,7 +119,8 @@ func (s *LXCService) Get(vmid int) (*LXC, error) {
 
 	rootMountPoint := internal.JString(valConfig, "rootfs")
 	internal.KVToStruct(rootMountPoint, &res.LXCConfig.RootMountPoint)
-	res.LXCConfig.MountPoints = make(map[int]*LXCMountPoint)
+
+	res.LXCConfig.MountPoints = make(LXCMountPointDict)
 	for i := LXCMinimumMountPoint; i <= LXCMaximumMountPoint; i++ {
 		mountPoint := internal.JStringDefault(valConfig, "mp" + strconv.Itoa(i), "")
 		if mountPoint != "" {
@@ -128,7 +129,7 @@ func (s *LXCService) Get(vmid int) (*LXC, error) {
 		}
 	}
 
-	res.LXCConfig.NetworkDevices = make(map[int]*LXCNetworkDevice)
+	res.LXCConfig.NetworkDevices = make(LXCNetworkDeviceDict)
 	for i := LXCMinimumNetworkDevice; i <= LXCMaximumNetworkDevice; i++ {
 		networkDevice := internal.JStringDefault(valConfig, "net" + strconv.Itoa(i), "")
 		if networkDevice != "" {

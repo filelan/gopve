@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -9,14 +8,24 @@ import (
 )
 
 type StructMeta struct {
-	Field     reflect.Value
-	Interface interface{}
-	Default   string
-	IsSet     bool
+	Field   reflect.Value
+	Default string
+	IsSet   bool
 }
 
-func GetStructMeta(s interface{}) map[string]*StructMeta {
-	var meta = make(map[string]*StructMeta)
+func (meta StructMeta) Get() interface{} {
+	return meta.Field.Interface()
+}
+
+func (meta StructMeta) Set(val interface{}) {
+	value := reflect.ValueOf(val)
+	meta.Field.Set(value)
+}
+
+type StructMetaDict = map[string]*StructMeta
+
+func GetStructMeta(s interface{}) StructMetaDict {
+	var meta = make(StructMetaDict)
 	values := reflect.ValueOf(s).Elem()
 	types := values.Type()
 	for i := 0; i < values.NumField(); i++ {
@@ -27,9 +36,8 @@ func GetStructMeta(s interface{}) map[string]*StructMeta {
 		d := fieldType.Tag.Get("d")
 
 		field := &StructMeta{
-			Field:     fieldValue,
-			Interface: fieldValue.Interface(),
-			Default:   d,
+			Field:   fieldValue,
+			Default: d,
 		}
 
 		names := strings.Split(n, ",")
@@ -41,17 +49,24 @@ func GetStructMeta(s interface{}) map[string]*StructMeta {
 	return meta
 }
 
-func StringToMetaValue(v string, field *StructMeta) reflect.Value {
-	var value reflect.Value
-	switch field.Interface.(type) {
+func StringToMetaValue(v string, field *StructMeta) interface{} {
+	switch field.Get().(type) {
 	case string:
-		value = reflect.ValueOf(v)
+		return v
 	case int:
 		val, _ := strconv.Atoi(v)
-		value = reflect.ValueOf(val)
+		return val
 	case bool:
-		val := v == "1"
-		value = reflect.ValueOf(val)
+		return v == "1"
+	case []string:
+		val := strings.Split(v, ";")
+		ival := make([]string, 0)
+		for _, w := range val {
+			if w != "" {
+				ival = append(ival, w)
+			}
+		}
+		return ival
 	case []int:
 		val := strings.Split(v, ";")
 		ival := make([]int, 0)
@@ -61,11 +76,10 @@ func StringToMetaValue(v string, field *StructMeta) reflect.Value {
 				ival = append(ival, wal)
 			}
 		}
-		fmt.Println(ival)
-		value = reflect.ValueOf(ival)
+		return ival
 	}
 
-	return value
+	return nil
 }
 
 func KVMap(kv string) map[string]string {
@@ -82,31 +96,29 @@ func KVMap(kv string) map[string]string {
 	return meta
 }
 
-func KVToStruct(kv string, s interface{}) {
+func KVToStruct(kv string, s interface{}, helpers ...func(StructMetaDict)) {
 	meta := GetStructMeta(s)
 	fields := KVMap(kv)
 
 	for name, field := range meta {
 		v, ok := fields[name]
-
-		if field.IsSet || !ok {
-			continue
+		if !field.IsSet && ok {
+			value := StringToMetaValue(v, field)
+			field.Set(value)
+			field.IsSet = true
 		}
-
-		value := StringToMetaValue(v, field)
-		field.Field.Set(value)
-		field.IsSet = true
 	}
 
 	for name, field := range meta {
 		_, ok := fields[name]
-
-		if field.IsSet || ok {
-			continue
+		if !field.IsSet && !ok {
+			value := StringToMetaValue(field.Default, field)
+			field.Set(value)
 		}
+	}
 
-		value := StringToMetaValue(field.Default, field)
-		field.Field.Set(value)
+	for _, helper := range helpers {
+		helper(meta)
 	}
 }
 
