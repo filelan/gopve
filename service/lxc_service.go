@@ -64,19 +64,18 @@ func (s *LXCService) List() (*LXCList, error) {
 	}
 
 	var res LXCList
-	for _, lxc := range internal.NewJArray(data) {
-		val := internal.NewJObject(lxc)
-		vmid, _ := strconv.Atoi(val.GetString("vmid"))
+	for _, lxc := range data.(internal.JArray) {
+		val := lxc.(internal.JObject)
 		row := &LXC{
 			provider: s,
 
-			VMID:   vmid,
-			Name:   val.GetString("name"),
-			Status: val.GetString("status"),
+			VMID:   internal.AsJInt(val, "vmid"),
+			Name:   internal.JString(val, "name"),
+			Status: internal.JString(val, "status"),
 			LXCConfig: LXCConfig{
-				CPU:         val.GetInt("cpus"),
-				MemoryTotal: val.GetInt("maxmem"),
-				MemorySwap:  val.GetInt("maxswap"),
+				CPU:         internal.JInt(val, "cpus"),
+				MemoryTotal: internal.JInt(val, "maxmem"),
+				MemorySwap:  internal.JInt(val, "maxswap"),
 			},
 		}
 
@@ -87,35 +86,55 @@ func (s *LXCService) List() (*LXCList, error) {
 }
 
 func (s *LXCService) Get(vmid int) (*LXC, error) {
-	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(vmid) + "/config")
-	if err != nil {
-		return nil, err
-	}
-
 	dataStatus, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(vmid) + "/status/current")
 	if err != nil {
 		return nil, err
 	}
 
-	valConfig := internal.NewJObject(dataConfig)
-	valStatus := internal.NewJObject(dataStatus)
+	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/lxc/" + strconv.Itoa(vmid) + "/config")
+	if err != nil {
+		return nil, err
+	}
+
+	valStatus := dataStatus.(internal.JObject)
+	valConfig := dataConfig.(internal.JObject)
 
 	res := &LXC{
 		provider: s,
 
-		VMID:   vmid,
-		Name:   valStatus.GetString("name"),
-		Description: valConfig.GetString("description"),
-		Status: valStatus.GetString("status"),
+		VMID:        internal.AsJInt(valStatus, "vmid"),
+		Name:        internal.JString(valStatus, "name"),
+		Description: internal.JString(valConfig, "description"),
+		Status:      internal.JString(valStatus, "status"),
 		LXCConfig: LXCConfig{
-			Architecture: valConfig.GetString("arch"),
-			OSType:       valConfig.GetString("ostype"),
-			CPU:          valConfig.GetInt("cores"),
-			CPULimit:     valConfig.GetIntDefault("cpulimit", LXCDefaultCPULimit),
-			CPUUnits:     valConfig.GetIntDefault("cpuunits", LXCDefaultCPUUnits),
-			MemoryTotal:  valConfig.GetInt("memory"),
-			MemorySwap:   valConfig.GetInt("swap"),
+			Architecture: internal.JString(valConfig, "arch"),
+			OSType:       internal.JString(valConfig, "ostype"),
+			CPU:          internal.JInt(valConfig, "cores"),
+			CPULimit:     internal.JIntDefault(valConfig, "cpulimit", LXCDefaultCPULimit),
+			CPUUnits:     internal.JIntDefault(valConfig, "cpuunits", LXCDefaultCPUUnits),
+			MemoryTotal:  internal.JInt(valConfig, "memory"),
+			MemorySwap:   internal.JInt(valConfig, "swap"),
 		},
+	}
+
+	rootMountPoint := internal.JString(valConfig, "rootfs")
+	internal.KVToStruct(rootMountPoint, &res.LXCConfig.RootMountPoint)
+	res.LXCConfig.MountPoints = make(map[int]*LXCMountPoint)
+	for i := LXCMinimumMountPoint; i <= LXCMaximumMountPoint; i++ {
+		mountPoint := internal.JStringDefault(valConfig, "mp" + strconv.Itoa(i), "")
+		if mountPoint != "" {
+			res.LXCConfig.MountPoints[i] = &LXCMountPoint{}
+			internal.KVToStruct(mountPoint, res.LXCConfig.MountPoints[i])
+		}
+	}
+
+	res.LXCConfig.NetworkDevices = make(map[int]*LXCNetworkDevice)
+	for i := LXCMinimumNetworkDevice; i <= LXCMaximumNetworkDevice; i++ {
+		networkDevice := internal.JStringDefault(valConfig, "net" + strconv.Itoa(i), "")
+		if networkDevice != "" {
+			res.LXCConfig.NetworkDevices[i] = &LXCNetworkDevice{}
+			internal.KVToStruct(networkDevice, res.LXCConfig.NetworkDevices[i])
+		}
 	}
 
 	return res, nil

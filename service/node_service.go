@@ -36,20 +36,20 @@ func (s *NodeService) List() (*NodeList, error) {
 	}
 
 	var res NodeList
-	for _, node := range internal.NewJArray(data) {
-		val := internal.NewJObject(node)
+	for _, node := range data.(internal.JArray) {
+		val := node.(internal.JObject)
 		row := &Node{
 			provider: s,
 
-			Node:          val.GetString("node"),
-			Status:        val.GetString("status"),
-			Uptime:        val.GetInt("uptime"),
-			CPUTotal:      val.GetInt("maxcpu"),
-			CPUPercentage: val.GetFloat("cpu"),
-			MemTotal:      val.GetInt("maxmem"),
-			MemUsed:       val.GetInt("mem"),
-			DiskTotal:     val.GetInt("maxdisk"),
-			DiskUsed:      val.GetInt("disk"),
+			Node:          internal.JString(val, "node"),
+			Status:        internal.JString(val, "status"),
+			Uptime:        internal.JInt(val, "uptime"),
+			CPUTotal:      internal.JInt(val, "maxcpu"),
+			CPUPercentage: internal.JFloat(val, "cpu"),
+			MemTotal:      internal.JInt(val, "maxmem"),
+			MemUsed:       internal.JInt(val, "mem"),
+			DiskTotal:     internal.JInt(val, "maxdisk"),
+			DiskUsed:      internal.JInt(val, "disk"),
 		}
 
 		row.QEMU = s.qemuFactory.Create(row)
@@ -67,23 +67,23 @@ func (s *NodeService) Get(node string) (*Node, error) {
 		return nil, err
 	}
 
-	val := internal.NewJObject(data)
-	cpu := val.GetJObject("cpuinfo")
-	mem := val.GetJObject("memory")
-	disk := val.GetJObject("rootfs")
+	val := data.(internal.JObject)
+	cpu := val["cpuinfo"].(internal.JObject)
+	mem := val["memory"].(internal.JObject)
+	disk := val["rootfs"].(internal.JObject)
 
 	res := &Node{
 		provider: s,
 
 		Node:          node,
 		Status:        "",
-		Uptime:        val.GetInt("uptime"),
-		CPUTotal:      cpu.GetInt("cpus"),
-		CPUPercentage: val.GetFloat("cpu"),
-		MemTotal:      mem.GetInt("total"),
-		MemUsed:       mem.GetInt("used"),
-		DiskTotal:     disk.GetInt("total"),
-		DiskUsed:      disk.GetInt("used"),
+		Uptime:        internal.JInt(val, "uptime"),
+		CPUTotal:      internal.JInt(cpu, "cpus"),
+		CPUPercentage: internal.JFloat(val, "cpu"),
+		MemTotal:      internal.JInt(mem, "total"),
+		MemUsed:       internal.JInt(mem, "used"),
+		DiskTotal:     internal.JInt(disk, "total"),
+		DiskUsed:      internal.JInt(disk, "used"),
 	}
 
 	res.QEMU = s.qemuFactory.Create(res)

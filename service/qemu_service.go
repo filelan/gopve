@@ -64,19 +64,18 @@ func (s *QEMUService) List() (*QEMUList, error) {
 	}
 
 	var res QEMUList
-	for _, qemu := range internal.NewJArray(data) {
-		val := internal.NewJObject(qemu)
-		vmid, _ := strconv.Atoi(val.GetString("vmid"))
+	for _, qemu := range data.(internal.JArray) {
+		val := qemu.(internal.JObject)
 		row := &QEMU{
 			provider: s,
 
-			VMID:   vmid,
-			Name:   val.GetString("name"),
-			Status: val.GetString("status"),
+			VMID:   internal.AsJInt(val, "vmid"),
+			Name:   internal.JString(val, "name"),
+			Status: internal.JString(val, "status"),
 			QEMUConfig: QEMUConfig{
-				CPU:           val.GetInt("cpus"),
-				MemoryTotal:   val.GetInt("maxmem"),
-				MemoryMinimum: val.GetIntDefault("balloon_min", 0),
+				CPU:           internal.JInt(val, "cpus"),
+				MemoryTotal:   internal.JInt(val, "maxmem"),
+				MemoryMinimum: internal.JIntDefault(val, "balloon_min", 0),
 			},
 		}
 
@@ -104,24 +103,24 @@ func (s *QEMUService) Get(vmid int) (*QEMU, error) {
 		return nil, err
 	}
 
-	valConfig := internal.NewJObject(dataConfig)
-	valStatus := internal.NewJObject(dataStatus)
+	valConfig := dataConfig.(internal.JObject)
+	valStatus := dataStatus.(internal.JObject)
 
 	res := &QEMU{
 		provider: s,
 
-		VMID:   vmid,
-		Name:   valStatus.GetString("name"),
-		Status: valStatus.GetString("status"),
+		VMID:   internal.AsJInt(valStatus, "vmid"),
+		Name:   internal.JString(valStatus, "name"),
+		Status: internal.JString(valStatus, "status"),
 		QEMUConfig: QEMUConfig{
-			OSType:        valConfig.GetString("ostype"),
-			CPUSockets:    valConfig.GetInt("sockets"),
-			CPUCores:      valConfig.GetInt("cores"),
-			CPULimit:      valConfig.GetIntDefault("cpulimit", QEMUDefaultCPULimit),
-			CPUUnits:      valConfig.GetIntDefault("cpuunits", QEMUDefaultCPUUnits),
-			MemoryTotal:   valConfig.GetInt("memory"),
-			MemoryMinimum: valConfig.GetInt("balloon"),
-			IsNUMAAware:   valConfig.GetBool("numa"),
+			OSType:        internal.JString(valConfig, "ostype"),
+			CPUSockets:    internal.JInt(valConfig, "sockets"),
+			CPUCores:      internal.JInt(valConfig, "cores"),
+			CPULimit:      internal.JIntDefault(valConfig, "cpulimit", QEMUDefaultCPULimit),
+			CPUUnits:      internal.JIntDefault(valConfig, "cpuunits", QEMUDefaultCPUUnits),
+			MemoryTotal:   internal.JInt(valConfig, "memory"),
+			MemoryMinimum: internal.JInt(valConfig, "balloon"),
+			IsNUMAAware:   internal.JBoolean(valConfig, "numa"),
 		},
 	}
 

@@ -11,58 +11,66 @@ type LXC struct {
 }
 
 type LXCConfig struct {
-	Architecture   string             `n:"arch"`
-	OSType         string             `n:"ostype"`
-	CPU            int                `n:"cores"`
-	CPULimit       int                `n:"cpulimit"`
-	CPUUnits       int                `n:"cpuunits"`
-	MemoryTotal    int                `n:"memory"`
-	MemorySwap     int                `n:"swap"`
-	RootMountPoint LXCMountPoint      `n:"rootfs"`
-	MountPoints    []LXCMountPoint    `n:"mp"`
-	NetworkDevices []LXCNetworkDevice `n:"net"`
-	StartOnBoot    bool               `n:"onboot"`
-	TTYCount       int                `n:"tty"`
-	HasConsole     bool               `n:"console"`
-	ConsoleMode    string             `n:"cmode"`
-	IsProtected    bool               `n:"protection"`
-	IsTemplate     bool               `n:"template"`
-	IsUnprivileged bool               `n:"unprivileged"`
+	Architecture   string               `n:"arch"`
+	OSType         string               `n:"ostype"`
+	CPU            int                  `n:"cores"`
+	CPULimit       int                  `n:"cpulimit"`
+	CPUUnits       int                  `n:"cpuunits"`
+	MemoryTotal    int                  `n:"memory"`
+	MemorySwap     int                  `n:"swap"`
+	RootMountPoint LXCMountPoint        `n:"rootfs"`
+	MountPoints    LXCMountPointDict    `n:"mp"`
+	NetworkDevices LXCNetworkDeviceDict `n:"net"`
+	StartOnBoot    bool                 `n:"onboot"`
+	TTYCount       int                  `n:"tty"`
+	HasConsole     bool                 `n:"console"`
+	ConsoleMode    string               `n:"cmode"`
+	IsProtected    bool                 `n:"protection"`
+	IsTemplate     bool                 `n:"template"`
+	IsUnprivileged bool                 `n:"unprivileged"`
 }
 
-type LXCList []*LXC
+type LXCList = []*LXC
 
 type LXCMountPoint struct {
-	Volume         string `n:"volume"`
-	MountPoint     string `n:"mp"`
+	Volume         string `n:",volume"`
+	MountPoint     string `n:"mp" d:"/"`
 	Size           string `n:"size"`
-	HasACL         bool   `n:"acl"`
-	HasBackup      bool   `n:"backup"`
-	HasQuota       bool   `n:"quota"`
-	HasReplication bool   `n:"replicate"`
-	IsReadOnly     bool   `n:"ro"`
-	IsShared       bool   `n:"shared"`
+	HasACL         bool   `n:"acl" d:"false"`
+	HasBackup      bool   `n:"backup" d:"false"`
+	HasQuota       bool   `n:"quota" d:"false"`
+	HasReplication bool   `n:"replicate" d:"true"`
+	IsReadOnly     bool   `n:"ro" d:"false"`
+	IsShared       bool   `n:"shared" d:"false"`
 }
+
+type LXCMountPointDict = map[int]*LXCMountPoint
 
 type LXCNetworkDevice struct {
-	Name        string `n:"name"`
-	Bridge      string `n:"bridge"`
-	Firewall    bool   `n:"firewall"`
-	Gateway     string `n:"gw"`
-	GatewayIPv6 string `n:"gw6"`
-	MACAddress  string `n:"hwaddr"`
-	IPAddress   string `n:"ip"`
-	IPv6Address string `n:"ip6"`
-	MTU         int    `n:"mtu"`
-	Rate        string `n:"rate"`
-	VLANTag     int    `n:"tag"`
-	Trunks      string `n:"trunks"`
 	Type        string `n:"type"`
+	Name        string `n:",name"`
+	MACAddress  string `n:"hwaddr"`
+	Bridge      string `n:"bridge"`
+	IPAddress   string `n:"ip"`
+	Gateway     string `n:"gw"`
+	IPv6Address string `n:"ip6"`
+	GatewayIPv6 string `n:"gw6"`
+	HasFirewall bool   `n:"firewall"`
+	MTU         int    `n:"mtu"`
+	Rate        int    `n:"rate"`
+	VLANTag     int    `n:"tag"`
+	Trunks      []int  `n:"trunks"`
 }
 
+type LXCNetworkDeviceDict = map[int]*LXCNetworkDevice
+
 const (
-	LXCDefaultCPULimit = 0
-	LXCDefaultCPUUnits = 1000
+	LXCDefaultCPULimit      = 0
+	LXCDefaultCPUUnits      = 1000
+	LXCMinimumMountPoint    = 0
+	LXCMaximumMountPoint    = 9
+	LXCMinimumNetworkDevice = 0
+	LXCMaximumNetworkDevice = 9
 )
 
 // LXC Architectures
