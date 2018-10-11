@@ -18,10 +18,10 @@ type QEMU struct {
 type QEMUList = []*QEMU
 
 type QEMUConfig struct {
-	Architecture     QEMUCpuType           `n:"cpu"`
+	Architecture     QEMUArchitecture      `n:"cpu"`
 	OSType           string                `n:"ostype"`
 	CPU              int                   `i:"always"`
-	CPUSockets       int                   `i:"always"`
+	CPUSockets       int                   `n:"sockets"`
 	CPUCores         int                   `n:"cores"`
 	CPULimit         float64               `n:"cpulimit"`
 	CPUUnits         int                   `n:"cpuunits"`
@@ -33,10 +33,11 @@ type QEMUConfig struct {
 	SCSIVolumes      QEMUVolumeDeviceDict  `n:"scsi"`
 	VIRTIOVolumes    QEMUVolumeDeviceDict  `n:"virtio"`
 	NetworkDevices   QEMUNetworkDeviceDict `n:"net"`
+	HasQEMUAgent     bool                  `n:"agent"`
 	IsNUMAAware      bool                  `n:"numa"`
 }
 
-type QEMUCpuType struct {
+type QEMUArchitecture struct {
 	Type   string   `n:",cputype"`
 	Flags  []string `n:"flags"`
 	Hidden bool     `n:"hidden"`
@@ -72,6 +73,7 @@ type QEMUCloudInitConfig struct {
 }
 
 const (
+	QEMUDefaultArchitecture = "kvm64"
 	QEMUDefaultCPULimit      = 0.0
 	QEMUDefaultCPUUnits      = 1024
 	QEMUMinimumIDEDevice     = 0
@@ -109,13 +111,13 @@ const (
 	OpenIndiania  = "solaris"
 )
 
-
 var QEMUVolumeTypes = []string{"cloop", "cow", "qcow", "qcow2", "qed", "raw", "vmdk"}
+
 func qemuVolumeTypeHelper(meta internal.StructMetaDict) {
 	if !meta["format"].IsSet {
 		volume := meta["file"].Get().(string)
 		for _, v := range QEMUVolumeTypes {
-			if strings.HasSuffix(volume, "." + v) {
+			if strings.HasSuffix(volume, "."+v) {
 				meta["format"].Set(v)
 				return
 			}

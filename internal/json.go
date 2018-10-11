@@ -53,13 +53,25 @@ func JFloatDefault(obj JObject, k string, v float64) float64 {
 }
 
 func JBoolean(obj JObject, k string) bool {
-	return obj[k].(float64) == 1
+	switch obj[k].(type) {
+	case string:
+		return obj[k].(string) == "1"
+	case float64:
+		return obj[k].(float64) == 1
+	}
+	return false
 }
 
 func JBooleanDefault(obj JObject, k string, v bool) bool {
 	val, ok := obj[k]
 	if ok {
-		return val.(float64) == 1
+		switch val.(type) {
+		case string:
+			return val.(string) == "1"
+		case float64:
+			return val.(float64) == 1
+		}
+		return false
 	} else {
 		return v
 	}

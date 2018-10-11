@@ -119,7 +119,8 @@ func (s *QEMUService) Get(vmid int) (*QEMU, error) {
 			CPULimit:      internal.JFloatDefault(valConfig, "cpulimit", QEMUDefaultCPULimit),
 			CPUUnits:      internal.JIntDefault(valConfig, "cpuunits", QEMUDefaultCPUUnits),
 			MemoryTotal:   internal.JInt(valConfig, "memory"),
-			MemoryMinimum: internal.JInt(valConfig, "balloon"),
+			MemoryMinimum: internal.JIntDefault(valConfig, "balloon", 0),
+			HasQEMUAgent:  internal.JBooleanDefault(valConfig, "agent", false),
 			IsNUMAAware:   internal.JBoolean(valConfig, "numa"),
 		},
 	}
@@ -131,6 +132,9 @@ func (s *QEMUService) Get(vmid int) (*QEMU, error) {
 	} else {
 		res.MemoryBallooning = true
 	}
+
+	architecture := internal.JStringDefault(valConfig, "cpu", QEMUDefaultArchitecture)
+	internal.KVToStruct(architecture, &res.QEMUConfig.Architecture)
 
 	res.QEMUConfig.IDEVolumes = make(QEMUVolumeDeviceDict)
 	for i := QEMUMinimumIDEDevice; i <= QEMUMaximumIDEDevice; i++ {
