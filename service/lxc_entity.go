@@ -3,10 +3,10 @@ package service
 type LXC struct {
 	provider LXCServiceProvider
 
-	VMID        int
-	Name        string
-	Description string
-	Status      string
+	VMID        int    `n:"vmid"`
+	Name        string `n:"name"`
+	Description string `n:"description"`
+	Status      string `n:"status"`
 	LXCConfig
 }
 
@@ -16,13 +16,13 @@ type LXCConfig struct {
 	Architecture   string               `n:"arch"`
 	OSType         string               `n:"ostype"`
 	CPU            int                  `n:"cores"`
-	CPULimit       float64              `n:"cpulimit"`
-	CPUUnits       int                  `n:"cpuunits"`
+	CPULimit       float64              `n:"cpulimit" d:"0.0"`
+	CPUUnits       int                  `n:"cpuunits" d:"1024"`
 	MemoryTotal    int                  `n:"memory"`
 	MemorySwap     int                  `n:"swap"`
-	RootMountPoint LXCMountPoint        `n:"rootfs"`
-	MountPoints    LXCMountPointDict    `n:"mp"`
-	NetworkDevices LXCNetworkDeviceDict `n:"net"`
+	RootMountPoint LXCMountPoint        `n:"rootfs" t:"kv"`
+	MountPoints    LXCMountPointDict    `n:"mp" t:"kvdict" min:"0" max:"9"`
+	NetworkDevices LXCNetworkDeviceDict `n:"net" t:"kvdict" min:"0" max:"9"`
 	StartOnBoot    bool                 `n:"onboot"`
 	TTYCount       int                  `n:"tty"`
 	HasConsole     bool                 `n:"console"`
@@ -58,20 +58,11 @@ type LXCNetworkDevice struct {
 	MTU         int    `n:"mtu"`
 	Rate        int    `n:"rate"`
 	VLANTag     int    `n:"tag"`
-	Trunks      []int  `n:"trunks"`
+	Trunks      []int  `n:"trunks" d:"" s:";"`
 	HasFirewall bool   `n:"firewall"`
 }
 
 type LXCNetworkDeviceDict = map[int]*LXCNetworkDevice
-
-const (
-	LXCDefaultCPULimit      = 0.0
-	LXCDefaultCPUUnits      = 1024
-	LXCMinimumMountPoint    = 0
-	LXCMaximumMountPoint    = 9
-	LXCMinimumNetworkDevice = 0
-	LXCMaximumNetworkDevice = 9
-)
 
 // LXC Architectures
 const (

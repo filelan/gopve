@@ -93,93 +93,23 @@ func (s *QEMUService) List() (*QEMUList, error) {
 }
 
 func (s *QEMUService) Get(vmid int) (*QEMU, error) {
-	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/config")
-	if err != nil {
-		return nil, err
-	}
-
 	dataStatus, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/status/current")
 	if err != nil {
 		return nil, err
 	}
 
-	valConfig := dataConfig.(internal.JObject)
-	valStatus := dataStatus.(internal.JObject)
-
-	res := &QEMU{
-		provider: s,
-
-		VMID:   internal.AsJInt(valStatus, "vmid"),
-		Name:   internal.JString(valStatus, "name"),
-		Status: internal.JString(valStatus, "status"),
-		QEMUConfig: QEMUConfig{
-			OSType:        internal.JString(valConfig, "ostype"),
-			CPUSockets:    internal.JInt(valConfig, "sockets"),
-			CPUCores:      internal.JInt(valConfig, "cores"),
-			CPULimit:      internal.JFloatDefault(valConfig, "cpulimit", QEMUDefaultCPULimit),
-			CPUUnits:      internal.JIntDefault(valConfig, "cpuunits", QEMUDefaultCPUUnits),
-			MemoryTotal:   internal.JInt(valConfig, "memory"),
-			MemoryMinimum: internal.JIntDefault(valConfig, "balloon", 0),
-			HasQEMUAgent:  internal.JBooleanDefault(valConfig, "agent", false),
-			IsNUMAAware:   internal.JBoolean(valConfig, "numa"),
-		},
+	dataConfig, err := s.client.Get("nodes/" + s.node.Node + "/qemu/" + strconv.Itoa(vmid) + "/config")
+	if err != nil {
+		return nil, err
 	}
 
-	res.CPU = res.CPUSockets * res.CPUCores
-	if res.MemoryMinimum == 0 {
-		res.MemoryMinimum = res.MemoryTotal
-		res.MemoryBallooning = false
-	} else {
-		res.MemoryBallooning = true
-	}
+	status := dataStatus.(internal.JObject)
+	config := dataConfig.(internal.JObject)
 
-	architecture := internal.JStringDefault(valConfig, "cpu", QEMUDefaultArchitecture)
-	internal.KVToStruct(architecture, &res.QEMUConfig.Architecture)
-
-	res.QEMUConfig.IDEVolumes = make(QEMUVolumeDeviceDict)
-	for i := QEMUMinimumIDEDevice; i <= QEMUMaximumIDEDevice; i++ {
-		mountPoint := internal.JStringDefault(valConfig, "ide" + strconv.Itoa(i), "")
-		if mountPoint != "" {
-			res.QEMUConfig.IDEVolumes[i] = &QEMUVolumeDevice{}
-			internal.KVToStruct(mountPoint, res.QEMUConfig.IDEVolumes[i], qemuVolumeTypeHelper)
-		}
-	}
-
-	res.QEMUConfig.SATAVolumes = make(QEMUVolumeDeviceDict)
-	for i := QEMUMinimumSATADevice; i <= QEMUMaximumSATADevice; i++ {
-		mountPoint := internal.JStringDefault(valConfig, "sata" + strconv.Itoa(i), "")
-		if mountPoint != "" {
-			res.QEMUConfig.SATAVolumes[i] = &QEMUVolumeDevice{}
-			internal.KVToStruct(mountPoint, res.QEMUConfig.SATAVolumes[i], qemuVolumeTypeHelper)
-		}
-	}
-
-	res.QEMUConfig.SCSIVolumes = make(QEMUVolumeDeviceDict)
-	for i := QEMUMinimumSCSIDevice; i <= QEMUMaximumSCSIDevice; i++ {
-		mountPoint := internal.JStringDefault(valConfig, "scsi" + strconv.Itoa(i), "")
-		if mountPoint != "" {
-			res.QEMUConfig.SCSIVolumes[i] = &QEMUVolumeDevice{}
-			internal.KVToStruct(mountPoint, res.QEMUConfig.SCSIVolumes[i], qemuVolumeTypeHelper)
-		}
-	}
-
-	res.QEMUConfig.VIRTIOVolumes = make(QEMUVolumeDeviceDict)
-	for i := QEMUMinimumVIRTIODevice; i <= QEMUMaximumVIRTIODevice; i++ {
-		mountPoint := internal.JStringDefault(valConfig, "virtio" + strconv.Itoa(i), "")
-		if mountPoint != "" {
-			res.QEMUConfig.VIRTIOVolumes[i] = &QEMUVolumeDevice{}
-			internal.KVToStruct(mountPoint, res.QEMUConfig.VIRTIOVolumes[i], qemuVolumeTypeHelper)
-		}
-	}
-
-	res.QEMUConfig.NetworkDevices = make(QEMUNetworkDeviceDict)
-	for i := QEMUMinimumNetworkDevice; i <= QEMUMaximumNetworkDevice; i++ {
-		networkDevice := internal.JStringDefault(valConfig, "net" + strconv.Itoa(i), "")
-		if networkDevice != "" {
-			res.QEMUConfig.NetworkDevices[i] = &QEMUNetworkDevice{}
-			internal.KVToStruct(networkDevice, res.QEMUConfig.NetworkDevices[i])
-		}
-	}
+	res := &QEMU{provider: s}
+	internal.JSONToStruct(status, res)
+	internal.JSONToStruct(config, res)
+	internal.JSONToStruct(config, &res.QEMUConfig)
 
 	return res, nil
 }

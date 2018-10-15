@@ -1,6 +1,9 @@
 package internal
 
-import "strconv"
+import (
+	"reflect"
+	"strconv"
+)
 
 type JObject = map[string]interface{}
 type JArray = []interface{}
@@ -74,5 +77,66 @@ func JBooleanDefault(obj JObject, k string, v bool) bool {
 		return false
 	} else {
 		return v
+	}
+}
+
+func JSONToStruct(json JObject, s interface{}) {
+	meta, ignore := GetStructMeta(s)
+
+	for name, field := range meta {
+		if field.FieldType == "dict" {
+			field.Set(reflect.MakeMap(field.Type()).Interface())
+			for i := field.MapMinimum; i <= field.MapMaximum; i++ {
+				ai := strconv.Itoa(i)
+				v, ok := json[name+ai]
+				if ok {
+					value := InterfaceToMetaValue(v, field, field.Type().Elem())
+					field.Field.SetMapIndex(reflect.ValueOf(i), reflect.ValueOf(value))
+				}
+			}
+		} else if field.FieldType == "kvdict" {
+			field.Set(reflect.MakeMap(field.Type()).Interface())
+			for i := field.MapMinimum; i <= field.MapMaximum; i++ {
+				ai := strconv.Itoa(i)
+				v, ok := json[name+ai]
+				if ok {
+					idx := reflect.New(field.Type().Elem().Elem())
+					field.Field.SetMapIndex(reflect.ValueOf(i), idx)
+					KVToStruct(v.(string), idx.Interface())
+				}
+			}
+		} else if field.FieldType == "kv" {
+			v, ok := json[name]
+			if ok {
+				KVToStruct(v.(string), field.GetPtr())
+			}
+		} else {
+			v, ok := json[name]
+			if !ok {
+				v = field.DefaultValue
+			}
+
+			if ok || field.HasDefault {
+				if field.HasHelper {
+					value := field.FieldHelper.Call([]reflect.Value{reflect.ValueOf(v)})
+					field.Set(value[0].Interface())
+				} else {
+					value := InterfaceToMetaValue(v, field, field.Type())
+					field.Set(value)
+				}
+			}
+		}
+	}
+
+	for _, field := range ignore {
+		if field.HasHelper {
+			value := field.FieldHelper.Call(nil)
+			field.Set(value[0].Interface())
+		}
+	}
+
+	m := reflect.ValueOf(s).MethodByName("UnmarshalHelper")
+	if m.IsValid() {
+		m.Call(nil)
 	}
 }

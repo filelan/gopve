@@ -96,47 +96,13 @@ func (s *LXCService) Get(vmid int) (*LXC, error) {
 		return nil, err
 	}
 
-	valStatus := dataStatus.(internal.JObject)
-	valConfig := dataConfig.(internal.JObject)
+	status := dataStatus.(internal.JObject)
+	config := dataConfig.(internal.JObject)
 
-	res := &LXC{
-		provider: s,
-
-		VMID:        internal.AsJInt(valStatus, "vmid"),
-		Name:        internal.JString(valStatus, "name"),
-		Description: internal.JString(valConfig, "description"),
-		Status:      internal.JString(valStatus, "status"),
-		LXCConfig: LXCConfig{
-			Architecture: internal.JString(valConfig, "arch"),
-			OSType:       internal.JString(valConfig, "ostype"),
-			CPU:          internal.JInt(valConfig, "cores"),
-			CPULimit:     internal.JFloatDefault(valConfig, "cpulimit", LXCDefaultCPULimit),
-			CPUUnits:     internal.JIntDefault(valConfig, "cpuunits", LXCDefaultCPUUnits),
-			MemoryTotal:  internal.JInt(valConfig, "memory"),
-			MemorySwap:   internal.JInt(valConfig, "swap"),
-		},
-	}
-
-	rootMountPoint := internal.JString(valConfig, "rootfs")
-	internal.KVToStruct(rootMountPoint, &res.LXCConfig.RootMountPoint)
-
-	res.LXCConfig.MountPoints = make(LXCMountPointDict)
-	for i := LXCMinimumMountPoint; i <= LXCMaximumMountPoint; i++ {
-		mountPoint := internal.JStringDefault(valConfig, "mp" + strconv.Itoa(i), "")
-		if mountPoint != "" {
-			res.LXCConfig.MountPoints[i] = &LXCMountPoint{}
-			internal.KVToStruct(mountPoint, res.LXCConfig.MountPoints[i])
-		}
-	}
-
-	res.LXCConfig.NetworkDevices = make(LXCNetworkDeviceDict)
-	for i := LXCMinimumNetworkDevice; i <= LXCMaximumNetworkDevice; i++ {
-		networkDevice := internal.JStringDefault(valConfig, "net" + strconv.Itoa(i), "")
-		if networkDevice != "" {
-			res.LXCConfig.NetworkDevices[i] = &LXCNetworkDevice{}
-			internal.KVToStruct(networkDevice, res.LXCConfig.NetworkDevices[i])
-		}
-	}
+	res := &LXC{provider: s}
+	internal.JSONToStruct(status, res)
+	internal.JSONToStruct(config, res)
+	internal.JSONToStruct(config, &res.LXCConfig)
 
 	return res, nil
 }
