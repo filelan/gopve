@@ -66,19 +66,8 @@ func (s *LXCService) List() (*LXCList, error) {
 	var res LXCList
 	for _, lxc := range data.(internal.JArray) {
 		val := lxc.(internal.JObject)
-		row := &LXC{
-			provider: s,
-
-			VMID:   internal.AsJInt(val, "vmid"),
-			Name:   internal.JString(val, "name"),
-			Status: internal.JString(val, "status"),
-			LXCConfig: LXCConfig{
-				CPU:         internal.JInt(val, "cpus"),
-				MemoryTotal: internal.JInt(val, "maxmem"),
-				MemorySwap:  internal.JInt(val, "maxswap"),
-			},
-		}
-
+		row := &LXC{provider: s}
+		internal.JSONToStruct(val, row)
 		res = append(res, row)
 	}
 
@@ -147,7 +136,7 @@ func (s *LXCService) Clone(vmid int, opts *VMCreateOptions) (*Task, error) {
 		return nil, err
 	}
 
-	return &Task{provider: s.node.Task, upid: task.(string)}, nil
+	return s.node.Task.Get(task.(string))
 }
 
 func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
@@ -162,5 +151,5 @@ func (s *LXCService) Delete(vmid int) (*Task, error) {
 		return nil, err
 	}
 
-	return &Task{provider: s.node.Task, upid: task.(string)}, nil
+	return s.node.Task.Get(task.(string))
 }

@@ -56,11 +56,8 @@ func (s *TaskService) List() (*TaskList, error) {
 	var res TaskList
 	for _, task := range data.(internal.JArray) {
 		val := task.(internal.JObject)
-		row := &Task{
-			provider: s,
-			upid:     internal.JString(val, "upid"),
-		}
-
+		row := &Task{provider: s}
+		internal.JSONToStruct(val, row)
 		res = append(res, row)
 	}
 
@@ -76,13 +73,10 @@ func (s *TaskService) Get(upid string) (*Task, error) {
 	val := data.(internal.JObject)
 	res := &Task{
 		provider:   s,
-		filled:     true,
-		upid:       upid,
-		taskType:   internal.JString(val, "type"),
-		status:     internal.JString(val, "status"),
-		exitStatus: internal.JStringDefault(val, "exitstatus", ""),
+		UPID:       upid,
 	}
 
+	internal.JSONToStruct(val, res)
 	return res, nil
 }
 
@@ -98,7 +92,7 @@ func (s *TaskService) Wait(upid string) error {
 			}
 
 			val := data.(internal.JObject)
-			if internal.JString(val, "status") == "stopped" {
+			if val["status"].(string) == "stopped" {
 				ch <- nil
 				return
 			}

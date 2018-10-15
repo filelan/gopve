@@ -66,26 +66,8 @@ func (s *QEMUService) List() (*QEMUList, error) {
 	var res QEMUList
 	for _, qemu := range data.(internal.JArray) {
 		val := qemu.(internal.JObject)
-		row := &QEMU{
-			provider: s,
-
-			VMID:   internal.AsJInt(val, "vmid"),
-			Name:   internal.JString(val, "name"),
-			Status: internal.JString(val, "status"),
-			QEMUConfig: QEMUConfig{
-				CPU:           internal.JInt(val, "cpus"),
-				MemoryTotal:   internal.JInt(val, "maxmem"),
-				MemoryMinimum: internal.JIntDefault(val, "balloon_min", 0),
-			},
-		}
-
-		if row.MemoryMinimum == 0 {
-			row.MemoryMinimum = row.MemoryTotal
-			row.MemoryBallooning = false
-		} else {
-			row.MemoryBallooning = true
-		}
-
+		row := &QEMU{provider: s}
+		internal.JSONToStruct(val, row)
 		res = append(res, row)
 	}
 
@@ -154,7 +136,7 @@ func (s *QEMUService) Clone(vmid int, opts *VMCreateOptions) (*Task, error) {
 		return nil, err
 	}
 
-	return &Task{provider: s.node.Task, upid: task.(string)}, nil
+	return s.node.Task.Get(task.(string))
 }
 
 func (s *QEMUService) Update(vmid int, cfg *QEMUConfig) error {
@@ -174,5 +156,5 @@ func (s *QEMUService) Delete(vmid int) (*Task, error) {
 		return nil, err
 	}
 
-	return &Task{provider: s.node.Task, upid: task.(string)}, nil
+	return s.node.Task.Get(task.(string))
 }

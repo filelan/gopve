@@ -1,8 +1,6 @@
 package service
 
 import (
-	"strings"
-
 	"github.com/xabinapal/gopve/internal"
 )
 
@@ -29,12 +27,8 @@ func (s *StorageService) List() (*StorageList, error) {
 	var res StorageList
 	for _, storage := range data.(internal.JArray) {
 		val := storage.(internal.JObject)
-		row := &Storage{
-			Storage: internal.JString(val, "storage"),
-			Type:    internal.JString(val, "type"),
-			Content: strings.Split(internal.JString(val, "content"), ","),
-		}
-
+		row := &Storage{}
+		internal.JSONToStruct(val, row)
 		res = append(res, row)
 	}
 
@@ -48,11 +42,8 @@ func (s *StorageService) Get(storage string) (*Storage, error) {
 	}
 
 	val := data.(internal.JObject)
-	res := Storage{
-		Storage: internal.JString(val, "storage"),
-		Type:    internal.JString(val, "type"),
-		Content: strings.Split(internal.JString(val, "content"), ","),
-	}
+	res := &Storage{}
 
-	return &res, nil
+	internal.JSONToStruct(val, res)
+	return res, nil
 }

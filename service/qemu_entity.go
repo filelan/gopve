@@ -35,11 +35,12 @@ type QEMUConfig struct {
 	VIRTIOVolumes    QEMUVolumeDeviceDict  `n:"virtio" t:"kvdict" min:"0" max:"15"`
 	NetworkDevices   QEMUNetworkDeviceDict `n:"net" t:"kvdict" min:"0" max:"9"`
 	SerialDevices    map[int]string        `n:"serial" t:"dict" min:"0" max:"3"`
-	BiosType         string                `n:"bios"`
-	StartOnBoot      bool                  `n:"onboot"`
+	BiosType         string                `n:"bios" d:"seabios"`
+	StartOnBoot      bool                  `n:"onboot" d:"0"`
+	RestartOnCrash   bool                  `n:"autostart" d:"0"`
 	BootOrder        []string              `n:"boot" d:"cdn" h:"true"`
 	BootDisk         string                `n:"bootdisk"`
-	HotPlug          []string              `n:"hotplug" d:"disk,network,usb" s:","`
+	HotPlug          []string              `n:"hotplug" d:"network,disk,usb" s:","`
 	HasAutoStart     bool                  `n:"autostart"`
 	HasQEMUAgent     bool                  `n:"agent"`
 	IsACPIEnabled    bool                  `n:"acpi"`

@@ -38,20 +38,8 @@ func (s *NodeService) List() (*NodeList, error) {
 	var res NodeList
 	for _, node := range data.(internal.JArray) {
 		val := node.(internal.JObject)
-		row := &Node{
-			provider: s,
-
-			Node:          internal.JString(val, "node"),
-			Status:        internal.JString(val, "status"),
-			Uptime:        internal.JInt(val, "uptime"),
-			CPUTotal:      internal.JInt(val, "maxcpu"),
-			CPUPercentage: internal.JFloat(val, "cpu"),
-			MemTotal:      internal.JInt(val, "maxmem"),
-			MemUsed:       internal.JInt(val, "mem"),
-			DiskTotal:     internal.JInt(val, "maxdisk"),
-			DiskUsed:      internal.JInt(val, "disk"),
-		}
-
+		row := &Node{provider: s}
+		internal.JSONToStruct(val, row)
 		row.QEMU = s.qemuFactory.Create(row)
 		row.LXC = s.lxcFactory.Create(row)
 		row.Task = s.taskFactory.Create(row)
@@ -68,26 +56,12 @@ func (s *NodeService) Get(node string) (*Node, error) {
 	}
 
 	val := data.(internal.JObject)
-	cpu := val["cpuinfo"].(internal.JObject)
-	mem := val["memory"].(internal.JObject)
-	disk := val["rootfs"].(internal.JObject)
 
-	res := &Node{
-		provider: s,
-
-		Node:          node,
-		Status:        "",
-		Uptime:        internal.JInt(val, "uptime"),
-		CPUTotal:      internal.JInt(cpu, "cpus"),
-		CPUPercentage: internal.JFloat(val, "cpu"),
-		MemTotal:      internal.JInt(mem, "total"),
-		MemUsed:       internal.JInt(mem, "used"),
-		DiskTotal:     internal.JInt(disk, "total"),
-		DiskUsed:      internal.JInt(disk, "used"),
-	}
-
+	res := &Node{ provider: s, Node: node}
+	internal.JSONToStruct(val, res)
 	res.QEMU = s.qemuFactory.Create(res)
 	res.LXC = s.lxcFactory.Create(res)
+	res.Task = s.taskFactory.Create(res)
 	return res, nil
 }
 
