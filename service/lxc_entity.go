@@ -3,17 +3,16 @@ package service
 type LXC struct {
 	provider LXCServiceProvider
 
-	VMID        int    `n:"vmid"`
-	Name        string `n:"name"`
-	Description string `n:"description"`
-	Status      string `n:"status"`
+	VMID         int    `n:"vmid"`
+	Name         string `n:"name"`
+	Description  string `n:"description"`
+	Status       string `n:"status"`
+	ConfigDigest string `n:"digest"`
 	LXCConfig
 }
 
-type LXCList = []*LXC
-
 type LXCConfig struct {
-	Architecture   string               `n:"arch"`
+	Architecture   string               `n:"arch" d:"amd64"`
 	OSType         string               `n:"ostype"`
 	CPU            int                  `n:"cores"`
 	CPULimit       float64              `n:"cpulimit" d:"0.0"`
@@ -23,13 +22,16 @@ type LXCConfig struct {
 	RootMountPoint LXCMountPoint        `n:"rootfs" t:"kv"`
 	MountPoints    LXCMountPointDict    `n:"mp" t:"kvdict" min:"0" max:"9"`
 	NetworkDevices LXCNetworkDeviceDict `n:"net" t:"kvdict" min:"0" max:"9"`
-	StartOnBoot    bool                 `n:"onboot"`
-	TTYCount       int                  `n:"tty"`
-	HasConsole     bool                 `n:"console"`
-	ConsoleMode    string               `n:"cmode"`
-	IsProtected    bool                 `n:"protection"`
-	IsTemplate     bool                 `n:"template"`
-	IsUnprivileged bool                 `n:"unprivileged"`
+	DNSServers     string               `n:"nameserver"`
+	DNSDomain      string               `n:"searchdomain"`
+	StartOnBoot    bool                 `n:"onboot" d:"0"`
+	LockType       string               `n:"lock"`
+	TTYCount       int                  `n:"tty" d:"2"`
+	HasConsole     bool                 `n:"console" d:"1"`
+	ConsoleMode    string               `n:"cmode" d:"tty"`
+	IsProtected    bool                 `n:"protection" d:"0"`
+	IsTemplate     bool                 `n:"template" d:"0"`
+	IsUnprivileged bool                 `n:"unprivileged" d:"0"`
 }
 
 type LXCMountPoint struct {

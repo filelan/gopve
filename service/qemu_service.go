@@ -8,7 +8,7 @@ import (
 )
 
 type QEMUServiceProvider interface {
-	List() (*QEMUList, error)
+	List() (map[int]string, error)
 	Get(int) (*QEMU, error)
 	Start(int) error
 	Stop(int) error
@@ -57,21 +57,21 @@ func (factory *QEMUServiceFactory) Create(node *Node) QEMUServiceProvider {
 	return provider
 }
 
-func (s *QEMUService) List() (*QEMUList, error) {
+func (s *QEMUService) List() (map[int]string, error) {
 	data, err := s.client.Get("nodes/" + s.node.Node + "/qemu")
 	if err != nil {
 		return nil, err
 	}
 
-	var res QEMUList
+	res := make(map[int]string)
 	for _, qemu := range data.(internal.JArray) {
 		val := qemu.(internal.JObject)
-		row := &QEMU{provider: s}
+		row := &QEMU{}
 		internal.JSONToStruct(val, row)
-		res = append(res, row)
+		res[row.VMID] = row.Name
 	}
 
-	return &res, nil
+	return res, nil
 }
 
 func (s *QEMUService) Get(vmid int) (*QEMU, error) {

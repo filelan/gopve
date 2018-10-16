@@ -8,7 +8,7 @@ import (
 )
 
 type LXCServiceProvider interface {
-	List() (*LXCList, error)
+	List() (map[int]string, error)
 	Get(int) (*LXC, error)
 	Start(int) error
 	Stop(int) error
@@ -57,21 +57,21 @@ func (factory *LXCServiceFactory) Create(node *Node) LXCServiceProvider {
 	return provider
 }
 
-func (s *LXCService) List() (*LXCList, error) {
+func (s *LXCService) List() (map[int]string, error) {
 	data, err := s.client.Get("nodes/" + s.node.Node + "/lxc")
 	if err != nil {
 		return nil, err
 	}
 
-	var res LXCList
+	res := make(map[int]string)
 	for _, lxc := range data.(internal.JArray) {
 		val := lxc.(internal.JObject)
-		row := &LXC{provider: s}
+		row := &LXC{}
 		internal.JSONToStruct(val, row)
-		res = append(res, row)
+		res[row.VMID] = row.Name
 	}
 
-	return &res, nil
+	return res, nil
 }
 
 func (s *LXCService) Get(vmid int) (*LXC, error) {

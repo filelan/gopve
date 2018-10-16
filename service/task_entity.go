@@ -21,9 +21,15 @@ func (e *Task) Update() error {
 	return err
 }
 
-func (e *Task) Wait() {
+func (e *Task) Stop() error {
+	err := e.provider.Stop(e.UPID)
+	return err
+}
+
+func (e *Task) Wait() error {
 	err := e.provider.Wait(e.UPID)
-	if err == nil {
-		e.Update()
+	if err != nil {
+		return err
 	}
+	return e.Update()
 }

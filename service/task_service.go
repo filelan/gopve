@@ -9,6 +9,7 @@ import (
 type TaskServiceProvider interface {
 	List() (*TaskList, error)
 	Get(string) (*Task, error)
+	Stop(string) error
 	Wait(string) error
 }
 
@@ -78,6 +79,11 @@ func (s *TaskService) Get(upid string) (*Task, error) {
 
 	internal.JSONToStruct(val, res)
 	return res, nil
+}
+
+func (s *TaskService) Stop(upid string) error {
+	_, err := s.client.Delete("nodes/" + s.node.Node + "/tasks/" + upid, nil)
+	return err
 }
 
 func (s *TaskService) Wait(upid string) error {
