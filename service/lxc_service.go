@@ -136,7 +136,7 @@ func (s *LXCService) Clone(vmid int, opts *VMCreateOptions) (*Task, error) {
 		return nil, err
 	}
 
-	return s.node.Task.Get(task.(string))
+	return s.node.Task().Get(task.(string))
 }
 
 func (s *LXCService) Update(vmid int, cfg *LXCConfig) error {
@@ -151,5 +151,5 @@ func (s *LXCService) Delete(vmid int) (*Task, error) {
 		return nil, err
 	}
 
-	return s.node.Task.Get(task.(string))
+	return s.node.Task().Get(task.(string))
 }

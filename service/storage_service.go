@@ -5,7 +5,7 @@ import (
 )
 
 type StorageServiceProvider interface {
-	List() (*StorageList, error)
+	List() (StorageList, error)
 	Get(storage string) (*Storage, error)
 }
 
@@ -18,27 +18,27 @@ func NewStorageService(c *internal.Client) *StorageService {
 	return storage
 }
 
-func (s *StorageService) List() (*StorageList, error) {
+func (s *StorageService) List() (StorageList, error) {
 	data, err := s.client.Get("storage")
 	if err != nil {
 		return nil, err
 	}
 
-	var res StorageList
+	res := make(StorageList)
 	for _, storage := range data.(internal.JArray) {
 		val := storage.(internal.JObject)
 		row := &Storage{}
 		internal.JSONToStruct(val, row)
-		res = append(res, row)
+		res[row.Storage] = row
 	}
 
-	return &res, nil
+	return res, nil
 }
 
 func (s *StorageService) Get(storage string) (*Storage, error) {
 	data, err := s.client.Get("storage/" + storage)
 	if err != nil {
-		return nil, err
+		return nil, &StorageError{Storage: storage}
 	}
 
 	val := data.(internal.JObject)

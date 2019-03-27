@@ -136,7 +136,7 @@ func (s *QEMUService) Clone(vmid int, opts *VMCreateOptions) (*Task, error) {
 		return nil, err
 	}
 
-	return s.node.Task.Get(task.(string))
+	return s.node.Task().Get(task.(string))
 }
 
 func (s *QEMUService) Update(vmid int, cfg *QEMUConfig) error {
@@ -156,5 +156,5 @@ func (s *QEMUService) Delete(vmid int) (*Task, error) {
 		return nil, err
 	}
 
-	return s.node.Task.Get(task.(string))
+	return s.node.Task().Get(task.(string))
 }

@@ -1,23 +1,45 @@
 package service
 
+import "fmt"
+
+type NodeError struct {
+	Node string
+}
+
+func (e *NodeError) Error() string {
+	return fmt.Sprintf("Node %s does not exist", e.Node)
+}
+
 type Node struct {
 	provider NodeServiceProvider
-	QEMU     QEMUServiceProvider
-	LXC      LXCServiceProvider
-	Task     TaskServiceProvider
+	qemu     QEMUServiceProvider
+	lxc      LXCServiceProvider
+	task     TaskServiceProvider
 
 	Node          string  `n:"node"`
 	Status        string  `n:"status"`
 	Uptime        int     `n:"uptime"`
-	CPUTotal      int     `n:"maxcpu,cpuinfo.cpus"`
+	CPUTotal      int     `n:"maxcpu"`
 	CPUPercentage float64 `n:"cpu"`
-	MemTotal      int     `n:"maxmem,memory.total"`
-	MemUsed       int     `n:"mem,memory.used"`
-	DiskTotal     int     `n:"maxdisk,rootfs.total"`
-	DiskUsed      int     `n:"disk,rootfs.used"`
+	MemTotal      int     `n:"maxmem"`
+	MemUsed       int     `n:"mem"`
+	DiskTotal     int     `n:"maxdisk"`
+	DiskUsed      int     `n:"disk"`
 }
 
-type NodeList []*Node
+type NodeList map[string]*Node
+
+func (e *Node) QEMU() QEMUServiceProvider {
+	return e.qemu
+}
+
+func (e *Node) LXC() LXCServiceProvider {
+	return e.lxc
+}
+
+func (e *Node) Task() TaskServiceProvider {
+	return e.task
+}
 
 func (e *Node) Reboot() error {
 	return e.provider.Reboot(e.Node)
