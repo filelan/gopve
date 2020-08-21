@@ -7,11 +7,14 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/xabinapal/gopve/internal/pkg/services/node"
 	"github.com/xabinapal/gopve/pkg/types"
 )
 
 type API struct {
 	client *client
+
+	node *node.Service
 }
 
 func New(cfg Config) (*API, error) {
@@ -80,4 +83,12 @@ func (api *API) Version() (*types.Version, error) {
 		return nil, err
 	}
 	return out.ConvertToEntity(), nil
+}
+
+func (api *API) Node() types.NodeService {
+	if api.node == nil {
+		api.node = node.NewService(api, api.client)
+	}
+
+	return api.node
 }
