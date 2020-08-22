@@ -38,6 +38,23 @@ func (obj VirtualMachineStatus) IsValid() error {
 	}
 }
 
+type QEMUImageFormat string
+
+const (
+	ImageRaw   QEMUImageFormat = "raw"
+	ImageQcow2 QEMUImageFormat = "qcow2"
+	ImageVMDK  QEMUImageFormat = "vmdk"
+)
+
+func (obj QEMUImageFormat) IsValid() error {
+	switch obj {
+	case ImageRaw, ImageQcow2, ImageVMDK:
+		return nil
+	default:
+		return fmt.Errorf("invalid virtual machine status")
+	}
+}
+
 type VirtualMachine interface {
 	Node() (Node, error)
 	Category() VirtualMachineCategory
@@ -81,8 +98,9 @@ type VMCloneOptions struct {
 	PoolName     string
 	SnapshotName string
 
-	FullClone      bool
-	BandwidthLimit uint
+	BandwidthLimit    uint
+	TemplateFullClone bool
+	ImageFormat       QEMUImageFormat
 
 	TargetNode    string
 	TargetStorage string
