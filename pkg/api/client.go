@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/xabinapal/gopve/internal/pkg/utils"
 )
 
 type client struct {
@@ -22,25 +24,25 @@ type client struct {
 	mutex sync.Mutex
 }
 
-func (c *client) Request(method string, resource string, form url.Values, out interface{}) error {
+func (c *client) Request(method string, resource string, form utils.RequestValues, out interface{}) error {
 	resourceURL, err := url.Parse(strings.TrimLeft(resource, "/"))
 	if err != nil {
 		return err
 	}
 
-	url := c.url.ResolveReference(resourceURL)
+	absoluteURL := c.url.ResolveReference(resourceURL)
 
 	var enc string
 	if form != nil && len(form) > 0 {
 		if method == http.MethodGet {
-			url.RawQuery = form.Encode()
+			absoluteURL.RawQuery = url.Values(form).Encode()
 		} else {
-			enc = form.Encode()
+			enc = url.Values(form).Encode()
 		}
 	}
 
 	buf := bytes.NewBufferString(enc)
-	req, err := http.NewRequest(method, url.String(), buf)
+	req, err := http.NewRequest(method, absoluteURL.String(), buf)
 	if err != nil {
 		return err
 	}

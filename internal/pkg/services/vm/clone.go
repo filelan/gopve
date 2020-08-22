@@ -3,8 +3,9 @@ package vm
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
+
+	"github.com/xabinapal/gopve/internal/pkg/utils"
 
 	"github.com/xabinapal/gopve/pkg/types"
 )
@@ -22,7 +23,7 @@ func (vm *VirtualMachine) Clone(options types.VMCloneOptions) (types.Task, error
 		vmid = freeVMID
 	}
 
-	values := url.Values{
+	values := utils.RequestValues{
 		"vmid":  {strconv.Itoa(int(vm.vmid))},
 		"newid": {strconv.Itoa(int(vmid))},
 	}

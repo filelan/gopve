@@ -3,7 +3,6 @@ package vm
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"github.com/xabinapal/gopve/internal/pkg/utils"
@@ -51,7 +50,7 @@ func (res getResponseJSON) ConvertToEntity(svc *Service) (types.VirtualMachine, 
 
 func (svc *Service) GetAll() ([]types.VirtualMachine, error) {
 	var res []getResponseJSON
-	if err := svc.Client.Request(http.MethodGet, "cluster/resources", url.Values{
+	if err := svc.Client.Request(http.MethodGet, "cluster/resources", utils.RequestValues{
 		"type": {"vm"},
 	}, &res); err != nil {
 		return nil, err
@@ -72,7 +71,7 @@ func (svc *Service) GetAll() ([]types.VirtualMachine, error) {
 
 func (svc *Service) GetAllByType(category types.VirtualMachineCategory) ([]types.VirtualMachine, error) {
 	var res []getResponseJSON
-	if err := svc.Client.Request(http.MethodGet, "cluster/resources", url.Values{
+	if err := svc.Client.Request(http.MethodGet, "cluster/resources", utils.RequestValues{
 		"type": {"vm"},
 	}, &res); err != nil {
 		return nil, err

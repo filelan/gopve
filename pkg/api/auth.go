@@ -3,7 +3,8 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"net/url"
+
+	"github.com/xabinapal/gopve/internal/pkg/utils"
 )
 
 type ticketResponseJSON struct {
@@ -15,13 +16,11 @@ type ticketResponseJSON struct {
 }
 
 func (api *API) AuthenticateWithCredentials(username string, password string) error {
-	form := url.Values{
+	var res ticketResponseJSON
+	err := api.client.Request(http.MethodPost, "access/ticket", utils.RequestValues{
 		"username": {username},
 		"password": {password},
-	}
-
-	var res ticketResponseJSON
-	err := api.client.Request(http.MethodPost, "access/ticket", form, &res)
+	}, &res)
 	if err != nil {
 		return err
 	}

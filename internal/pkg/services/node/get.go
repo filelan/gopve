@@ -3,7 +3,8 @@ package node
 import (
 	"fmt"
 	"net/http"
-	"net/url"
+
+	"github.com/xabinapal/gopve/internal/pkg/utils"
 
 	"github.com/xabinapal/gopve/pkg/types"
 )
@@ -28,7 +29,7 @@ func (res getResponseJSON) ConvertToEntity(svc *Service) (*Node, error) {
 
 func (svc *Service) GetAll() ([]types.Node, error) {
 	var res []getResponseJSON
-	if err := svc.Client.Request(http.MethodGet, "cluster/resources", url.Values{
+	if err := svc.Client.Request(http.MethodGet, "cluster/resources", utils.RequestValues{
 		"type": {"node"},
 	}, &res); err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func (svc *Service) GetAll() ([]types.Node, error) {
 
 func (svc *Service) Get(name string) (types.Node, error) {
 	var res []getResponseJSON
-	if err := svc.Client.Request(http.MethodGet, "cluster/resources", url.Values{
+	if err := svc.Client.Request(http.MethodGet, "cluster/resources", utils.RequestValues{
 		"type": {"node"},
 	}, &res); err != nil {
 		return nil, err

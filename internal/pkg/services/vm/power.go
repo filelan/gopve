@@ -13,7 +13,7 @@ func postStatus(vm *VirtualMachine, command string) (types.Task, error) {
 	}
 
 	var task string
-	err := vm.svc.Client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/%s/%d/status/%s", vm.node, string(vm.category), vm.VMID, command), nil, &task)
+	err := vm.svc.Client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/%s/%d/status/%s", vm.node, string(vm.category), vm.vmid, command), nil, &task)
 	if err != nil {
 		return nil, err
 	}
