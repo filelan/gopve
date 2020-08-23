@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/xabinapal/gopve/internal/pkg/debug"
 	"github.com/xabinapal/gopve/internal/pkg/utils"
 )
 
@@ -41,6 +42,8 @@ func (c *client) Request(method string, resource string, form utils.RequestValue
 		}
 	}
 
+	debug.Printf("request=%s", absoluteURL.String())
+
 	buf := bytes.NewBufferString(enc)
 	req, err := http.NewRequest(method, absoluteURL.String(), buf)
 	if err != nil {
@@ -71,10 +74,8 @@ func (c *client) Request(method string, resource string, form utils.RequestValue
 		return fmt.Errorf(res.Status)
 	}
 
-	body := res.Body
-
 	if out != nil {
-		decoder := json.NewDecoder(body)
+		decoder := json.NewDecoder(res.Body)
 
 		var raw struct {
 			Data json.RawMessage
@@ -83,6 +84,8 @@ func (c *client) Request(method string, resource string, form utils.RequestValue
 		if err != nil {
 			return err
 		}
+
+		debug.Printf("%s", raw.Data)
 
 		err = json.Unmarshal(raw.Data, &out)
 		if err != nil {
