@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 )
 
 type NodeService interface {
@@ -12,6 +13,16 @@ type NodeService interface {
 type Node interface {
 	Name() string
 	Status() NodeStatus
+
+	Shutdown() error
+	Reboot() error
+	WakeOnLAN() (Task, error)
+
+	GetSyslog(opts NodeGetSyslogOptions) (LogEntries, error)
+
+	GetTime(local bool) (*time.Time, error)
+	GetTimezone() (*time.Location, error)
+	SetTimezone(timezone *time.Location) error
 }
 
 type NodeStatus string
@@ -29,4 +40,14 @@ func (obj NodeStatus) IsValid() error {
 	default:
 		return fmt.Errorf("invalid node status")
 	}
+}
+
+type NodeGetSyslogOptions struct {
+	LineStart uint
+	LineLimit uint
+
+	Since time.Time
+	Until time.Time
+
+	Service string
 }
