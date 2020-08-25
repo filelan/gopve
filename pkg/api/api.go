@@ -7,7 +7,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/xabinapal/gopve/internal/pkg/services/cluster"
 	"github.com/xabinapal/gopve/internal/pkg/services/node"
+	"github.com/xabinapal/gopve/internal/pkg/services/pool"
 	"github.com/xabinapal/gopve/internal/pkg/services/vm"
 	"github.com/xabinapal/gopve/pkg/types"
 )
@@ -15,8 +17,10 @@ import (
 type API struct {
 	client *client
 
-	node *node.Service
-	vm   *vm.Service
+	cluster *cluster.Service
+	node    *node.Service
+	pool    *pool.Service
+	vm      *vm.Service
 }
 
 func New(cfg Config) (*API, error) {
@@ -64,27 +68,12 @@ func New(cfg Config) (*API, error) {
 	}, nil
 }
 
-type getVersionResponseJSON struct {
-	Release string `json:"release"`
-	Version string `json:"version"`
-	RepoID  string `json:"repoid"`
-}
-
-func (res getVersionResponseJSON) ConvertToEntity() *types.Version {
-	return &types.Version{
-		Release: res.Release,
-		Version: res.Version,
-		RepoID:  res.RepoID,
+func (api *API) Cluster() types.ClusterService {
+	if api.cluster == nil {
+		api.cluster = cluster.NewService(api, api.client)
 	}
-}
 
-func (api *API) Version() (*types.Version, error) {
-	var out getVersionResponseJSON
-	err := api.client.Request(http.MethodGet, "/version", nil, &out)
-	if err != nil {
-		return nil, err
-	}
-	return out.ConvertToEntity(), nil
+	return api.cluster
 }
 
 func (api *API) Node() types.NodeService {
@@ -93,6 +82,14 @@ func (api *API) Node() types.NodeService {
 	}
 
 	return api.node
+}
+
+func (api *API) Pool() types.PoolService {
+	if api.pool == nil {
+		api.pool = pool.NewService(api, api.client)
+	}
+
+	return api.pool
 }
 
 func (api *API) VM() types.VMService {

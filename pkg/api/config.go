@@ -12,5 +12,5 @@ type Config struct {
 
 	PoolingInterval int
 	RequestTimeout  int
-	HTTPTransport   *http.Transport
+	HTTPTransport   http.RoundTripper
 }

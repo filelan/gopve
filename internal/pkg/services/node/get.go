@@ -14,7 +14,7 @@ type getResponseJSON struct {
 	Status types.NodeStatus `json:"status"`
 }
 
-func (res getResponseJSON) ConvertToEntity(svc *Service) (*Node, error) {
+func (res getResponseJSON) ConvertToEntity(svc *Service) (types.Node, error) {
 	if err := res.Status.IsValid(); err != nil {
 		return nil, fmt.Errorf("unsupported node status")
 	}
