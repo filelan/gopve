@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -32,6 +31,10 @@ type PVEExecutor struct {
 }
 
 func NewPVEExecutor(base *url.URL, client *http.Client) *PVEExecutor {
+	if client == nil {
+		client = new(http.Client)
+	}
+
 	return &PVEExecutor{
 		mux:    new(sync.Mutex),
 		client: client,
@@ -66,7 +69,7 @@ func (exc *PVEExecutor) Request(method string, path string, form Values) ([]byte
 		body := url.Values(form).Encode()
 
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		req.Header.Add("Content-Length", strconv.Itoa(len(body)))
+		req.ContentLength = int64(len(body))
 
 		buf := bytes.NewBufferString(body)
 		req.Body = ioutil.NopCloser(buf)
@@ -147,13 +150,9 @@ func (exc *PVEExecutor) getAbsoluteURL(path string) (*url.URL, error) {
 }
 
 func (exc *PVEExecutor) unsetAuthenticationTicket() {
-	cookies := exc.client.Jar.Cookies(exc.base)
-	for i, cookie := range cookies {
-		if cookie.Name == "PVEAuthCookie" {
-			cookies = append(cookies[:i], cookies[i+1:]...)
-			exc.client.Jar.SetCookies(exc.base, cookies)
-			break
-		}
+	if exc.client.Jar != nil {
+		authCookie := &http.Cookie{Name: "PVEAuthCookie", MaxAge: -1}
+		exc.client.Jar.SetCookies(exc.base, []*http.Cookie{authCookie})
 	}
 
 	exc.ticket = ""
