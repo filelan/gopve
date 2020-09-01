@@ -118,22 +118,12 @@ func (exc *PVEExecutor) SetAuthenticationTicket(ticket string, method Authentica
 			exc.client.Jar = jar
 		}
 
-		cookies := exc.client.Jar.Cookies(exc.base)
-		for _, cookie := range cookies {
-			if cookie.Name == "PVEAuthCookie" {
-				authCookie = cookie
-				break
-			}
+		authCookie = &http.Cookie{
+			Name:  "PVEAuthCookie",
+			Value: ticket,
 		}
 
-		if authCookie == nil {
-			authCookie = &http.Cookie{Name: "PVEAuthCookie"}
-			cookies = append(cookies, authCookie)
-		}
-
-		authCookie.Value = ticket
-
-		exc.client.Jar.SetCookies(exc.base, cookies)
+		exc.client.Jar.SetCookies(exc.base, []*http.Cookie{authCookie})
 
 	case AuthenticationMethodHeader:
 		exc.ticket = ticket

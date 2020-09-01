@@ -1,9 +1,12 @@
 package request_test
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -16,104 +19,177 @@ func testCreateHTTPServerHelper(t *testing.T, handler http.HandlerFunc) *httptes
 	return httptest.NewServer(handler)
 }
 
-func testCreatePVEExecutor(t *testing.T, srv *httptest.Server) *request.PVEExecutor {
+func testCreatePVEExecutorHelper(t *testing.T, srv *httptest.Server) *request.PVEExecutor {
+	t.Helper()
+
 	url, err := url.Parse(srv.URL)
 	if err != nil {
 		t.Fatalf("Unexpected url.Parse error: %s", err.Error())
 	}
 
+	url.Path = "/api2/json/"
+
 	return request.NewPVEExecutor(url, srv.Client())
 }
 
-func TestExecutorRequestHeaders(t *testing.T) {
-	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
-		transferEncoding := strings.Join(req.TransferEncoding, ", ")
-		if transferEncoding != "" {
-			t.Errorf("Got Transfer-Encoding '%s', expected '<nil>'", transferEncoding)
-		}
+func testMakeExecutorRequestHelper(t *testing.T, exc *request.PVEExecutor, method, path string, form request.Values) {
+	t.Helper()
 
+	if _, err := exc.Request(method, path, form); err != nil {
+		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
+	}
+}
+
+func TestExecutorRequestURLPath(t *testing.T) {
+	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
+		url := req.URL.Path
+		if url != "/api2/json/test" {
+			t.Errorf("Got Resource '%s', expected '/api2/json/test'", url)
+		}
+	})
+	defer srv.Close()
+
+	exc := testCreatePVEExecutorHelper(t, srv)
+
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/test", nil)
+}
+
+func TestExecutorRequestQueryString(t *testing.T) {
+	values := request.Values{
+		"test": {"test"},
+	}
+
+	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
+		form := req.URL.Query()
+
+		data := url.Values(values)
+		if !reflect.DeepEqual(form, data) {
+			t.Errorf("Got QueryString '%s', expected '%s'", form.Encode(), data.Encode())
+		}
+	})
+	defer srv.Close()
+
+	exc := testCreatePVEExecutorHelper(t, srv)
+
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/test", values)
+}
+
+func TestExecutorRequestFormData(t *testing.T) {
+	values := request.Values{
+		"test": {"test"},
+	}
+
+	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
 		if req.ContentLength != 0 {
 			contentType := req.Header.Get("Content-Type")
 			if contentType != "application/x-www-form-urlencoded" {
 				t.Errorf("Got Content-Type '%s', expected 'application/x-www-form-urlencoded'", contentType)
 			}
 		}
-	})
-	defer srv.Close()
 
-	exc := testCreatePVEExecutor(t, srv)
+		transferEncoding := strings.Join(req.TransferEncoding, ", ")
+		if transferEncoding != "" {
+			t.Errorf("Got Transfer-Encoding '%s', expected '<nil>'", transferEncoding)
+		}
 
-	if _, err := exc.Request(http.MethodGet, "/", nil); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
+		form, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("Unexpected ioutil.ReadAll error: %s", err.Error())
+		}
 
-	if _, err := exc.Request(http.MethodPost, "/", nil); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
+		formValues, err := url.ParseQuery(string(form))
+		if err != nil {
+			t.Fatalf("Unexpected url.ParseQuery error: %s", err.Error())
+		}
 
-	if _, err := exc.Request(http.MethodPost, "/", request.Values{
-		"test": {"test"},
-	}); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
-}
-
-func TestExecutorRequestCSRFPrevention(t *testing.T) {
-	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
-		csrfToken := req.Header.Get("CSRFPreventionToken")
-		if csrfToken != "token" {
-			t.Errorf("Got CSRF prevention token '%s', expected 'token'", csrfToken)
+		data := url.Values(values)
+		if !reflect.DeepEqual(formValues, data) {
+			t.Errorf("Got FormData '%s', expected '%s'", formValues.Encode(), data.Encode())
 		}
 	})
 	defer srv.Close()
 
-	exc := testCreatePVEExecutor(t, srv)
-	exc.SetCSRFToken("token")
+	exc := testCreatePVEExecutorHelper(t, srv)
+	testMakeExecutorRequestHelper(t, exc, http.MethodPost, "/test", values)
+}
 
-	if _, err := exc.Request(http.MethodGet, "/", nil); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
+func TestExecutorRequestCSRFPrevention(t *testing.T) {
+	expectedTokenCount := 1
+
+	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
+		csrfToken := req.Header.Get("CSRFPreventionToken")
+
+		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+		expectedTokenCount++
+
+		if csrfToken != expectedToken {
+			t.Errorf("Got CSRF prevention token '%s', expected '%s'", csrfToken, expectedToken)
+		}
+	})
+	defer srv.Close()
+
+	exc := testCreatePVEExecutorHelper(t, srv)
+
+	exc.SetCSRFToken("token1")
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+
+	exc.SetCSRFToken("token2")
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
 }
 
 func TestExecutorRequestCookieAuthentication(t *testing.T) {
+	expectedTokenCount := 1
+
 	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
 		cookieToken, err := req.Cookie("PVEAuthCookie")
 		if err != nil {
 			t.Errorf("No Cookie authentication token found: %s", err.Error())
 		}
-		if cookieToken.Value != "token" {
-			t.Errorf("Got Cookie authentication token '%s', expected 'token'", cookieToken)
+
+		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+		expectedTokenCount++
+
+		if cookieToken.Value != expectedToken {
+			t.Errorf("Got cookie authentication token '%s', expected '%s'", cookieToken, expectedToken)
 		}
 	})
 	defer srv.Close()
 
-	exc := testCreatePVEExecutor(t, srv)
-	exc.SetAuthenticationTicket("token", request.AuthenticationMethodCookie)
+	exc := testCreatePVEExecutorHelper(t, srv)
 
-	if _, err := exc.Request(http.MethodGet, "/", nil); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
+	exc.SetAuthenticationTicket("token1", request.AuthenticationMethodCookie)
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+
+	exc.SetAuthenticationTicket("token2", request.AuthenticationMethodCookie)
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
 }
 
 func TestExecutorRequestHeaderAuthentication(t *testing.T) {
+	expectedTokenCount := 1
+
 	srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
 		headerToken := req.Header.Get("Authorization")
-		if headerToken != "token" {
-			t.Errorf("Got Cookie authentication token '%s', expected token", headerToken)
+
+		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+		expectedTokenCount++
+
+		if headerToken != expectedToken {
+			t.Errorf("Got header authentication token '%s', expected '%s'", headerToken, expectedToken)
 		}
 	})
 	defer srv.Close()
 
-	exc := testCreatePVEExecutor(t, srv)
-	exc.SetAuthenticationTicket("token", request.AuthenticationMethodHeader)
+	exc := testCreatePVEExecutorHelper(t, srv)
 
-	if _, err := exc.Request(http.MethodGet, "/", nil); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
+	exc.SetAuthenticationTicket("token1", request.AuthenticationMethodHeader)
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+
+	exc.SetAuthenticationTicket("token2", request.AuthenticationMethodHeader)
+	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
 }
 
 func TestExecutorRequestMixedAuthentication(t *testing.T) {
-	runnerHelper := func(t *testing.T, fn func(*request.PVEExecutor)) {
+	runnerHelper := func(t *testing.T, setAuthenticationFunction func(*request.PVEExecutor)) {
 		t.Helper()
 
 		srv := testCreateHTTPServerHelper(t, func(res http.ResponseWriter, req *http.Request) {
@@ -131,12 +207,10 @@ func TestExecutorRequestMixedAuthentication(t *testing.T) {
 		})
 		defer srv.Close()
 
-		exc := testCreatePVEExecutor(t, srv)
-		fn(exc)
+		exc := testCreatePVEExecutorHelper(t, srv)
 
-		if _, err := exc.Request(http.MethodGet, "/", nil); err != nil {
-			t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-		}
+		setAuthenticationFunction(exc)
+		testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
 	}
 
 	t.Run("CookieFirst", func(t *testing.T) {
