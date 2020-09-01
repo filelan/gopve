@@ -11,11 +11,13 @@ import (
 	"sync"
 )
 
+//go:generate mockery --case snake --testonly --name Executor
+
 type Executor interface {
 	StartAtomicBlock()
 	EndAtomicBlock()
 
-	Request(method string, url string, form Values) ([]byte, error)
+	Request(method, url string, form url.Values) ([]byte, error)
 
 	SetCSRFToken(token string)
 	SetAuthenticationTicket(ticket string, method AuthenticationMethod)
@@ -50,14 +52,10 @@ func (exc *PVEExecutor) EndAtomicBlock() {
 	exc.mux.Unlock()
 }
 
-func (exc *PVEExecutor) Request(method string, path string, form Values) ([]byte, error) {
-	absoluteURL, err := exc.getAbsoluteURL(path)
+func (exc *PVEExecutor) Request(method, path string, form url.Values) ([]byte, error) {
+	absoluteURL, err := exc.getAbsoluteURL(method, path, form)
 	if err != nil {
 		return nil, err
-	}
-
-	if method == http.MethodGet && form != nil {
-		absoluteURL.RawQuery = url.Values(form).Encode()
 	}
 
 	req, err := http.NewRequest(method, absoluteURL.String(), nil)
@@ -66,7 +64,7 @@ func (exc *PVEExecutor) Request(method string, path string, form Values) ([]byte
 	}
 
 	if method != http.MethodGet && form != nil {
-		body := url.Values(form).Encode()
+		body := form.Encode()
 
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		req.ContentLength = int64(len(body))
@@ -114,7 +112,11 @@ func (exc *PVEExecutor) SetAuthenticationTicket(ticket string, method Authentica
 		var authCookie *http.Cookie
 
 		if exc.client.Jar == nil {
-			jar, _ := cookiejar.New(nil)
+			jar, err := cookiejar.New(nil)
+			if err != nil {
+				panic(fmt.Sprintf("This should never happen: %s", err.Error()))
+			}
+
 			exc.client.Jar = jar
 		}
 
@@ -130,13 +132,19 @@ func (exc *PVEExecutor) SetAuthenticationTicket(ticket string, method Authentica
 	}
 }
 
-func (exc *PVEExecutor) getAbsoluteURL(path string) (*url.URL, error) {
+func (exc *PVEExecutor) getAbsoluteURL(method, path string, form url.Values) (*url.URL, error) {
 	resourceURL, err := url.Parse(strings.TrimLeft(path, "/"))
 	if err != nil {
 		return nil, err
 	}
 
-	return exc.base.ResolveReference(resourceURL), nil
+	absoluteURL := exc.base.ResolveReference(resourceURL)
+
+	if method == http.MethodGet && form != nil {
+		absoluteURL.RawQuery = form.Encode()
+	}
+
+	return absoluteURL, nil
 }
 
 func (exc *PVEExecutor) unsetAuthenticationTicket() {

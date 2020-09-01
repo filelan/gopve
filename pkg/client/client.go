@@ -3,13 +3,16 @@ package client
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
-const DefaultRequestTimeout = time.Duration(30) * time.Second
-const DefaultPoolingInterval = time.Duration(5) * time.Second
+const (
+	DefaultRequestTimeout  = time.Duration(30) * time.Second
+	DefaultPoolingInterval = time.Duration(5) * time.Second
+)
 
 type Client struct {
 	cfg      Config
@@ -19,18 +22,18 @@ type Client struct {
 }
 
 func NewClient(cfg Config) (*Client, error) {
-	url, err := cfg.Endpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	transport := cfg.HTTPTransport
-	if transport == nil {
-		transport = new(http.Transport)
-	}
-
 	executor := cfg.Executor
 	if executor == nil {
+		url, err := cfg.Endpoint()
+		if err != nil {
+			return nil, err
+		}
+
+		transport := cfg.HTTPTransport
+		if transport == nil {
+			transport = new(http.Transport)
+		}
+
 		timeout := cfg.RequestTimeout
 		if timeout == 0 {
 			timeout = DefaultRequestTimeout
@@ -65,8 +68,8 @@ func (cli *Client) EndAtomicBlock() {
 	cli.executor.EndAtomicBlock()
 }
 
-func (cli *Client) Request(method string, resource string, form request.Values, out interface{}) error {
-	data, err := cli.executor.Request(method, resource, form)
+func (cli *Client) Request(method, resource string, form request.Values, out interface{}) error {
+	data, err := cli.executor.Request(method, resource, url.Values(form))
 	if err != nil {
 		return err
 	}
@@ -76,7 +79,7 @@ func (cli *Client) Request(method string, resource string, form request.Values, 
 			Data json.RawMessage
 		}
 
-		if err := json.Unmarshal(data, &raw); err != nil {
+		if err = json.Unmarshal(data, &raw); err != nil {
 			return err
 		}
 
