@@ -1,0 +1,6 @@
+{
+    "data": {
+        "ticket": "authenticationToken",
+        "CSRFPreventionToken": "csrfToken"
+    }
+}

@@ -17,6 +17,7 @@ func helpExecutorCreateHTTPServer(t *testing.T, handler http.HandlerFunc) *httpt
 	t.Helper()
 
 	srv := httptest.NewServer(handler)
+
 	t.Cleanup(func() {
 		srv.Close()
 	})

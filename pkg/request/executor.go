@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-//go:generate mockery --case snake --testonly --name Executor
+//go:generate mockery --case snake --name Executor
 
 type Executor interface {
 	StartAtomicBlock()

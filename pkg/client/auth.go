@@ -8,20 +8,16 @@ import (
 )
 
 type ticketResponseJSON struct {
-	Username  string `json:"username"`
 	Ticket    string `json:"ticket"`
 	CSRFToken string `json:"CSRFPreventionToken"`
-
-	ClusterName string `json:"clustername"`
 }
 
-func (cli *Client) AuthenticateWithCredentials(username string, password string) error {
+func (cli *Client) AuthenticateWithCredentials(username, password string) error {
 	var res ticketResponseJSON
-	err := cli.Request(http.MethodPost, "access/ticket", request.Values{
+	if err := cli.Request(http.MethodPost, "access/ticket", request.Values{
 		"username": {username},
 		"password": {password},
-	}, &res)
-	if err != nil {
+	}, &res); err != nil {
 		return err
 	}
 
@@ -31,7 +27,7 @@ func (cli *Client) AuthenticateWithCredentials(username string, password string)
 	return nil
 }
 
-func (cli *Client) AuthenticateWithToken(id string, secret string) error {
+func (cli *Client) AuthenticateWithToken(id, secret string) error {
 	ticket := fmt.Sprintf("PVEAPIToken=%s!TOKENID=%s", id, secret)
 	cli.executor.SetAuthenticationTicket(ticket, request.AuthenticationMethodHeader)
 
