@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
@@ -29,9 +30,7 @@ func helpExecutorCreatePVEExecutor(t *testing.T, srv *httptest.Server) *request.
 	t.Helper()
 
 	url, err := url.Parse(srv.URL)
-	if err != nil {
-		t.Fatalf("Unexpected url.Parse error: %s", err.Error())
-	}
+	require.NoError(t, err)
 
 	url.Path = "/api2/json/"
 
@@ -41,17 +40,14 @@ func helpExecutorCreatePVEExecutor(t *testing.T, srv *httptest.Server) *request.
 func testMakeExecutorRequestHelper(t *testing.T, exc *request.PVEExecutor, method, path string, form url.Values) {
 	t.Helper()
 
-	if _, err := exc.Request(method, path, form); err != nil {
-		t.Fatalf("Unexpected request.PVEExecutor error: %s", err.Error())
-	}
+	_, err := exc.Request(method, path, form)
+	require.NoError(t, err)
 }
 
 func TestExecutorRequestURLPath(t *testing.T) {
 	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
 		url := req.URL.Path
-		if url != "/api2/json/test" {
-			t.Errorf("Got Resource '%s', expected '/api2/json/test'", url)
-		}
+		assert.Equal(t, "/api2/json/test", url)
 	})
 
 	exc := helpExecutorCreatePVEExecutor(t, srv)
@@ -66,10 +62,7 @@ func TestExecutorRequestQueryString(t *testing.T) {
 
 	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
 		form := req.URL.Query()
-
-		if !reflect.DeepEqual(form, values) {
-			t.Errorf("Got QueryString '%s', expected '%s'", form.Encode(), values.Encode())
-		}
+		assert.Equal(t, values, form)
 	})
 
 	exc := helpExecutorCreatePVEExecutor(t, srv)
@@ -85,29 +78,21 @@ func TestExecutorRequestFormData(t *testing.T) {
 	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
 		if req.ContentLength != 0 {
 			contentType := req.Header.Get("Content-Type")
-			if contentType != "application/x-www-form-urlencoded" {
-				t.Errorf("Got Content-Type '%s', expected 'application/x-www-form-urlencoded'", contentType)
-			}
+			assert.Equal(t, "application/x-www-form-urlencoded", contentType)
 		}
 
 		transferEncoding := strings.Join(req.TransferEncoding, ", ")
 		if transferEncoding != "" {
-			t.Errorf("Got Transfer-Encoding '%s', expected '<nil>'", transferEncoding)
+			assert.Equal(t, req.TransferEncoding, []string{})
 		}
 
 		body, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			t.Fatalf("Unexpected ioutil.ReadAll error: %s", err.Error())
-		}
+		require.NoError(t, err)
 
 		form, err := url.ParseQuery(string(body))
-		if err != nil {
-			t.Fatalf("Unexpected url.ParseQuery error: %s", err.Error())
-		}
+		require.NoError(t, err)
 
-		if !reflect.DeepEqual(form, values) {
-			t.Errorf("Got FormData '%s', expected '%s'", form.Encode(), values.Encode())
-		}
+		require.Equal(t, values, form)
 	})
 
 	exc := helpExecutorCreatePVEExecutor(t, srv)
@@ -118,14 +103,10 @@ func TestExecutorRequestCSRFPrevention(t *testing.T) {
 	expectedTokenCount := 1
 
 	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		csrfToken := req.Header.Get("CSRFPreventionToken")
-
 		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+		csrfToken := req.Header.Get("CSRFPreventionToken")
+		assert.Equal(t, expectedToken, csrfToken)
 		expectedTokenCount++
-
-		if csrfToken != expectedToken {
-			t.Errorf("Got CSRF prevention token '%s', expected '%s'", csrfToken, expectedToken)
-		}
 	})
 
 	exc := helpExecutorCreatePVEExecutor(t, srv)
@@ -141,17 +122,11 @@ func TestExecutorRequestCookieAuthentication(t *testing.T) {
 	expectedTokenCount := 1
 
 	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		cookieToken, err := req.Cookie("PVEAuthCookie")
-		if err != nil {
-			t.Errorf("No Cookie authentication token found: %s", err.Error())
-		}
-
 		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+		cookieToken, err := req.Cookie("PVEAuthCookie")
+		require.NoError(t, err)
+		assert.Equal(t, expectedToken, cookieToken.Value)
 		expectedTokenCount++
-
-		if cookieToken.Value != expectedToken {
-			t.Errorf("Got cookie authentication token '%s', expected '%s'", cookieToken, expectedToken)
-		}
 	})
 
 	exc := helpExecutorCreatePVEExecutor(t, srv)
@@ -167,14 +142,10 @@ func TestExecutorRequestHeaderAuthentication(t *testing.T) {
 	expectedTokenCount := 1
 
 	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		headerToken := req.Header.Get("Authorization")
-
 		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+		headerToken := req.Header.Get("Authorization")
+		assert.Equal(t, expectedToken, headerToken)
 		expectedTokenCount++
-
-		if headerToken != expectedToken {
-			t.Errorf("Got header authentication token '%s', expected '%s'", headerToken, expectedToken)
-		}
 	})
 
 	exc := helpExecutorCreatePVEExecutor(t, srv)
@@ -199,9 +170,9 @@ func TestExecutorRequestMixedAuthentication(t *testing.T) {
 
 			headerToken := req.Header.Get("Authorization")
 
-			if cookieToken != "" && headerToken != "" {
-				t.Errorf("Got both Cookie and Header authentication tokens, expected only one of them")
-			}
+			assert.Condition(t, func() bool {
+				return (cookieToken == "") != (headerToken == "")
+			})
 		})
 
 		exc := helpExecutorCreatePVEExecutor(t, srv)

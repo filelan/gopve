@@ -3,6 +3,8 @@ package client_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/client"
 )
 
@@ -25,21 +27,17 @@ func helpConfigCheckEndpoint(t *testing.T, parts urlParts) func(t *testing.T) {
 			Secure: parts.Secure,
 		}
 
-		if endpoint, err := cfg.Endpoint(); err != nil {
-			t.Fatalf("Unexpected client.Config.Endpoint error: %s", err.Error())
-		} else if endpoint.String() != parts.URL {
-			t.Fatalf("Got endpoint '%s', expected '%s'", endpoint.String(), parts.URL)
-		}
+		endpoint, err := cfg.Endpoint()
+		assert.NoError(t, err)
+		assert.Equal(t, parts.URL, endpoint.String())
 	}
 }
 
 func TestConfigEndpointGuards(t *testing.T) {
 	cfg := client.Config{}
-	if _, err := cfg.Endpoint(); err == nil {
-		t.Errorf("Got no error, expected 'no host specified'")
-	} else if err.Error() != "no host specified" {
-		t.Errorf("Got error '%s', expected 'no host specified'", err.Error())
-	}
+	_, err := cfg.Endpoint()
+	require.Error(t, err)
+	require.Equal(t, client.ErrConfigNoHost, err)
 }
 
 func TestConfigEndpointPorts(t *testing.T) {

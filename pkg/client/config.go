@@ -6,8 +6,16 @@ import (
 	"net/url"
 	"strings"
 	"time"
+)
 
-	"github.com/xabinapal/gopve/pkg/request"
+type ConfigError string
+
+func (e ConfigError) Error() string {
+	return string(e)
+}
+
+const (
+	ErrConfigNoHost = ConfigError("no host specified")
 )
 
 type Config struct {
@@ -19,8 +27,6 @@ type Config struct {
 	HTTPTransport   *http.Transport
 	RequestTimeout  time.Duration
 	PoolingInterval time.Duration
-
-	Executor request.Executor
 }
 
 func (cfg Config) Endpoint() (*url.URL, error) {
@@ -56,7 +62,7 @@ func (cfg Config) getURLParts() (scheme string, port uint16) {
 func (cfg Config) getURL(scheme string, port uint16) (*url.URL, error) {
 	host := strings.Trim(cfg.Host, " ")
 	if host == "" {
-		return nil, fmt.Errorf("no host specified")
+		return nil, ErrConfigNoHost
 	}
 
 	absoluteURL, err := url.Parse(fmt.Sprintf("%s://%s:%d/", scheme, cfg.Host, port))

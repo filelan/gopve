@@ -5,12 +5,14 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/client"
 	"github.com/xabinapal/gopve/pkg/request/mocks"
 )
 
 func TestClientAtomicBlock(t *testing.T) {
 	exc := new(mocks.Executor)
-	cli := helpClientCreate(t, exc)
+	cli := client.NewClientWithExecutor(exc, 0)
 
 	exc.On("StartAtomicBlock").Return().Once()
 	cli.StartAtomicBlock()
@@ -23,16 +25,15 @@ func TestClientAtomicBlock(t *testing.T) {
 
 func TestClientRequest(t *testing.T) {
 	exc := new(mocks.Executor)
-	cli := helpClientCreate(t, exc)
+	cli := client.NewClientWithExecutor(exc, 0)
 
 	exc.
 		On("Request", http.MethodGet, "/", url.Values(nil)).
 		Return(nil, nil).
 		Once()
 
-	if err := cli.Request(http.MethodGet, "/", nil, nil); err != nil {
-		t.Fatalf("Unexpected client.Client.Request error: %s", err.Error())
-	}
+	err := cli.Request(http.MethodGet, "/", nil, nil)
+	require.NoError(t, err)
 
 	exc.AssertExpectations(t)
 }

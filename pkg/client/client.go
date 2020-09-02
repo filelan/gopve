@@ -15,49 +15,47 @@ const (
 )
 
 type Client struct {
-	cfg      Config
 	executor request.Executor
 
 	api API
 }
 
 func NewClient(cfg Config) (*Client, error) {
-	executor := cfg.Executor
-	if executor == nil {
-		url, err := cfg.Endpoint()
-		if err != nil {
-			return nil, err
-		}
-
-		transport := cfg.HTTPTransport
-		if transport == nil {
-			transport = new(http.Transport)
-		}
-
-		timeout := cfg.RequestTimeout
-		if timeout == 0 {
-			timeout = DefaultRequestTimeout
-		}
-
-		executor = request.NewPVEExecutor(url, &http.Client{
-			Transport: transport,
-			Timeout:   timeout,
-		})
+	url, err := cfg.Endpoint()
+	if err != nil {
+		return nil, err
 	}
 
-	poolingInterval := cfg.PoolingInterval
-	if poolingInterval == 0 {
+	transport := cfg.HTTPTransport
+	if transport == nil {
+		transport = new(http.Transport)
+	}
+
+	timeout := cfg.RequestTimeout
+	if timeout == 0 {
+		timeout = DefaultRequestTimeout
+	}
+
+	exc := request.NewPVEExecutor(url, &http.Client{
+		Transport: transport,
+		Timeout:   timeout,
+	})
+
+	return NewClientWithExecutor(exc, cfg.PoolingInterval), nil
+}
+
+func NewClientWithExecutor(exc request.Executor, poolingInterval time.Duration) *Client {
+	if poolingInterval < time.Duration(1)*time.Second {
 		poolingInterval = DefaultPoolingInterval
 	}
 
 	cli := &Client{
-		cfg:      cfg,
-		executor: executor,
+		executor: exc,
 	}
 
 	cli.api = NewAPI(cli, poolingInterval)
 
-	return cli, nil
+	return cli
 }
 
 func (cli *Client) StartAtomicBlock() {
