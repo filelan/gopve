@@ -4,6 +4,8 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/cluster"
 )
 
+//go:generate mockery --case snake --name Cluster
+
 type Cluster interface {
 	HA() HighAvailability
 }

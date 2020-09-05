@@ -14,14 +14,14 @@ type getTimeResponseJSON struct {
 	Timezone  string `json:"timezone"`
 }
 
-func newTimeWithTimezone(timestamp int64, location string) (*time.Time, error) {
+func newTimeWithTimezone(timestamp int64, location string) (time.Time, error) {
 	loc, err := time.LoadLocation(location)
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	t := time.Unix(timestamp, 0).In(loc)
-	return &t, nil
+	return t, nil
 }
 
 func (node *Node) getTime() (*getTimeResponseJSON, error) {
@@ -34,10 +34,10 @@ func (node *Node) getTime() (*getTimeResponseJSON, error) {
 	return &res, err
 }
 
-func (node *Node) GetTime(local bool) (*time.Time, error) {
+func (node *Node) GetTime(local bool) (time.Time, error) {
 	res, err := node.getTime()
 	if err != nil {
-		return nil, err
+		return time.Time{}, err
 	}
 
 	timezone := "UTC"

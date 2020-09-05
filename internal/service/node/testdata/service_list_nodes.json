@@ -1,0 +1,18 @@
+{
+    "data": [
+      {
+        "status": "online",
+        "disk": 3280633856,
+        "maxcpu": 2,
+        "id": "node/test_node",
+        "mem": 1333387264,
+        "maxdisk": 16578916352,
+        "level": "",
+        "uptime": 671,
+        "type": "node",
+        "maxmem": 2077298688,
+        "node": "test_node",
+        "cpu": 0.623937686754283
+      }
+    ]
+  }

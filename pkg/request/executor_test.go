@@ -14,7 +14,7 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
-func helpExecutorCreateHTTPServer(t *testing.T, handler http.HandlerFunc) *httptest.Server {
+func helpExecutorCreateServer(t *testing.T, handler http.HandlerFunc) *httptest.Server {
 	t.Helper()
 
 	srv := httptest.NewServer(handler)
@@ -26,7 +26,7 @@ func helpExecutorCreateHTTPServer(t *testing.T, handler http.HandlerFunc) *httpt
 	return srv
 }
 
-func helpExecutorCreatePVEExecutor(t *testing.T, srv *httptest.Server) *request.PVEExecutor {
+func helpExecutorCreateExecutor(t *testing.T, srv *httptest.Server) *request.PVEExecutor {
 	t.Helper()
 
 	url, err := url.Parse(srv.URL)
@@ -37,7 +37,7 @@ func helpExecutorCreatePVEExecutor(t *testing.T, srv *httptest.Server) *request.
 	return request.NewPVEExecutor(url, srv.Client())
 }
 
-func testMakeExecutorRequestHelper(t *testing.T, exc *request.PVEExecutor, method, path string, form url.Values) {
+func helpExecutorMakeRequest(t *testing.T, exc *request.PVEExecutor, method, path string, form url.Values) {
 	t.Helper()
 
 	_, err := exc.Request(method, path, form)
@@ -45,29 +45,17 @@ func testMakeExecutorRequestHelper(t *testing.T, exc *request.PVEExecutor, metho
 }
 
 func TestExecutorRequestURLPath(t *testing.T) {
-	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
+	srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
 		url := req.URL.Path
 		assert.Equal(t, "/api2/json/test", url)
 	})
 
-	exc := helpExecutorCreatePVEExecutor(t, srv)
+	exc := helpExecutorCreateExecutor(t, srv)
 
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/test", nil)
-}
-
-func TestExecutorRequestQueryString(t *testing.T) {
-	values := url.Values{
-		"test": {"test"},
-	}
-
-	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		form := req.URL.Query()
-		assert.Equal(t, values, form)
-	})
-
-	exc := helpExecutorCreatePVEExecutor(t, srv)
-
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/test", values)
+	helpExecutorMakeRequest(t, exc, http.MethodGet, "test", nil)
+	helpExecutorMakeRequest(t, exc, http.MethodGet, "/test", nil)
+	helpExecutorMakeRequest(t, exc, http.MethodGet, "test/", nil)
+	helpExecutorMakeRequest(t, exc, http.MethodGet, "/test/", nil)
 }
 
 func TestExecutorRequestFormData(t *testing.T) {
@@ -75,93 +63,118 @@ func TestExecutorRequestFormData(t *testing.T) {
 		"test": {"test"},
 	}
 
-	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		if req.ContentLength != 0 {
-			contentType := req.Header.Get("Content-Type")
-			assert.Equal(t, "application/x-www-form-urlencoded", contentType)
-		}
+	queryMethods := []string{http.MethodGet}
+	for _, method := range queryMethods {
+		t.Run(method, func(t *testing.T) {
+			srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
+				assert.Equal(t, method, req.Method)
 
-		transferEncoding := strings.Join(req.TransferEncoding, ", ")
-		if transferEncoding != "" {
-			assert.Equal(t, req.TransferEncoding, []string{})
-		}
+				form := req.URL.Query()
+				assert.Equal(t, values, form)
+			})
 
-		body, err := ioutil.ReadAll(req.Body)
-		require.NoError(t, err)
+			exc := helpExecutorCreateExecutor(t, srv)
 
-		form, err := url.ParseQuery(string(body))
-		require.NoError(t, err)
+			helpExecutorMakeRequest(t, exc, method, "/test", values)
+		})
+	}
 
-		require.Equal(t, values, form)
-	})
+	bodyMethods := []string{http.MethodPost, http.MethodPut, http.MethodDelete}
+	for _, method := range bodyMethods {
+		t.Run(method, func(t *testing.T) {
+			srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
+				assert.Equal(t, method, req.Method)
 
-	exc := helpExecutorCreatePVEExecutor(t, srv)
-	testMakeExecutorRequestHelper(t, exc, http.MethodPost, "/test", values)
+				if req.ContentLength != 0 {
+					contentType := req.Header.Get("Content-Type")
+					assert.Equal(t, "application/x-www-form-urlencoded", contentType)
+				}
+
+				transferEncoding := strings.Join(req.TransferEncoding, ", ")
+				if transferEncoding != "" {
+					assert.Equal(t, req.TransferEncoding, []string{})
+				}
+
+				body, err := ioutil.ReadAll(req.Body)
+				require.NoError(t, err)
+
+				form, err := url.ParseQuery(string(body))
+				require.NoError(t, err)
+
+				require.Equal(t, values, form)
+			})
+
+			exc := helpExecutorCreateExecutor(t, srv)
+			helpExecutorMakeRequest(t, exc, method, "/test", values)
+		})
+	}
 }
 
 func TestExecutorRequestCSRFPrevention(t *testing.T) {
 	expectedTokenCount := 1
 
-	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
+	srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
 		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
 		csrfToken := req.Header.Get("CSRFPreventionToken")
 		assert.Equal(t, expectedToken, csrfToken)
 		expectedTokenCount++
 	})
 
-	exc := helpExecutorCreatePVEExecutor(t, srv)
+	exc := helpExecutorCreateExecutor(t, srv)
 
 	exc.SetCSRFToken("token1")
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+	helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
 
 	exc.SetCSRFToken("token2")
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+	helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
 }
 
-func TestExecutorRequestCookieAuthentication(t *testing.T) {
-	expectedTokenCount := 1
+func TestExecutorRequestAuthenticationMethod(t *testing.T) {
+	t.Run("Cookie", func(t *testing.T) {
+		expectedTokenCount := 1
 
-	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
-		cookieToken, err := req.Cookie("PVEAuthCookie")
-		require.NoError(t, err)
-		assert.Equal(t, expectedToken, cookieToken.Value)
-		expectedTokenCount++
+		srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
+			expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+			cookieToken, err := req.Cookie("PVEAuthCookie")
+			require.NoError(t, err)
+			assert.Equal(t, expectedToken, cookieToken.Value)
+			expectedTokenCount++
+		})
+
+		exc := helpExecutorCreateExecutor(t, srv)
+
+		exc.SetAuthenticationTicket("token1", request.AuthenticationMethodCookie)
+		helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
+
+		exc.SetAuthenticationTicket("token2", request.AuthenticationMethodCookie)
+		helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
 	})
 
-	exc := helpExecutorCreatePVEExecutor(t, srv)
+	t.Run("Header", func(t *testing.T) {
+		expectedTokenCount := 1
 
-	exc.SetAuthenticationTicket("token1", request.AuthenticationMethodCookie)
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+		srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
+			expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
+			headerToken := req.Header.Get("Authorization")
+			assert.Equal(t, expectedToken, headerToken)
+			expectedTokenCount++
+		})
 
-	exc.SetAuthenticationTicket("token2", request.AuthenticationMethodCookie)
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
-}
+		exc := helpExecutorCreateExecutor(t, srv)
 
-func TestExecutorRequestHeaderAuthentication(t *testing.T) {
-	expectedTokenCount := 1
+		exc.SetAuthenticationTicket("token1", request.AuthenticationMethodHeader)
+		helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
 
-	srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
-		expectedToken := fmt.Sprintf("token%d", expectedTokenCount)
-		headerToken := req.Header.Get("Authorization")
-		assert.Equal(t, expectedToken, headerToken)
-		expectedTokenCount++
+		exc.SetAuthenticationTicket("token2", request.AuthenticationMethodHeader)
+		helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
 	})
-
-	exc := helpExecutorCreatePVEExecutor(t, srv)
-
-	exc.SetAuthenticationTicket("token1", request.AuthenticationMethodHeader)
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
-
-	exc.SetAuthenticationTicket("token2", request.AuthenticationMethodHeader)
-	testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
 }
 
-func TestExecutorRequestMixedAuthentication(t *testing.T) {
+func TestExecutorRequestMixedAuthenticationMethods(t *testing.T) {
 	runnerHelper := func(t *testing.T, setAuthenticationFunction func(*request.PVEExecutor)) {
 		t.Helper()
 
-		srv := helpExecutorCreateHTTPServer(t, func(res http.ResponseWriter, req *http.Request) {
+		srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
 			var cookieToken string
 			cookie, err := req.Cookie("PVEAuthCookie")
 			if err == nil {
@@ -175,10 +188,10 @@ func TestExecutorRequestMixedAuthentication(t *testing.T) {
 			})
 		})
 
-		exc := helpExecutorCreatePVEExecutor(t, srv)
+		exc := helpExecutorCreateExecutor(t, srv)
 
 		setAuthenticationFunction(exc)
-		testMakeExecutorRequestHelper(t, exc, http.MethodGet, "/", nil)
+		helpExecutorMakeRequest(t, exc, http.MethodGet, "/", nil)
 	}
 
 	t.Run("CookieFirst", func(t *testing.T) {
@@ -194,4 +207,16 @@ func TestExecutorRequestMixedAuthentication(t *testing.T) {
 			exc.SetAuthenticationTicket("token", request.AuthenticationMethodCookie)
 		})
 	})
+}
+
+func TestExecutorRequestError(t *testing.T) {
+	srv := helpExecutorCreateServer(t, func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte("Internal Server Error"))
+	})
+
+	exc := helpExecutorCreateExecutor(t, srv)
+
+	_, err := exc.Request(http.MethodGet, "/", nil)
+	assert.Error(t, err)
 }

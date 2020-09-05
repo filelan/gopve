@@ -18,10 +18,16 @@ func NewService(cli client.Client, api client.API) *Service {
 }
 
 type Node struct {
-	svc *Service
-
+	svc    *Service
 	name   string
 	status node.Status
+}
+
+func NewNode(svc *Service, name string) *Node {
+	return &Node{
+		svc:  svc,
+		name: name,
+	}
 }
 
 func (n *Node) Name() string {

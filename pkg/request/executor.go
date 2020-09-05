@@ -133,7 +133,7 @@ func (exc *PVEExecutor) SetAuthenticationTicket(ticket string, method Authentica
 }
 
 func (exc *PVEExecutor) getAbsoluteURL(method, path string, form url.Values) (*url.URL, error) {
-	resourceURL, err := url.Parse(strings.TrimLeft(path, "/"))
+	resourceURL, err := url.Parse(strings.Trim(path, "/"))
 	if err != nil {
 		return nil, err
 	}
