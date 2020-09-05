@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/xabinapal/gopve/pkg/types/task"
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
@@ -8,4 +9,7 @@ import (
 
 type VirtualMachine interface {
 	List() ([]vm.VirtualMachine, error)
+
+	CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, error)
+	CreateLXC(opts vm.LXCCreateOptions) (task.Task, error)
 }
