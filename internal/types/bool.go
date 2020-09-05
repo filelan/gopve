@@ -6,16 +6,16 @@ import (
 
 type PVEBool bool
 
-func (b PVEBool) String() string {
-	if b {
+func (obj PVEBool) String() string {
+	if obj {
 		return "1"
 	} else {
 		return "0"
 	}
 }
 
-func (b PVEBool) Bool() bool {
-	return bool(b)
+func (obj PVEBool) Bool() bool {
+	return bool(obj)
 }
 
 func (obj *PVEBool) UnmarshalJSON(b []byte) error {

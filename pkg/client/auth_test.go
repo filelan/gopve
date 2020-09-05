@@ -7,14 +7,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xabinapal/gopve/pkg/client"
+	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/client/test"
 	"github.com/xabinapal/gopve/pkg/request"
-	"github.com/xabinapal/gopve/pkg/request/mocks"
 )
 
 func TestClientUserAuthentication(t *testing.T) {
-	exc := new(mocks.Executor)
-	cli := client.NewClientWithExecutor(exc, 0)
+	cli, exc := test.NewClient()
 
 	values := request.Values{
 		"username": {"testUsername"},
@@ -22,7 +21,7 @@ func TestClientUserAuthentication(t *testing.T) {
 	}
 
 	response, err := ioutil.ReadFile("./testdata/access_ticket.json")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	exc.
 		On("Request", http.MethodPost, "access/ticket", url.Values(values)).
