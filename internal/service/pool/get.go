@@ -8,9 +8,8 @@ import (
 )
 
 type getResponseJSON struct {
-	Name    string   `json:"id"`
-	Comment string   `json:"comment"`
-	Members []string `json:"members"`
+	Name        string `json:"poolid"`
+	Description string `json:"comment"`
 }
 
 func (res getResponseJSON) Map(svc *Service, full bool) (pool.Pool, error) {
@@ -18,11 +17,12 @@ func (res getResponseJSON) Map(svc *Service, full bool) (pool.Pool, error) {
 		svc:  svc,
 		full: full,
 
-		name: res.Name,
+		name:        res.Name,
+		description: res.Description,
 	}
 
 	if full {
-		pool.description = res.Comment
+		// TODO
 	}
 
 	return pool, nil

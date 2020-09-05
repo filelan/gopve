@@ -39,7 +39,12 @@ func (obj *Pool) Load() error {
 		return nil
 	}
 
-	obj.description, _ = pool.Description()
+	switch pool.(type) {
+	case *Pool:
+		*obj = *(pool.(*Pool))
+	default:
+		panic(fmt.Sprintf("This should never happen: %s", err.Error()))
+	}
 
 	return nil
 }
@@ -49,10 +54,6 @@ func (obj *Pool) Name() string {
 }
 
 func (obj *Pool) Description() (string, error) {
-	if err := obj.Load(); err != nil {
-		return "", err
-	}
-
 	return obj.description, nil
 }
 
