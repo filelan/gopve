@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"fmt"
-
 	"github.com/xabinapal/gopve/internal/client"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
@@ -38,11 +36,11 @@ func (obj *Storage) Load() error {
 		return nil
 	}
 
-	switch storage.(type) {
+	switch x := storage.(type) {
 	case *Storage:
-		*obj = *(storage.(*Storage))
+		*obj = *x
 	default:
-		panic(fmt.Sprintf("This should never happen: %s", err.Error()))
+		panic("This should never happen")
 	}
 
 	return nil

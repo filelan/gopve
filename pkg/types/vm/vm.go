@@ -6,13 +6,16 @@ import (
 )
 
 type VirtualMachine interface {
-	Node() (node.Node, error)
+	Node() string
+
+	GetNode() (node.Node, error)
 	Kind() Kind
 
 	VMID() uint
 	Name() string
-	Status() Status
 	IsTemplate() bool
+
+	Status() (Status, error)
 
 	Clone(options CloneOptions) (task.Task, error)
 

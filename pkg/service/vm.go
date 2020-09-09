@@ -9,6 +9,8 @@ import (
 
 type VirtualMachine interface {
 	List() ([]vm.VirtualMachine, error)
+	ListByKind(kind vm.Kind) ([]vm.VirtualMachine, error)
+	Get(vmid uint) (vm.VirtualMachine, error)
 
 	CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, error)
 	CreateLXC(opts vm.LXCCreateOptions) (task.Task, error)

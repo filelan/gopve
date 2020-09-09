@@ -8,9 +8,5 @@ import (
 
 func (cli *Client) Version() (*types.Version, error) {
 	var res types.Version
-	err := cli.Request(http.MethodGet, "/version", nil, &res)
-	if err != nil {
-		return nil, err
-	}
-	return &res, nil
+	return &res, cli.Request(http.MethodGet, "/version", nil, &res)
 }

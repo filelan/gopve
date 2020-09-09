@@ -39,11 +39,11 @@ func (obj *Pool) Load() error {
 		return nil
 	}
 
-	switch pool.(type) {
+	switch x := pool.(type) {
 	case *Pool:
-		*obj = *(pool.(*Pool))
+		*obj = *x
 	default:
-		panic(fmt.Sprintf("This should never happen: %s", err.Error()))
+		panic("This should never happen")
 	}
 
 	return nil

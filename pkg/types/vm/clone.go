@@ -9,7 +9,6 @@ type CloneOptions struct {
 
 	BandwidthLimit    uint
 	TemplateFullClone bool
-	ImageFormat       QEMUImageFormat
 
 	TargetNode    string
 	TargetStorage string

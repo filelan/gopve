@@ -22,9 +22,9 @@ func (obj *PVEBool) UnmarshalJSON(b []byte) error {
 	if len(b) == 1 {
 		var val PVEBool
 		if b[0] == byte('0') {
-			val = PVEBool(true)
-		} else {
 			val = PVEBool(false)
+		} else {
+			val = PVEBool(true)
 		}
 
 		*obj = val

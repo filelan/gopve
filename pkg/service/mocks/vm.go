@@ -61,6 +61,29 @@ func (_m *VirtualMachine) CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, erro
 	return r0, r1
 }
 
+// Get provides a mock function with given fields: vmid
+func (_m *VirtualMachine) Get(vmid uint) (vm.VirtualMachine, error) {
+	ret := _m.Called(vmid)
+
+	var r0 vm.VirtualMachine
+	if rf, ok := ret.Get(0).(func(uint) vm.VirtualMachine); ok {
+		r0 = rf(vmid)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(vm.VirtualMachine)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(vmid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // List provides a mock function with given fields:
 func (_m *VirtualMachine) List() ([]vm.VirtualMachine, error) {
 	ret := _m.Called()
@@ -77,6 +100,29 @@ func (_m *VirtualMachine) List() ([]vm.VirtualMachine, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListByKind provides a mock function with given fields: kind
+func (_m *VirtualMachine) ListByKind(kind vm.Kind) ([]vm.VirtualMachine, error) {
+	ret := _m.Called(kind)
+
+	var r0 []vm.VirtualMachine
+	if rf, ok := ret.Get(0).(func(vm.Kind) []vm.VirtualMachine); ok {
+		r0 = rf(kind)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]vm.VirtualMachine)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(vm.Kind) error); ok {
+		r1 = rf(kind)
 	} else {
 		r1 = ret.Error(1)
 	}

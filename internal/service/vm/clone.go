@@ -61,21 +61,6 @@ func (virtualMachine *VirtualMachine) Clone(options vm.CloneOptions) (task.Task,
 		fullClone = true
 	}
 
-	if options.ImageFormat != "" {
-		if virtualMachine.kind == vm.KindQEMU {
-			if !fullClone {
-				return nil, fmt.Errorf("image format can only be specified when performing a full clone")
-			} else if err := options.ImageFormat.IsValid(); err != nil {
-				return nil, err
-			} else {
-				// TODO check if image format is compatible with target storage
-				values.AddString("format", string(options.ImageFormat))
-			}
-		} else {
-			return nil, fmt.Errorf("image format can only be specified in QEMU virtual machines")
-		}
-	}
-
 	if options.TargetNode != "" {
 		// TODO check if VM is on shared storage
 		values.AddString("target", options.TargetNode)
@@ -88,8 +73,6 @@ func (virtualMachine *VirtualMachine) Clone(options vm.CloneOptions) (task.Task,
 			return nil, fmt.Errorf("target storage can only be specified in full clone operations")
 		}
 	}
-
-	fmt.Printf("%s\n", values)
 
 	var task string
 	err := virtualMachine.svc.client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/qemu/%d/clone", virtualMachine.node, virtualMachine.vmid), values, &task)
