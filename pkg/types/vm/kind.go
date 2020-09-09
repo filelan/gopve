@@ -19,3 +19,7 @@ func (obj Kind) IsValid() error {
 		return fmt.Errorf("invalid virtual machine kind")
 	}
 }
+
+func (obj Kind) String() string {
+	return string(obj)
+}

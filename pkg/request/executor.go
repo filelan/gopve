@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 )
@@ -52,6 +53,8 @@ func (exc *PVEExecutor) EndAtomicBlock() {
 	exc.mux.Unlock()
 }
 
+var errorRegExp = regexp.MustCompile(`^\d+\s*`)
+
 func (exc *PVEExecutor) Request(method, path string, form url.Values) ([]byte, error) {
 	absoluteURL, err := exc.getAbsoluteURL(method, path, form)
 	if err != nil {
@@ -89,7 +92,9 @@ func (exc *PVEExecutor) Request(method, path string, form url.Values) ([]byte, e
 
 	if res.StatusCode != http.StatusOK {
 		res.Body.Close()
-		return nil, fmt.Errorf(res.Status)
+
+		status := string(errorRegExp.ReplaceAll([]byte(res.Status), nil))
+		return nil, fmt.Errorf("%d - %s", res.StatusCode, status)
 	}
 
 	body, err := ioutil.ReadAll(res.Body)

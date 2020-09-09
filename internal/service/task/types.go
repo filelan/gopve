@@ -29,6 +29,14 @@ type Task struct {
 	upid string
 }
 
+func NewTask(svc *Service, node, upid string) *Task {
+	return &Task{
+		svc:  svc,
+		node: node,
+		upid: upid,
+	}
+}
+
 func (t *Task) Node() string {
 	return t.node
 }

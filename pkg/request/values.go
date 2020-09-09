@@ -8,6 +8,10 @@ import (
 	"github.com/xabinapal/gopve/internal/types"
 )
 
+type Marshaller interface {
+	Marshal() (string, error)
+}
+
 type Values url.Values
 
 func (v Values) AddString(k string, s string) {
@@ -28,6 +32,16 @@ func (v Values) AddBool(k string, b bool) {
 
 func (v Values) AddTime(k string, t time.Time) {
 	v[k] = []string{t.Format("2006-01-02 15:04:05")}
+}
+
+func (v Values) AddObject(k string, t Marshaller) error {
+	val, err := t.Marshal()
+	if err != nil {
+		return err
+	}
+
+	v[k] = []string{val}
+	return nil
 }
 
 func (v Values) ConditionalAddString(k string, s string, cond bool) {
@@ -57,5 +71,11 @@ func (v Values) ConditionalAddBool(k string, b bool, cond bool) {
 func (v Values) ConditionalAddTime(k string, t time.Time, cond bool) {
 	if cond {
 		v.AddTime(k, t)
+	}
+}
+
+func (v Values) ConditionalAddObject(k string, t Marshaller, cond bool) {
+	if cond {
+		v.AddObject(k, t)
 	}
 }
