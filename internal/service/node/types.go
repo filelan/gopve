@@ -23,10 +23,11 @@ type Node struct {
 	status node.Status
 }
 
-func NewNode(svc *Service, name string) *Node {
+func NewNode(svc *Service, name string, status node.Status) *Node {
 	return &Node{
-		svc:  svc,
-		name: name,
+		svc:    svc,
+		name:   name,
+		status: status,
 	}
 }
 

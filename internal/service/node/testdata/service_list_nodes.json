@@ -2,16 +2,44 @@
     "data": [
       {
         "status": "online",
-        "disk": 3280633856,
-        "maxcpu": 2,
+        "disk": 5368709120,
+        "maxcpu": 4,
         "id": "node/test_node",
-        "mem": 1333387264,
-        "maxdisk": 16578916352,
+        "mem": 1342177280,
+        "maxdisk": 21474836480,
         "level": "",
-        "uptime": 671,
+        "uptime": 100,
         "type": "node",
-        "maxmem": 2077298688,
+        "maxmem": 2147483648,
         "node": "test_node",
+        "cpu": 0.623937686754283
+      },
+      {
+        "status": "offline",
+        "disk": 5368709120,
+        "maxcpu": 4,
+        "id": "node/test_node2",
+        "mem": 1342177280,
+        "maxdisk": 21474836480,
+        "level": "",
+        "uptime": 100,
+        "type": "node",
+        "maxmem": 2147483648,
+        "node": "test_node2",
+        "cpu": 0.623937686754283
+      },
+      {
+        "status": "unknown",
+        "disk": 5368709120,
+        "maxcpu": 4,
+        "id": "node/test_node3",
+        "mem": 1342177280,
+        "maxdisk": 21474836480,
+        "level": "",
+        "uptime": 100,
+        "type": "node",
+        "maxmem": 2147483648,
+        "node": "test_node3",
         "cpu": 0.623937686754283
       }
     ]

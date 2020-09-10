@@ -8,7 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/internal/service/node"
 	"github.com/xabinapal/gopve/internal/service/node/test"
+	types "github.com/xabinapal/gopve/pkg/types/node"
 )
 
 func TestServiceList(t *testing.T) {
@@ -16,6 +18,12 @@ func TestServiceList(t *testing.T) {
 
 	response, err := ioutil.ReadFile("./testdata/service_list_nodes.json")
 	require.NoError(t, err)
+
+	expectedNodes := []types.Node{
+		node.NewNode(svc, "test_node", types.StatusOnline),
+		node.NewNode(svc, "test_node2", types.StatusOffline),
+		node.NewNode(svc, "test_node3", types.StatusUnknown),
+	}
 
 	exc.
 		On("Request", http.MethodGet, "cluster/resources", url.Values{
@@ -26,7 +34,7 @@ func TestServiceList(t *testing.T) {
 
 	nodes, err := svc.List()
 	require.NoError(t, err)
-	assert.Equal(t, nil, nodes)
+	assert.ElementsMatch(t, expectedNodes, nodes)
 
 	exc.AssertExpectations(t)
 }

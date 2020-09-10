@@ -45,11 +45,12 @@ func (obj *HighAvailabilityGroup) Load() error {
 		return nil
 	}
 
-	obj.description, _ = group.Description()
-	obj.restrictedResourceExecution, _ = group.RestrictedResourceExecution()
-	obj.migrateResourcesToHigherPriority, _ = group.MigrateResourcesToHigherPriority()
-
-	obj.nodes, _ = group.Nodes()
+	switch x := group.(type) {
+	case *HighAvailabilityGroup:
+		*obj = *x
+	default:
+		panic("This should never happen")
+	}
 
 	return nil
 }
@@ -151,6 +152,7 @@ func (obj *HighAvailabilityGroup) DeleteNodes(nodes []string) error {
 
 	var nodeMap cluster.HighAvailabilityGroupNodes
 	nodeKeys := make(map[string]*cluster.HighAvailabilityGroupNode)
+
 	for node, priority := range obj.nodes {
 		nodeMap[node] = priority
 		nodeKeys[node.Name()] = &node

@@ -8,8 +8,12 @@ import (
 	"github.com/xabinapal/gopve/internal/types"
 )
 
-type Marshaller interface {
+type Marshaler interface {
 	Marshal() (string, error)
+}
+
+type Unmarshaler interface {
+	Unmarshal(s string) error
 }
 
 type Values url.Values
@@ -34,8 +38,8 @@ func (v Values) AddTime(k string, t time.Time) {
 	v[k] = []string{t.Format("2006-01-02 15:04:05")}
 }
 
-func (v Values) AddObject(k string, t Marshaller) error {
-	val, err := t.Marshal()
+func (v Values) AddObject(k string, o Marshaler) error {
+	val, err := o.Marshal()
 	if err != nil {
 		return err
 	}
@@ -74,7 +78,7 @@ func (v Values) ConditionalAddTime(k string, t time.Time, cond bool) {
 	}
 }
 
-func (v Values) ConditionalAddObject(k string, t Marshaller, cond bool) {
+func (v Values) ConditionalAddObject(k string, t Marshaler, cond bool) {
 	if cond {
 		v.AddObject(k, t)
 	}

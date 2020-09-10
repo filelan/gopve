@@ -18,10 +18,7 @@ func (res getResponseJSON) Map(svc *Service) (node.Node, error) {
 		return nil, fmt.Errorf("unsupported node status")
 	}
 
-	node := NewNode(svc, res.Name)
-	node.status = res.Status
-
-	return node, nil
+	return NewNode(svc, res.Name, res.Status), nil
 }
 
 func (svc *Service) List() ([]node.Node, error) {

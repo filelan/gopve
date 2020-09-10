@@ -51,6 +51,7 @@ func (svc *Service) ListGroups() ([]cluster.HighAvailabilityGroup, error) {
 	}
 
 	groups := make([]cluster.HighAvailabilityGroup, len(res))
+
 	for i, group := range res {
 		out, err := group.Map(svc, false)
 		if err != nil {
@@ -74,10 +75,11 @@ func (svc *Service) GetGroup(name string) (cluster.HighAvailabilityGroup, error)
 
 func (svc *Service) CreateGroup(name string, props cluster.HighAvailabilityGroupProperties, nodes cluster.HighAvailabilityGroupNodes) (cluster.HighAvailabilityGroup, error) {
 	if len(nodes) == 0 {
-		return &HighAvailabilityGroup{}, fmt.Errorf("at least one node is required")
+		return nil, fmt.Errorf("at least one node is required")
 	}
 
 	var form request.Values
+
 	form.AddString("type", "group")
 	form.AddString("group", name)
 
@@ -88,7 +90,7 @@ func (svc *Service) CreateGroup(name string, props cluster.HighAvailabilityGroup
 	form.AddString("nodes", nodeMapToString(nodes))
 
 	if err := svc.client.Request(http.MethodPost, "cluster/ha/groups", form, nil); err != nil {
-		return &HighAvailabilityGroup{}, err
+		return nil, err
 	}
 
 	return svc.GetGroup(name)
