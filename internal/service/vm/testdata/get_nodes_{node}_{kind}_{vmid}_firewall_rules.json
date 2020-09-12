@@ -1,0 +1,39 @@
+{
+  "data": [
+    {
+      "enable": 1,
+      "comment": "test_rule_1",
+      "log": "emerg",
+      "type": "in",
+      "action": "ACCEPT",
+      "iface": "eth0",
+      "source": "0.0.0.0/0",
+      "dest": "10.0.0.0-10.0.0.255",
+      "proto": "tcp",
+      "sport": "0:65535",
+      "dport": "80,443,8080:8083",
+      "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+    },
+    {
+      "enable": 0,
+      "comment": "test_rule_2",
+      "log": "crit",
+      "type": "out",
+      "action": "DROP",
+      "iface": "eth1",
+      "source": "10.0.0.0-10.255.255.255",
+      "dest": "0.0.0.0",
+      "macro": "Ping",
+      "digest": "15161718191a1b1c1d1e1f202122232425262728"
+    },
+    {
+      "enable": 1,
+      "comment": "test_rule_3",
+      "log": "crit",
+      "type": "group",
+      "action": "test_security_group",
+      "iface": "eth2",
+      "digest": "292a2b2c2d2e2f303132333435363738393a3b3c"
+    }
+  ]
+}

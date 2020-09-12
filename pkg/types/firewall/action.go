@@ -17,13 +17,10 @@ func (obj Action) Marshal() (string, error) {
 	switch obj {
 	case ActionAccept:
 		return "ACCEPT", nil
-
 	case ActionReject:
 		return "REJECT", nil
-
 	case ActionDrop:
 		return "DROP", nil
-
 	default:
 		return "", fmt.Errorf("unknown action")
 	}
@@ -33,13 +30,10 @@ func (obj *Action) Unmarshal(s string) error {
 	switch s {
 	case "ACCEPT":
 		*obj = ActionAccept
-
 	case "REJECT":
 		*obj = ActionReject
-
 	case "DROP":
 		*obj = ActionDrop
-
 	default:
 		return fmt.Errorf("can't unmarshal firewall action %s", s)
 	}

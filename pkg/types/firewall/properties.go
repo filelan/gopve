@@ -6,11 +6,6 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
-type GetOptions struct {
-	LineStart uint
-	LineLimit uint
-}
-
 const (
 	DefaultMaxTrackedConnections         = 262144
 	DefaultMaxConnectionEstablishTimeout = 432000
@@ -19,7 +14,35 @@ const (
 	DefaultSYNFloodProtectionBurst       = 1000
 )
 
-type Properties struct {
+type ClusterProperties struct {
+	Enable         bool
+	EnableEbtables bool
+
+	DefaultInputPolicy  Action
+	DefaultOutputPolicy Action
+
+	LogLimit LogLimit
+
+	Digest string
+}
+
+func (props ClusterProperties) MapToValues() (request.Values, error) {
+	values := make(request.Values)
+
+	values.AddBool("enable", props.Enable)
+	values.AddBool("ebtables", props.EnableEbtables)
+
+	values.AddObject("policy_in", props.DefaultInputPolicy)
+	values.AddObject("policy_out", props.DefaultOutputPolicy)
+
+	values.AddObject("log_ratelimit", props.LogLimit)
+
+	values.ConditionalAddString("digest", props.Digest, props.Digest != "")
+
+	return values, nil
+}
+
+type NodeProperties struct {
 	Enable           bool
 	LogLevelIncoming LogLevel
 	LogLevelOutgoing LogLevel
@@ -45,59 +68,95 @@ type Properties struct {
 	Digest string
 }
 
-func (props Properties) MapToValues() (request.Values, error) {
+func (props NodeProperties) MapToValues() (request.Values, error) {
 	var delete []string
-	form := make(request.Values)
+	values := make(request.Values)
 
-	form.AddBool("enable", props.Enable)
-	form.AddObject("log_level_in", props.LogLevelIncoming)
-	form.AddObject("log_level_out", props.LogLevelOutgoing)
+	values.AddBool("enable", props.Enable)
+	values.AddObject("log_level_in", props.LogLevelIncoming)
+	values.AddObject("log_level_out", props.LogLevelOutgoing)
 
-	form.AddBool("log_nf_conntrack", props.LogTrackedConnections)
-	form.AddBool("nf_conntrack_allow_invalid", props.AllowInvalidConnectionPackets)
+	values.AddBool("log_nf_conntrack", props.LogTrackedConnections)
+	values.AddBool("nf_conntrack_allow_invalid", props.AllowInvalidConnectionPackets)
 
 	if props.MaxTrackedConnections == 0 || props.MaxTrackedConnections == DefaultMaxTrackedConnections {
 		delete = append(delete, "nf_conntrack_max")
 	} else {
-		form.AddUint("nf_conntrack_max", props.MaxTrackedConnections)
+		values.AddUint("nf_conntrack_max", props.MaxTrackedConnections)
 	}
 	if props.MaxConnectionEstablishTimeout == 0 || props.MaxConnectionEstablishTimeout == DefaultMaxConnectionEstablishTimeout {
 		delete = append(delete, "nf_conntrack_tcp_timeout_established")
 	} else {
-		form.AddUint("nf_conntrack_tcp_timeout_established", props.MaxConnectionEstablishTimeout)
+		values.AddUint("nf_conntrack_tcp_timeout_established", props.MaxConnectionEstablishTimeout)
 	}
 	if props.MaxConnectionSYNACKTimeout == 0 || props.MaxConnectionSYNACKTimeout == DefaultMaxConectionSYNACKTimeout {
 		delete = append(delete, "nf_conntrack_tcp_timeout_syn_recv")
 	} else {
-		form.AddUint("nf_conntrack_tcp_timeout_syn_recv", props.MaxConnectionSYNACKTimeout)
+		values.AddUint("nf_conntrack_tcp_timeout_syn_recv", props.MaxConnectionSYNACKTimeout)
 	}
 
-	form.AddBool("ndp", props.EnableNDP)
+	values.AddBool("ndp", props.EnableNDP)
 
-	form.AddBool("nosmurfs", !props.EnableSMURFS)
-	form.AddObject("smurf_log_level", props.SMURFSLogLevel)
+	values.AddBool("nosmurfs", props.EnableSMURFS)
+	values.AddObject("smurf_log_level", props.SMURFSLogLevel)
 
-	form.AddBool("tcpflags", props.EnableTCPFlagsFilter)
-	form.AddObject("tcp_flags_log_level", props.TCPFlagsFilterLogLevel)
+	values.AddBool("tcpflags", props.EnableTCPFlagsFilter)
+	values.AddObject("tcp_flags_log_level", props.TCPFlagsFilterLogLevel)
 
-	form.AddBool("protection_synflood", props.EnableSYNFloodProtection)
+	values.AddBool("protection_synflood", props.EnableSYNFloodProtection)
 	if props.SYNFloodProtectionRate == 0 || props.SYNFloodProtectionRate == DefaultSYNFloodProtectionRate {
 		delete = append(delete, "protection_synflood_rate")
 	} else {
-		form.AddUint("protection_synflood_rate", props.SYNFloodProtectionRate)
+		values.AddUint("protection_synflood_rate", props.SYNFloodProtectionRate)
 	}
 
 	if props.SYNFloodProtectionBurst == 0 || props.SYNFloodProtectionBurst == DefaultSYNFloodProtectionBurst {
 		delete = append(delete, "protection_synflood_burst")
 	} else {
-		form.AddUint("protection_synflood_burst", props.SYNFloodProtectionBurst)
+		values.AddUint("protection_synflood_burst", props.SYNFloodProtectionBurst)
 	}
 
-	form.ConditionalAddString("digest", props.Digest, props.Digest != "")
+	values.ConditionalAddString("digest", props.Digest, props.Digest != "")
 
-	form.ConditionalAddString("delete", strings.Join(delete, ","), len(delete) != 0)
+	values.ConditionalAddString("delete", strings.Join(delete, ","), len(delete) != 0)
 
-	return form, nil
+	return values, nil
 }
 
-type LogEntries map[int]string
+type VMProperties struct {
+	Enable           bool
+	LogLevelIncoming LogLevel
+	LogLevelOutgoing LogLevel
+
+	DefaultInputPolicy  Action
+	DefaultOutputPolicy Action
+
+	EnableNDP       bool
+	EnableRADV      bool
+	EnableDHCP      bool
+	EnableMACFilter bool
+	EnableIPFilter  bool
+
+	Digest string
+}
+
+func (props VMProperties) MapToValues() (request.Values, error) {
+	values := make(request.Values)
+
+	values.AddBool("enable", props.Enable)
+	values.AddObject("log_level_in", props.LogLevelIncoming)
+	values.AddObject("log_level_out", props.LogLevelOutgoing)
+
+	values.AddObject("policy_in", props.DefaultInputPolicy)
+	values.AddObject("policy_out", props.DefaultOutputPolicy)
+
+	values.AddBool("ndp", props.EnableNDP)
+	values.AddBool("radv", props.EnableRADV)
+	values.AddBool("dhcp", props.EnableDHCP)
+	values.AddBool("macfilter", props.EnableMACFilter)
+	values.AddBool("ipfilter", props.EnableIPFilter)
+
+	values.ConditionalAddString("digest", props.Digest, props.Digest != "")
+
+	return values, nil
+}

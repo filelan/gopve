@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "name": "internal",
+      "comment": "LAN hosts",
+      "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+    },
+    {
+      "name": "dns",
+      "comment": "DNS servers",
+      "digest": "15161718191a1b1c1d1e1f202122232425262728"
+    }
+  ]
+}

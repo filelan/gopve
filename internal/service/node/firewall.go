@@ -14,7 +14,7 @@ type getFirewallLogResponseJSON struct {
 	Contents   string `json:"t"`
 }
 
-func (n *Node) GetFirewallLog(opts firewall.GetOptions) (firewall.LogEntries, error) {
+func (n *Node) GetFirewallLog(opts firewall.GetLogOptions) (firewall.LogEntries, error) {
 	form := make(request.Values)
 
 	form.ConditionalAddUint("start", opts.LineStart, opts.LineStart != 0)
@@ -46,7 +46,7 @@ type getFirewallPropertiesResponseJSON struct {
 
 	EnableNDP types.PVEBool `json:"ndp"`
 
-	DisableSMURFS  types.PVEBool     `json:"nosmurfs"`
+	EnableSMURFS   types.PVEBool     `json:"nosmurfs"`
 	SMURFSLogLevel firewall.LogLevel `json:"smurf_log_level"`
 
 	EnableTCPFlagsFilter   types.PVEBool     `json:"tcpflags"`
@@ -59,33 +59,43 @@ type getFirewallPropertiesResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallPropertiesResponseJSON) Map() (firewall.Properties, error) {
-	var maxTrackedConnections uint = firewall.DefaultMaxTrackedConnections
+func (obj getFirewallPropertiesResponseJSON) Map() (firewall.NodeProperties, error) {
+	var maxTrackedConnections uint
 	if obj.MaxTrackedConnections != nil {
 		maxTrackedConnections = *obj.MaxTrackedConnections
+	} else {
+		maxTrackedConnections = firewall.DefaultMaxTrackedConnections
 	}
 
-	var maxConnectionEstablishTimeout uint = firewall.DefaultMaxConnectionEstablishTimeout
+	var maxConnectionEstablishTimeout uint
 	if obj.MaxConnectionEstablishTimeout != nil {
 		maxConnectionEstablishTimeout = *obj.MaxConnectionEstablishTimeout
+	} else {
+		maxConnectionEstablishTimeout = firewall.DefaultMaxConnectionEstablishTimeout
 	}
 
-	var maxConnectionSYNACKTimeout uint = firewall.DefaultMaxConectionSYNACKTimeout
+	var maxConnectionSYNACKTimeout uint
 	if obj.MaxConnectionSYNACKTimeout != nil {
 		maxConnectionSYNACKTimeout = *obj.MaxConnectionSYNACKTimeout
+	} else {
+		maxConnectionSYNACKTimeout = firewall.DefaultMaxConectionSYNACKTimeout
 	}
 
-	var synFloodProtectionRate uint = firewall.DefaultSYNFloodProtectionRate
+	var synFloodProtectionRate uint
 	if obj.SYNFloodProtectionRate != nil {
 		synFloodProtectionRate = *obj.SYNFloodProtectionRate
+	} else {
+		synFloodProtectionRate = firewall.DefaultSYNFloodProtectionRate
 	}
 
-	var synFloodProtectionBurst uint = firewall.DefaultSYNFloodProtectionBurst
+	var synFloodProtectionBurst uint
 	if obj.SYNFloodProtectionBurst != nil {
 		synFloodProtectionBurst = *obj.SYNFloodProtectionBurst
+	} else {
+		synFloodProtectionBurst = firewall.DefaultSYNFloodProtectionBurst
 	}
 
-	return firewall.Properties{
+	return firewall.NodeProperties{
 		Enable:           obj.Enable.Bool(),
 		LogLevelIncoming: obj.LogLevelIncoming,
 		LogLevelOutgoing: obj.LogLevelOutgoing,
@@ -98,7 +108,7 @@ func (obj getFirewallPropertiesResponseJSON) Map() (firewall.Properties, error) 
 
 		EnableNDP: obj.EnableNDP.Bool(),
 
-		EnableSMURFS:   !obj.DisableSMURFS.Bool(),
+		EnableSMURFS:   obj.EnableSMURFS.Bool(),
 		SMURFSLogLevel: obj.SMURFSLogLevel,
 
 		EnableTCPFlagsFilter:   obj.EnableTCPFlagsFilter.Bool(),
@@ -112,16 +122,16 @@ func (obj getFirewallPropertiesResponseJSON) Map() (firewall.Properties, error) 
 	}, nil
 }
 
-func (n *Node) GetFirewallProperties() (firewall.Properties, error) {
+func (n *Node) GetFirewallProperties() (firewall.NodeProperties, error) {
 	var res getFirewallPropertiesResponseJSON
 	if err := n.svc.client.Request(http.MethodGet, fmt.Sprintf("nodes/%s/firewall/options", n.name), nil, &res); err != nil {
-		return firewall.Properties{}, err
+		return firewall.NodeProperties{}, err
 	}
 
 	return res.Map()
 }
 
-func (n *Node) SetFirewallProperties(props firewall.Properties) error {
+func (n *Node) SetFirewallProperties(props firewall.NodeProperties) error {
 	form, err := props.MapToValues()
 	if err != nil {
 		return err
@@ -262,8 +272,13 @@ func (n *Node) MoveFirewallRule(pos uint, newpos uint) error {
 }
 
 func (n *Node) DeleteFirewallRule(pos uint, digest string) error {
-	form := make(request.Values)
-	form.ConditionalAddString("digest", digest, digest != "")
+	var form request.Values
+
+	if digest != "" {
+		form = request.Values{
+			"digest": {digest},
+		}
+	}
 
 	return n.svc.client.Request(http.MethodDelete, fmt.Sprintf("nodes/%s/firewall/rules/%d", n.name, pos), form, nil)
 }

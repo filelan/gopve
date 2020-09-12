@@ -1,0 +1,21 @@
+{
+  "data": {
+    "enable": 1,
+    "log_level_in": "info",
+    "log_level_out": "warning",
+    "log_nf_conntrack": 1,
+    "nf_conntrack_allow_invalid": 1,
+    "nf_conntrack_max": 262144,
+    "nf_conntrack_tcp_timeout_established": 432000,
+    "nf_conntrack_tcp_timeout_syn_recv": 60,
+    "ndp": 1,
+    "nosmurfs": 1,
+    "smurf_log_level": "debug",
+    "tcpflags": 1,
+    "tcp_flags_log_level": "crit",
+    "protection_synflood": 1,
+    "protection_synflood_rate": 200,
+    "protection_synflood_burst": 1000,
+    "digest": "0000000000000000000000000000000000000000"
+  }
+}

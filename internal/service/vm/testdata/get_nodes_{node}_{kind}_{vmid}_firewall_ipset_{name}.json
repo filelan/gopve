@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "cidr": "10.0.0.1",
+      "comment": "PVE test_node",
+      "nomatch": 0,
+      "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+    },
+    {
+      "cidr": "10.0.0.2",
+      "comment": "PVE test_node2",
+      "nomatch": 0,
+      "digest": "15161718191a1b1c1d1e1f202122232425262728"
+    },
+    {
+      "cidr": "10.0.0.3",
+      "comment": "PVE test_node3",
+      "nomatch": 0,
+      "digest": "292a2b2c2d2e2f303132333435363738393a3b3c"
+    },
+    {
+      "cidr": "10.0.0.254",
+      "comment": "Gateway",
+      "nomatch": 1,
+      "digest": "3d3e3f404142434445464748494a4b4c4d4e4f50"
+    }
+  ]
+}

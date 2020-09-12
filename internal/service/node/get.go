@@ -44,21 +44,14 @@ func (svc *Service) List() ([]node.Node, error) {
 }
 
 func (svc *Service) Get(name string) (node.Node, error) {
-	var res []getResponseJSON
-	if err := svc.client.Request(http.MethodGet, "cluster/resources", request.Values{
-		"type": {"node"},
-	}, &res); err != nil {
+	nodes, err := svc.List()
+	if err != nil {
 		return nil, err
 	}
 
-	for _, node := range res {
-		if node.Name == name {
-			out, err := node.Map(svc)
-			if err != nil {
-				return nil, err
-			}
-
-			return out, nil
+	for _, node := range nodes {
+		if node.Name() == name {
+			return node, nil
 		}
 	}
 

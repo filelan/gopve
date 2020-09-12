@@ -1,0 +1,9 @@
+{
+  "data": {
+    "name": "local",
+    "comment": "LAN network",
+    "cidr": "10.0.0.0/8",
+    "ipversion": 4,
+    "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+  }
+}

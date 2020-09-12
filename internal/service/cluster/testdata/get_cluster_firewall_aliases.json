@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "name": "local",
+      "comment": "LAN network",
+      "cidr": "10.0.0.0/8",
+      "ipversion": 4,
+      "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+    },
+    {
+      "name": "self",
+      "comment": "PVE test_node",
+      "cidr": "10.0.0.1",
+      "ipversion": 4,
+      "digest": "15161718191a1b1c1d1e1f202122232425262728"
+    }
+  ]
+}

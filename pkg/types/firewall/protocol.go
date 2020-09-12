@@ -228,158 +228,107 @@ func (obj *Protocol) Unmarshal(s string) error {
 	switch s {
 	case "":
 		*obj = ProtocolNone
-	case "icmp":
-	case "1":
+	case "icmp", "1":
 		*obj = ProtocolICMP
-	case "igmp":
-	case "2":
+	case "igmp", "2":
 		*obj = ProtocolIGMP
-	case "ggp":
-	case "3":
+	case "ggp", "3":
 		*obj = ProtocolGGP
-	case "ipencap":
-	case "4":
+	case "ipencap", "4":
 		*obj = ProtocolIPEncap
-	case "st":
-	case "5":
+	case "st", "5":
 		*obj = ProtocolST
-	case "tcp":
-	case "6":
+	case "tcp", "6":
 		*obj = ProtocolTCP
-	case "egp":
-	case "8":
+	case "egp", "8":
 		*obj = ProtocolEGP
-	case "igp":
-	case "9":
+	case "igp", "9":
 		*obj = ProtocolIGP
-	case "pup":
-	case "12":
+	case "pup", "12":
 		*obj = ProtocolPUP
-	case "udp":
-	case "17":
+	case "udp", "17":
 		*obj = ProtocolUDP
-	case "hmp":
-	case "20":
+	case "hmp", "20":
 		*obj = ProtocolHMP
-	case "xns-idp":
-	case "22":
+	case "xns-idp", "22":
 		*obj = ProtocolXNSIDP
-	case "rdp":
-	case "27":
+	case "rdp", "27":
 		*obj = ProtocolRDP
-	case "iso-tp4":
-	case "29":
+	case "iso-tp4", "29":
 		*obj = ProtocolISOTP4
-	case "dccp":
-	case "33":
+	case "dccp", "33":
 		*obj = ProtocolDCCP
-	case "xtp":
-	case "36":
+	case "xtp", "36":
 		*obj = ProtocolXTP
-	case "ddp":
-	case "37":
+	case "ddp", "37":
 		*obj = ProtocolDDP
-	case "idpr-cmtp":
-	case "38":
+	case "idpr-cmtp", "38":
 		*obj = ProtocolIDPRCMTP
-	case "ipv6":
-	case "41":
+	case "ipv6", "41":
 		*obj = ProtocolIPv6
-	case "ipv6-route":
-	case "43":
+	case "ipv6-route", "43":
 		*obj = ProtocolIPv6Route
-	case "ipv6-frag":
-	case "44":
+	case "ipv6-frag", "44":
 		*obj = ProtocolIPv6Frag
-	case "idrp":
-	case "45":
+	case "idrp", "45":
 		*obj = ProtocolIDRP
-	case "rsvp":
-	case "46":
+	case "rsvp", "46":
 		*obj = ProtocolRSVP
-	case "gre":
-	case "47":
+	case "gre", "47":
 		*obj = ProtocolGRE
-	case "esp":
-	case "50":
+	case "esp", "50":
 		*obj = ProtocolESP
-	case "ah":
-	case "51":
+	case "ah", "51":
 		*obj = ProtocolAH
-	case "skip":
-	case "57":
+	case "skip", "57":
 		*obj = ProtocolSKIP
-	case "ipv6-icmp":
-	case "58":
+	case "ipv6-icmp", "58":
 		*obj = ProtocolIPv6ICMP
-	case "ipv6-nonxt":
-	case "59":
+	case "ipv6-nonxt", "59":
 		*obj = ProtocolIPv6NoNXT
-	case "ipv6-opts":
-	case "60":
+	case "ipv6-opts", "60":
 		*obj = ProtocolIPv6Opts
-	case "vmtp":
-	case "81":
+	case "vmtp", "81":
 		*obj = ProtocolVMTP
-	case "eigrp":
-	case "88":
+	case "eigrp", "88":
 		*obj = ProtocolEIGRP
-	case "ospf":
-	case "89":
+	case "ospf", "89":
 		*obj = ProtocolOSPF
-	case "ax.25":
-	case "93":
+	case "ax.25", "93":
 		*obj = ProtocolAX25
-	case "ipip":
-	case "94":
+	case "ipip", "94":
 		*obj = ProtocolIPIP
-	case "etherip":
-	case "97":
+	case "etherip", "97":
 		*obj = ProtocolEtherIP
-	case "encap":
-	case "98":
+	case "encap", "98":
 		*obj = ProtocolEncap
-	case "pim":
-	case "103":
+	case "pim", "103":
 		*obj = ProtocolPIM
-	case "ipcomp":
-	case "108":
+	case "ipcomp", "108":
 		*obj = ProtocolIPComp
-	case "vrrp":
-	case "112":
+	case "vrrp", "112":
 		*obj = ProtocolVRRP
-	case "l2tp":
-	case "115":
+	case "l2tp", "115":
 		*obj = ProtocolL2TP
-	case "isis":
-	case "124":
+	case "isis", "124":
 		*obj = ProtocolISIS
-	case "sctp":
-	case "132":
+	case "sctp", "132":
 		*obj = ProtocolSCTP
-	case "fc":
-	case "133":
+	case "fc", "133":
 		*obj = ProtocolFC
-	case "mobility-header":
-	case "135":
+	case "mobility-header", "135":
 		*obj = ProtocolMobilityHeader
-	case "udplite":
-	case "136":
+	case "udplite", "136":
 		*obj = ProtocolUDPLite
-	case "mpls-in-ip":
-	case "137":
+	case "mpls-in-ip", "137":
 		*obj = ProtocolMPLSInIP
-	case "hip":
-	case "139":
+	case "hip", "139":
 		*obj = ProtocolHIP
-	case "shim6":
-	case "140":
+	case "shim6", "140":
 		*obj = ProtocolSHIM6
-	case "wesp":
-	case "141":
+	case "wesp", "141":
 		*obj = ProtocolWESP
-	case "rohc":
-	case "142":
+	case "rohc", "142":
 		*obj = ProtocolROHC
 	default:
 		return fmt.Errorf("can't unmarshal firewall protocol %s", s)

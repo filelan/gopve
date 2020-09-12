@@ -1,0 +1,8 @@
+{
+  "data": {
+    "cidr": "10.0.0.1",
+    "comment": "PVE test_node",
+    "nomatch": 0,
+    "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+  }
+}

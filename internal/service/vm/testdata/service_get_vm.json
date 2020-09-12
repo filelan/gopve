@@ -1,0 +1,18 @@
+{
+    "data": [
+      {
+        "id": "node/janus",
+        "maxmem": 2077298688,
+        "disk": 3283542016,
+        "type": "node",
+        "uptime": 170,
+        "level": "",
+        "cpu": 0.915263673837319,
+        "status": "online",
+        "maxdisk": 16578916352,
+        "mem": 1316511744,
+        "node": "janus",
+        "maxcpu": 2
+      }
+    ]
+  }

@@ -26,9 +26,9 @@ type Node interface {
 	GetTimezone() (*time.Location, error)
 	SetTimezone(timezone *time.Location) error
 
-	GetFirewallLog(opts firewall.GetOptions) (firewall.LogEntries, error)
-	GetFirewallProperties() (firewall.Properties, error)
-	SetFirewallProperties(props firewall.Properties) error
+	GetFirewallLog(opts firewall.GetLogOptions) (firewall.LogEntries, error)
+	GetFirewallProperties() (firewall.NodeProperties, error)
+	SetFirewallProperties(props firewall.NodeProperties) error
 
 	ListFirewallRules() ([]firewall.Rule, error)
 	GetFirewallRule(pos uint) (firewall.Rule, error)

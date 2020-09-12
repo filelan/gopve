@@ -1,0 +1,15 @@
+{
+  "data": {
+    "enable": 1,
+    "log_level_in": "info",
+    "log_level_out": "warning",
+    "policy_in": "DROP",
+    "policy_out": "ACCEPT",
+    "ndp": 1,
+    "radv": 1,
+    "dhcp": 1,
+    "macfilter": 1,
+    "ipfilter": 1,
+    "digest": "0000000000000000000000000000000000000000"
+  }
+}
