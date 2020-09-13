@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "name": "first",
+      "description": "First snapshot",
+      "snaptime": 1609372800,
+      "vmstate": 1
+    },
+    {
+      "name": "second",
+      "description": "Second snapshot",
+      "snaptime": 1609416000,
+      "vmstate": 0,
+      "parent": "first"
+    },
+    {
+      "name": "current",
+      "description": "You are here!",
+      "running": 0,
+      "parent": "first",
+      "digest": "0102030405060708090a0b0c0d0e0f1011121314"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/firewall"
 )
 
-func TestClusterFirewallAliases(t *testing.T) {
+func TestFirewallAliases(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	getAlias := func() *cluster.FirewallAlias {
@@ -105,7 +105,7 @@ func TestClusterFirewallAliases(t *testing.T) {
 	})
 }
 
-func TestClusterFirewallIPSets(t *testing.T) {
+func TestFirewallIPSets(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	getIPSet := func() *cluster.FirewallIPSet {
@@ -334,7 +334,7 @@ func TestClusterFirewallIPSets(t *testing.T) {
 	})
 }
 
-func TestClusterFirewallServiceGroupRules(t *testing.T) {
+func TestFirewallServiceGroupRules(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	getServiceGroup := func() *cluster.FirewallServiceGroup {

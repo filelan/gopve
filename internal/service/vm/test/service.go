@@ -6,8 +6,8 @@ import (
 	"github.com/xabinapal/gopve/pkg/request/mocks"
 )
 
-func NewService() (*vm.Service, *mocks.Executor) {
+func NewService() (*vm.Service, *test.API, *mocks.Executor) {
 	cli, exc := test.NewClient()
 	api := test.NewAPI()
-	return vm.NewService(cli, api), exc
+	return vm.NewService(cli, api), api, exc
 }

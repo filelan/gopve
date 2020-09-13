@@ -14,7 +14,7 @@ import (
 )
 
 func TestVirtualMachineFirewallProperties(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("Get", func(t *testing.T) {
 		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_options.json")
@@ -93,7 +93,7 @@ func TestVirtualMachineFirewallProperties(t *testing.T) {
 }
 
 func TestVirtualMachineServiceFirewallAliases(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
 		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_aliases.json")
@@ -136,7 +136,7 @@ func TestVirtualMachineServiceFirewallAliases(t *testing.T) {
 }
 
 func TestVirtualMachineServiceFirewallIPSets(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
 		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_ipset.json")
@@ -180,7 +180,7 @@ func TestVirtualMachineServiceFirewallIPSets(t *testing.T) {
 }
 
 func TestVirtualMachineServiceFirewallServiceGroups(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
 		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_groups.json")
@@ -223,7 +223,7 @@ func TestVirtualMachineServiceFirewallServiceGroups(t *testing.T) {
 }
 
 func TestVirtualMachineFirewallRules(t *testing.T) {
-	vm, exc := test.NewVirtualMachine()
+	vm, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
 		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_rules.json")

@@ -13,8 +13,8 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/firewall"
 )
 
-func TestVirtualMachineFirewallAliases(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+func TestFirewallAliases(t *testing.T) {
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	getAlias := func() *vm.FirewallAlias {
 		return vm.NewFirewallAlias(virtualMachine, "test_alias", "test_description", "127.0.0.1", "test_digest")
@@ -105,8 +105,8 @@ func TestVirtualMachineFirewallAliases(t *testing.T) {
 	})
 }
 
-func TestVirtualMachineFirewallIPSets(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+func TestFirewallIPSets(t *testing.T) {
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	getIPSet := func() *vm.FirewallIPSet {
 		return vm.NewFirewallIPSet(virtualMachine, "test_ipset", "test_description", "test_digest")
@@ -334,8 +334,8 @@ func TestVirtualMachineFirewallIPSets(t *testing.T) {
 	})
 }
 
-func TestVirtualMachineServiceGroupRules(t *testing.T) {
-	virtualMachine, exc := test.NewVirtualMachine()
+func TestFirewallServiceGroupRules(t *testing.T) {
+	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	getServiceGroup := func() *vm.FirewallServiceGroup {
 		return vm.NewFirewallServiceGroup(virtualMachine, "test_sg", "test_description", "test_digest")

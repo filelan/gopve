@@ -28,18 +28,23 @@ type VirtualMachine interface {
 	Suspend() (task.Task, error)
 	Resume() (task.Task, error)
 
+	ListSnapshots() ([]Snapshot, error)
+	GetSnapshot(name string) (Snapshot, error)
+	CreateSnapshot(name string, props SnapshotProperties) (task.Task, error)
+	RollbackToSnapshot(name string) (task.Task, error)
+
 	GetFirewallLog(opts firewall.GetLogOptions) (firewall.LogEntries, error)
 	GetFirewallProperties() (firewall.VMProperties, error)
 	SetFirewallProperties(props firewall.VMProperties) error
 
-	ListFirewallAiases() ([]firewall.Alias, error)
+	ListFirewallAliases() ([]firewall.Alias, error)
 	GetFirewallAlias(name string) (firewall.Alias, error)
 
 	ListFirewallIPSets() ([]firewall.IPSet, error)
 	GetFirewallIPSet(name string) (firewall.IPSet, error)
 
 	ListFirewallServiceGroups() ([]firewall.ServiceGroup, error)
-	GetfirewallServiceGroup(name string) (firewall.ServiceGroup, error)
+	GetFirewallServiceGroup(name string) (firewall.ServiceGroup, error)
 
 	ListFirewallRules() ([]firewall.Rule, error)
 	GetFirewallRule(pos uint) (firewall.Rule, error)
