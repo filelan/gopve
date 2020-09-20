@@ -1,0 +1,11 @@
+{
+    "data": [
+      {
+        "poolid": "test_pool",
+        "comment": "test_description"
+      },
+      {
+        "poolid": "test_pool2"
+      }
+    ]
+  }

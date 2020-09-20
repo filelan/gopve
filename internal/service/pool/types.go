@@ -27,6 +27,29 @@ type Pool struct {
 
 	name        string
 	description string
+
+	members []pool.PoolMember
+}
+
+func NewPool(svc *Service, name string, description string) *Pool {
+	return &Pool{
+		svc: svc,
+
+		name:        name,
+		description: description,
+	}
+}
+
+func NewFullPool(svc *Service, name, description string, members []pool.PoolMember) *Pool {
+	return &Pool{
+		svc:  svc,
+		full: true,
+
+		name:        name,
+		description: description,
+
+		members: members,
+	}
 }
 
 func (obj *Pool) Load() error {
@@ -58,10 +81,6 @@ func (obj *Pool) Description() (string, error) {
 }
 
 func (obj *Pool) GetProperties() (pool.PoolProperties, error) {
-	if err := obj.Load(); err != nil {
-		return pool.PoolProperties{}, err
-	}
-
 	return pool.PoolProperties{
 		Description: obj.description,
 	}, nil
@@ -82,4 +101,12 @@ func (obj *Pool) SetProperties(props pool.PoolProperties) error {
 
 func (obj *Pool) Delete(force bool) error {
 	return fmt.Errorf("not implemented")
+}
+
+func (obj *Pool) ListMembers() ([]pool.PoolMember, error) {
+	if err := obj.Load(); err != nil {
+		return nil, err
+	}
+
+	return obj.members, nil
 }

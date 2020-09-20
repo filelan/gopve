@@ -8,8 +8,6 @@ type Pool interface {
 	SetProperties(prop PoolProperties) error
 
 	Delete(force bool) error
-}
 
-type PoolProperties struct {
-	Description string
+	ListMembers() ([]PoolMember, error)
 }

@@ -12,13 +12,36 @@ type Pool struct {
 	mock.Mock
 }
 
-// Get provides a mock function with given fields: id
-func (_m *Pool) Get(id string) (pool.Pool, error) {
-	ret := _m.Called(id)
+// Create provides a mock function with given fields: name, props
+func (_m *Pool) Create(name string, props pool.PoolProperties) (pool.Pool, error) {
+	ret := _m.Called(name, props)
+
+	var r0 pool.Pool
+	if rf, ok := ret.Get(0).(func(string, pool.PoolProperties) pool.Pool); ok {
+		r0 = rf(name, props)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(pool.Pool)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, pool.PoolProperties) error); ok {
+		r1 = rf(name, props)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Get provides a mock function with given fields: name
+func (_m *Pool) Get(name string) (pool.Pool, error) {
+	ret := _m.Called(name)
 
 	var r0 pool.Pool
 	if rf, ok := ret.Get(0).(func(string) pool.Pool); ok {
-		r0 = rf(id)
+		r0 = rf(name)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(pool.Pool)
@@ -27,7 +50,7 @@ func (_m *Pool) Get(id string) (pool.Pool, error) {
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
+		r1 = rf(name)
 	} else {
 		r1 = ret.Error(1)
 	}
