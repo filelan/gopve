@@ -8,9 +8,9 @@ import (
 )
 
 type getResponseJSON struct {
-	Name    string                 `json:"storage"`
-	Kind    string                 `json:"type"`
-	Content storage.StorageContent `json:"content"`
+	Name    string          `json:"storage"`
+	Kind    string          `json:"type"`
+	Content storage.Content `json:"content"`
 }
 
 func (res getResponseJSON) Map(svc *Service, full bool) (storage.Storage, error) {

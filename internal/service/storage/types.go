@@ -23,7 +23,17 @@ type Storage struct {
 
 	name    string
 	kind    string
-	content storage.StorageContent
+	content storage.Content
+}
+
+func NewStorage(svc *Service, name string, kind string, content storage.Content) *Storage {
+	return &Storage{
+		svc: svc,
+
+		name:    name,
+		kind:    kind,
+		content: content,
+	}
 }
 
 func (obj *Storage) Load() error {
@@ -58,9 +68,9 @@ func (obj *Storage) Kind() (string, error) {
 	return obj.kind, nil
 }
 
-func (obj *Storage) Content() (storage.StorageContent, error) {
+func (obj *Storage) Content() (storage.Content, error) {
 	if err := obj.Load(); err != nil {
-		return storage.StorageContent(0), err
+		return storage.Content(0), err
 	}
 
 	return obj.content, nil

@@ -14,7 +14,7 @@ import (
 )
 
 func TestServiceList(t *testing.T) {
-	svc, exc := test.NewService()
+	svc, _, exc := test.NewService()
 
 	response, err := ioutil.ReadFile("./testdata/get_pools.json")
 	require.NoError(t, err)
@@ -37,15 +37,24 @@ func TestServiceList(t *testing.T) {
 }
 
 func TestServiceGet(t *testing.T) {
-	svc, exc := test.NewService()
+	svc, _, exc := test.NewService()
 
 	response, err := ioutil.ReadFile("./testdata/get_pools_{poolid}.json")
 	require.NoError(t, err)
 
+	member1, err := pool.NewPoolMemberVirtualMachine(svc, "qemu/100")
+	require.NoError(t, err)
+
+	member2, err := pool.NewPoolMemberVirtualMachine(svc, "lxc/101")
+	require.NoError(t, err)
+
+	member3, err := pool.NewPoolMemberStorage(svc, "storage/test_node/local")
+	require.NoError(t, err)
+
 	expectedPool := pool.NewFullPool(svc, "test_pool", "test_description", []types.PoolMember{
-		pool.NewPoolMemberVirtualMachine(svc, "qemu/100"),
-		pool.NewPoolMemberVirtualMachine(svc, "lxc/101"),
-		pool.NewPoolMemberStorage(svc, "storage/test_node/local"),
+		member1,
+		member2,
+		member3,
 	})
 
 	exc.

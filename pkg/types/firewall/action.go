@@ -46,5 +46,6 @@ func (obj *Action) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err
 	}
+
 	return obj.Unmarshal(s)
 }

@@ -11,8 +11,8 @@ type getResponseJSON struct {
 	Name        string `json:"poolid"`
 	Description string `json:"comment"`
 	Members     []struct {
-		ID   string    `json:"id"`
-		Type pool.Kind `json:"type"`
+		ID   string          `json:"id"`
+		Type pool.MemberKind `json:"type"`
 	} `json:"members"`
 }
 
@@ -21,13 +21,20 @@ func (res getResponseJSON) Map(svc *Service, name string, full bool) (pool.Pool,
 		var members []pool.PoolMember
 
 		for _, m := range res.Members {
-			fmt.Printf("%+v\n", m)
 			switch m.Type {
-			case pool.KindVirtualMachine:
-				member := NewPoolMemberVirtualMachine(svc, m.ID)
+			case pool.MemberKindVirtualMachine:
+				member, err := NewPoolMemberVirtualMachine(svc, m.ID)
+				if err != nil {
+					return nil, err
+				}
+
 				members = append(members, member)
-			case pool.KindStorage:
-				member := NewPoolMemberStorage(svc, m.ID)
+			case pool.MemberKindStorage:
+				member, err := NewPoolMemberStorage(svc, m.ID)
+				if err != nil {
+					return nil, err
+				}
+
 				members = append(members, member)
 			default:
 				return nil, fmt.Errorf("unsupported pool member type")

@@ -8,20 +8,20 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
-type Kind int
+type MemberKind int
 
 const (
-	KindVirtualMachine Kind = iota
-	KindStorage
+	MemberKindVirtualMachine MemberKind = iota
+	MemberKindStorage
 )
 
-func (obj *Kind) Unmarshal(s string) error {
+func (obj *MemberKind) Unmarshal(s string) error {
 	switch s {
 	case "qemu", "lxc":
-		*obj = KindVirtualMachine
+		*obj = MemberKindVirtualMachine
 
 	case "storage":
-		*obj = KindStorage
+		*obj = MemberKindStorage
 
 	default:
 		return fmt.Errorf("unknown pool member kind %s", s)
@@ -30,7 +30,7 @@ func (obj *Kind) Unmarshal(s string) error {
 	return nil
 }
 
-func (obj *Kind) UnmarshalJSON(b []byte) error {
+func (obj *MemberKind) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err
@@ -41,6 +41,7 @@ func (obj *Kind) UnmarshalJSON(b []byte) error {
 
 type PoolMember interface {
 	ID() string
+	Kind() MemberKind
 }
 
 type PoolMemberVirtualMachine interface {
