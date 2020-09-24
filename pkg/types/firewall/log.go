@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
+
+	"github.com/xabinapal/gopve/internal/types"
 )
 
 type LogLevel int
@@ -130,47 +131,49 @@ func (obj LogLimit) Marshal() (string, error) {
 }
 
 func (obj *LogLimit) Unmarshal(s string) error {
-	props := strings.Split(s, ",")
+	var props types.PVEStringList
+	if err := props.Unmarshal(s); err != nil {
+		return err
+	}
 
 	for _, prop := range props {
-		kv := strings.Split(prop, "=")
-		if len(kv) == 2 {
-			switch kv[0] {
-			case "enable":
-				if kv[1] == "0" {
-					obj.Enable = false
-				} else if kv[1] == "1" {
-					obj.Enable = true
-				} else {
-					fmt.Errorf("can't unmarshal log limit %s", s)
-				}
-			case "rate":
-				v := strings.Split(kv[1], "/")
-				if len(v) == 2 {
-					rateMessage, err := strconv.Atoi(v[0])
-					if err != nil {
-						return err
-					}
-					obj.RateMessages = uint(rateMessage)
+		kv := types.PVEStringKV{Separator: "=", AllowNoValue: false}
+		if err := kv.Unmarshal(prop); err != nil {
+			return err
+		}
 
-					if err := (&obj.RatePeriod).Unmarshal(v[1]); err != nil {
-						return err
-					}
-				} else {
-					fmt.Errorf("can't unmarshal log limit %s", s)
-				}
-			case "burst":
-				v, err := strconv.Atoi(kv[1])
-				if err != nil {
-					return err
-				}
-
-				obj.BurstMessages = uint(v)
+		switch kv.Key() {
+		case "enable":
+			switch kv.Value() {
+			case "0":
+				obj.Enable = false
+			case "1":
+				obj.Enable = true
 			default:
-				fmt.Errorf("can't unmarshal log limit %s", s)
+				return fmt.Errorf("can't unmarshal log limit %s", s)
 			}
-		} else {
-			return fmt.Errorf("can't unmarshal log limit %s", s)
+
+		case "rate":
+			v := types.PVEStringKV{Separator: "/", AllowNoValue: false}
+			v.Unmarshal(kv.Value())
+
+			rateMessage, err := strconv.Atoi(v.Key())
+			if err != nil {
+				return err
+			}
+			obj.RateMessages = uint(rateMessage)
+
+			if err := (&obj.RatePeriod).Unmarshal(v.Value()); err != nil {
+				return err
+			}
+
+		case "burst":
+			v, err := strconv.Atoi(kv.Value())
+			if err != nil {
+				return err
+			}
+
+			obj.BurstMessages = uint(v)
 		}
 	}
 

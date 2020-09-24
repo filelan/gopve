@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/cluster"
 )
 
@@ -15,20 +16,28 @@ func nodeStringToMap(svc *Service, nodes string) (cluster.HighAvailabilityGroupN
 		return nodeMap, nil
 	}
 
-	nodeList := strings.Split(nodes, ",")
+	var nodeList types.PVEStringList
+	if err := nodeList.Unmarshal(nodes); err != nil {
+		return nil, err
+	}
+
 	for _, node := range nodeList {
-		nodeData := strings.Split(node, ":")
+		nodeData := types.PVEStringKV{Separator: ":", AllowNoValue: true}
+		if err := nodeData.Unmarshal(node); err != nil {
+			return nil, err
+		}
 
-		key := HighAvailabilityGroupNode{svc, nodeData[0]}
+		key := HighAvailabilityGroupNode{svc, nodeData.Key()}
 
-		if len(nodeData) == 1 {
-			nodeMap[key] = 0
-		} else {
-			priority, err := strconv.Atoi(nodeData[1])
+		if nodeData.HasValue() {
+			priority, err := strconv.Atoi(nodeData.Value())
 			if err != nil {
 				return nil, err
 			}
+
 			nodeMap[key] = uint(priority)
+		} else {
+			nodeMap[key] = 0
 		}
 	}
 

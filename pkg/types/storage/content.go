@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/xabinapal/gopve/internal/types"
 )
 
 type Content int
@@ -48,7 +50,10 @@ func (obj Content) Marshal() (string, error) {
 }
 
 func (obj *Content) Unmarshal(s string) error {
-	content := strings.Split(s, ",")
+	var content types.PVEStringList
+	if err := content.Unmarshal(s); err != nil {
+		return err
+	}
 
 	for _, c := range content {
 		switch c {

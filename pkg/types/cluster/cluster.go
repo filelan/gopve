@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
@@ -69,25 +69,35 @@ func (obj NodeLink) Marshal() (string, error) {
 	return content, nil
 }
 
-func (obj *NodeLink) UnmarshalJSON(b []byte) error {
-	var s string
-	if err := json.Unmarshal(b, &s); err != nil {
+func (obj *NodeLink) Unmarshal(s string) error {
+	var content types.PVEStringList
+	if err := content.Unmarshal(s); err != nil {
 		return err
 	}
 
-	content := strings.Split(s, ",")
+	var addressIsSet bool
 
 	for _, c := range content {
-		kv := strings.Split(c, "=")
-		if len(kv) == 1 {
-			obj.Address = kv[0]
-		} else if len(kv) == 2 {
-			switch kv[0] {
+		kv := types.PVEStringKV{Separator: "=", AllowNoValue: true}
+		if err := kv.Unmarshal(c); err != nil {
+			return err
+		}
+
+		if !kv.HasValue() {
+			if addressIsSet {
+				return fmt.Errorf("can't unmarshal %s", s)
+			}
+
+			obj.Address = kv.Key()
+			addressIsSet = true
+		} else {
+			switch kv.Key() {
 			case "address":
-				obj.Address = kv[1]
+				obj.Address = kv.Value()
+				addressIsSet = true
 
 			case "priority":
-				priority, err := strconv.Atoi(kv[1])
+				priority, err := strconv.Atoi(kv.Value())
 				if err != nil {
 					return err
 				}
@@ -95,12 +105,19 @@ func (obj *NodeLink) UnmarshalJSON(b []byte) error {
 				obj.Priority = uint(priority)
 
 			default:
-				return fmt.Errorf("unknown key %s", kv[0])
+				return fmt.Errorf("unknown key %s", kv.Key())
 			}
-		} else {
-			return fmt.Errorf("unknown value %s", c)
 		}
 	}
 
 	return nil
+}
+
+func (obj *NodeLink) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	return obj.Unmarshal(s)
 }

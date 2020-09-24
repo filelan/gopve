@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
+
+	"github.com/xabinapal/gopve/internal/types"
 )
 
 type PortRange struct {
@@ -35,29 +36,31 @@ func (obj PortRanges) Marshal() (string, error) {
 func (obj *PortRanges) Unmarshal(s string) error {
 	var err error
 
-	ranges := strings.Split(s, ",")
+	var ranges types.PVEStringList
+	if err := ranges.Unmarshal(s); err != nil {
+		return err
+	}
+
 	for _, portRange := range ranges {
 		var start, end int
-		rangeValues := strings.Split(portRange, ":")
-		if len(rangeValues) == 1 {
-			start, err = strconv.Atoi(rangeValues[0])
-			if err != nil {
-				return err
-			}
 
-			end = start
-		} else if len(rangeValues) == 2 {
-			start, err = strconv.Atoi(rangeValues[0])
-			if err != nil {
-				return err
-			}
+		rangeValues := types.PVEStringKV{Separator: ":", AllowNoValue: true}
+		if err := rangeValues.Unmarshal(portRange); err != nil {
+			return err
+		}
 
-			end, err = strconv.Atoi(rangeValues[1])
+		start, err = strconv.Atoi(rangeValues.Key())
+		if err != nil {
+			return err
+		}
+
+		end = start
+
+		if rangeValues.HasValue() {
+			end, err = strconv.Atoi(rangeValues.Value())
 			if err != nil {
 				return err
 			}
-		} else {
-			return fmt.Errorf("unknown port range %s", s)
 		}
 
 		*obj = append(*obj, PortRange{

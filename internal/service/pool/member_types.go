@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/pool"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 	"github.com/xabinapal/gopve/pkg/types/vm"
@@ -32,12 +33,12 @@ type PoolMemberVirtualMachine struct {
 }
 
 func NewPoolMemberVirtualMachine(svc *Service, id string) (pool.PoolMember, error) {
-	memberID := strings.Split(id, "/")
-	if len(memberID) != 2 {
-		return nil, fmt.Errorf("unknown virtual machine pool member id")
+	memberID := types.PVEStringKV{Separator: "/", AllowNoValue: false}
+	if err := memberID.Unmarshal(id); err != nil {
+		return nil, err
 	}
 
-	vmid, err := strconv.Atoi(memberID[1])
+	vmid, err := strconv.Atoi(memberID.Value())
 	if err != nil {
 		return nil, err
 	}
