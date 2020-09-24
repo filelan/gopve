@@ -55,7 +55,10 @@ func (exc *PVEExecutor) EndAtomicBlock() {
 
 var errorRegExp = regexp.MustCompile(`^\d+\s*`)
 
-func (exc *PVEExecutor) Request(method, path string, form url.Values) ([]byte, error) {
+func (exc *PVEExecutor) Request(
+	method, path string,
+	form url.Values,
+) ([]byte, error) {
 	absoluteURL, err := exc.getAbsoluteURL(method, path, form)
 	if err != nil {
 		return nil, err
@@ -109,7 +112,10 @@ func (exc *PVEExecutor) SetCSRFToken(token string) {
 	exc.csrf = token
 }
 
-func (exc *PVEExecutor) SetAuthenticationTicket(ticket string, method AuthenticationMethod) {
+func (exc *PVEExecutor) SetAuthenticationTicket(
+	ticket string,
+	method AuthenticationMethod,
+) {
 	exc.unsetAuthenticationTicket()
 
 	switch method {
@@ -137,7 +143,10 @@ func (exc *PVEExecutor) SetAuthenticationTicket(ticket string, method Authentica
 	}
 }
 
-func (exc *PVEExecutor) getAbsoluteURL(method, path string, form url.Values) (*url.URL, error) {
+func (exc *PVEExecutor) getAbsoluteURL(
+	method, path string,
+	form url.Values,
+) (*url.URL, error) {
 	resourceURL, err := url.Parse(strings.Trim(path, "/"))
 	if err != nil {
 		return nil, err

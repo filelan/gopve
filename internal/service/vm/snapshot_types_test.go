@@ -21,7 +21,14 @@ func TestSnapshot(t *testing.T) {
 	require.NoError(t, err)
 
 	getSnapshot := func(parent string) *vm.Snapshot {
-		return vm.NewSnapshot(virtualMachine, "test_snapshot", "test_description", time.Unix(1609372800, 0).In(loc), true, parent)
+		return vm.NewSnapshot(
+			virtualMachine,
+			"test_snapshot",
+			"test_description",
+			time.Unix(1609372800, 0).In(loc),
+			true,
+			parent,
+		)
 	}
 
 	t.Run("Name", func(t *testing.T) {
@@ -62,7 +69,9 @@ func TestSnapshot(t *testing.T) {
 	t.Run("GetParent", func(t *testing.T) {
 		snapshot := getSnapshot("first")
 
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_snapshot.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_snapshot.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -70,7 +79,14 @@ func TestSnapshot(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedParent := vm.NewSnapshot(virtualMachine, "first", "First snapshot", time.Unix(1609372800, 0).In(loc), true, "")
+		expectedParent := vm.NewSnapshot(
+			virtualMachine,
+			"first",
+			"First snapshot",
+			time.Unix(1609372800, 0).In(loc),
+			true,
+			"",
+		)
 
 		parent, err := snapshot.GetParent()
 		require.NoError(t, err)

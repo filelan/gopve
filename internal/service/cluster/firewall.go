@@ -44,13 +44,20 @@ func (svc *Service) GetFirewallProperties() (firewall.ClusterProperties, error) 
 	return res.Map()
 }
 
-func (svc *Service) SetFirewallProperties(props firewall.ClusterProperties) error {
+func (svc *Service) SetFirewallProperties(
+	props firewall.ClusterProperties,
+) error {
 	form, err := props.MapToValues()
 	if err != nil {
 		return err
 	}
 
-	return svc.client.Request(http.MethodPut, "cluster/firewall/options", form, nil)
+	return svc.client.Request(
+		http.MethodPut,
+		"cluster/firewall/options",
+		form,
+		nil,
+	)
 }
 
 type getFirewallAliasResponseJSON struct {
@@ -61,8 +68,16 @@ type getFirewallAliasResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallAliasResponseJSON) Map(svc *Service) (firewall.Alias, error) {
-	return NewFirewallAlias(svc, obj.Name, obj.Comment, obj.CIDR, obj.Digest), nil
+func (obj getFirewallAliasResponseJSON) Map(
+	svc *Service,
+) (firewall.Alias, error) {
+	return NewFirewallAlias(
+		svc,
+		obj.Name,
+		obj.Comment,
+		obj.CIDR,
+		obj.Digest,
+	), nil
 }
 
 func (svc *Service) ListFirewallAliases() ([]firewall.Alias, error) {
@@ -100,7 +115,9 @@ type getFirewallIPSetResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallIPSetResponseJSON) Map(svc *Service) (firewall.IPSet, error) {
+func (obj getFirewallIPSetResponseJSON) Map(
+	svc *Service,
+) (firewall.IPSet, error) {
 	return NewFirewallIPSet(svc, obj.Name, obj.Comment, obj.Digest), nil
 }
 
@@ -145,7 +162,9 @@ type getFirewallServiceGroupResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallServiceGroupResponseJSON) Map(svc *Service) (firewall.ServiceGroup, error) {
+func (obj getFirewallServiceGroupResponseJSON) Map(
+	svc *Service,
+) (firewall.ServiceGroup, error) {
 	alias := NewFirewallServiceGroup(svc, obj.Name, obj.Comment, obj.Digest)
 	return alias, nil
 }
@@ -169,7 +188,9 @@ func (svc *Service) ListFirewallServiceGroups() ([]firewall.ServiceGroup, error)
 	return groups, nil
 }
 
-func (svc *Service) GetFirewallServiceGroup(name string) (firewall.ServiceGroup, error) {
+func (svc *Service) GetFirewallServiceGroup(
+	name string,
+) (firewall.ServiceGroup, error) {
 	serviceGroups, err := svc.ListFirewallServiceGroups()
 	if err != nil {
 		return nil, err
@@ -298,7 +319,12 @@ func (svc *Service) AddFirewallRule(rule firewall.Rule) error {
 		return err
 	}
 
-	return svc.client.Request(http.MethodPost, "cluster/firewall/rules", form, nil)
+	return svc.client.Request(
+		http.MethodPost,
+		"cluster/firewall/rules",
+		form,
+		nil,
+	)
 }
 
 func (svc *Service) EditFirewallRule(pos uint, rule firewall.Rule) error {
@@ -307,14 +333,24 @@ func (svc *Service) EditFirewallRule(pos uint, rule firewall.Rule) error {
 		return err
 	}
 
-	return svc.client.Request(http.MethodPut, fmt.Sprintf("cluster/firewall/rules/%d", pos), form, nil)
+	return svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("cluster/firewall/rules/%d", pos),
+		form,
+		nil,
+	)
 }
 
 func (svc *Service) MoveFirewallRule(pos uint, newpos uint) error {
 	form := request.Values{}
 	form.AddUint("moveto", newpos)
 
-	return svc.client.Request(http.MethodPut, fmt.Sprintf("cluster/firewall/rules/%d", pos), form, nil)
+	return svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("cluster/firewall/rules/%d", pos),
+		form,
+		nil,
+	)
 }
 
 func (svc *Service) DeleteFirewallRule(pos uint, digest string) error {
@@ -326,5 +362,10 @@ func (svc *Service) DeleteFirewallRule(pos uint, digest string) error {
 		}
 	}
 
-	return svc.client.Request(http.MethodDelete, fmt.Sprintf("cluster/firewall/rules/%d", pos), form, nil)
+	return svc.client.Request(
+		http.MethodDelete,
+		fmt.Sprintf("cluster/firewall/rules/%d", pos),
+		form,
+		nil,
+	)
 }

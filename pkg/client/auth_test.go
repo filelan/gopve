@@ -28,7 +28,13 @@ func TestClientUserAuthentication(t *testing.T) {
 		Return(response, nil).
 		Once()
 
-	exc.On("SetAuthenticationTicket", "authenticationToken", request.AuthenticationMethodCookie).Return(response).Once()
+	exc.On(
+		"SetAuthenticationTicket",
+		"authenticationToken",
+		request.AuthenticationMethodCookie,
+	).Return(
+		response,
+	).Once()
 	exc.On("SetCSRFToken", "csrfToken").Return().Once()
 
 	err = cli.AuthenticateWithCredentials("testUsername", "testPassword")

@@ -7,7 +7,10 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/task"
 )
 
-func (svc *Service) Create(name string, props cluster.NodeProperties) (task.Task, error) {
+func (svc *Service) Create(
+	name string,
+	props cluster.NodeProperties,
+) (task.Task, error) {
 	c, err := svc.Get()
 	if err != nil {
 		return nil, err
@@ -32,7 +35,10 @@ func (svc *Service) Create(name string, props cluster.NodeProperties) (task.Task
 	return svc.api.Task().Get(task)
 }
 
-func (svc *Service) Join(hostname, password, fingerprint string, props cluster.NodeProperties) (task.Task, error) {
+func (svc *Service) Join(
+	hostname, password, fingerprint string,
+	props cluster.NodeProperties,
+) (task.Task, error) {
 	c, err := svc.Get()
 	if err != nil {
 		return nil, err

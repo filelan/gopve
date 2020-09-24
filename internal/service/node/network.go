@@ -18,12 +18,17 @@ func (n *Node) GetDNSSettings() (node.DNSSettings, error) {
 }
 
 func (n *Node) SetDNSSettings(settings node.DNSSettings) error {
-	return n.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/dns", n.name), request.Values{
-		"dns1":   {settings.FirstDNS},
-		"dns2":   {settings.SecondDNS},
-		"dns3":   {settings.ThirdDNS},
-		"search": {settings.SearchDomain},
-	}, nil)
+	return n.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("nodes/%s/dns", n.name),
+		request.Values{
+			"dns1":   {settings.FirstDNS},
+			"dns2":   {settings.SecondDNS},
+			"dns3":   {settings.ThirdDNS},
+			"search": {settings.SearchDomain},
+		},
+		nil,
+	)
 }
 
 func (n *Node) GetHostsFile() (node.HostsFile, error) {
@@ -41,5 +46,10 @@ func (n *Node) SetHostsFile(file node.HostsFile) error {
 	}
 	form.ConditionalAddString("digest", file.Digest, file.Digest != "")
 
-	return n.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/hosts", n.name), form, nil)
+	return n.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("nodes/%s/hosts", n.name),
+		form,
+		nil,
+	)
 }

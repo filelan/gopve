@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/xabinapal/gopve/internal/types"
 )
@@ -20,42 +19,42 @@ const (
 )
 
 func (obj Content) Marshal() (string, error) {
-	var content []string
+	content := types.PVEStringList{Separator: ","}
 
 	if obj&ContentQEMUData != 0 {
-		content = append(content, "images")
+		content.Append("images")
 	}
 
 	if obj&ContentContainerData != 0 {
-		content = append(content, "rootdir")
+		content.Append("rootdir")
 	}
 
 	if obj&ContentContainerTemplate != 0 {
-		content = append(content, "vztmpl")
+		content.Append("vztmpl")
 	}
 
 	if obj&ContentBackup != 0 {
-		content = append(content, "backup")
+		content.Append("backup")
 	}
 
 	if obj&ContentISO != 0 {
-		content = append(content, "iso")
+		content.Append("iso")
 	}
 
 	if obj&ContentSnippet != 0 {
-		content = append(content, "snippets")
+		content.Append("snippets")
 	}
 
-	return strings.Join(content, ","), nil
+	return content.Marshal()
 }
 
 func (obj *Content) Unmarshal(s string) error {
-	var content types.PVEStringList
+	content := types.PVEStringList{Separator: ","}
 	if err := content.Unmarshal(s); err != nil {
 		return err
 	}
 
-	for _, c := range content {
+	for _, c := range content.List() {
 		switch c {
 		case "images":
 			*obj |= ContentQEMUData

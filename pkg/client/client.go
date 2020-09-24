@@ -44,7 +44,10 @@ func NewClient(cfg Config) (*Client, error) {
 	return NewClientWithExecutor(exc, cfg.PoolingInterval), nil
 }
 
-func NewClientWithExecutor(exc request.Executor, poolingInterval time.Duration) *Client {
+func NewClientWithExecutor(
+	exc request.Executor,
+	poolingInterval time.Duration,
+) *Client {
 	if poolingInterval < time.Duration(1)*time.Second {
 		poolingInterval = DefaultPoolingInterval
 	}
@@ -66,7 +69,11 @@ func (cli *Client) EndAtomicBlock() {
 	cli.executor.EndAtomicBlock()
 }
 
-func (cli *Client) Request(method, resource string, form request.Values, out interface{}) error {
+func (cli *Client) Request(
+	method, resource string,
+	form request.Values,
+	out interface{},
+) error {
 	data, err := cli.executor.Request(method, resource, url.Values(form))
 	if err != nil {
 		return err

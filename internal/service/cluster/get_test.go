@@ -40,7 +40,11 @@ func TestClusterServiceGet(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedCluster := cluster.NewCluster(svc, types.ModeCluster, "test_cluster")
+		expectedCluster := cluster.NewCluster(
+			svc,
+			types.ModeCluster,
+			"test_cluster",
+		)
 
 		cluster, err := svc.Get()
 		require.NoError(t, err)

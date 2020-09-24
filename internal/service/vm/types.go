@@ -35,7 +35,12 @@ type VirtualMachine struct {
 	isTemplate  bool
 }
 
-func NewVirtualMachine(svc *Service, node string, kind vm.Kind, vmid uint) *VirtualMachine {
+func NewVirtualMachine(
+	svc *Service,
+	node string,
+	kind vm.Kind,
+	vmid uint,
+) *VirtualMachine {
 	return &VirtualMachine{
 		svc:  svc,
 		node: node,
@@ -165,7 +170,17 @@ func (obj *VirtualMachine) Status() (vm.Status, error) {
 }
 
 func (obj *VirtualMachine) ConvertToTemplate() error {
-	return obj.svc.client.Request(http.MethodPost, fmt.Sprintf("node/%s/%s/%d/template", obj.node, obj.kind.String(), obj.vmid), nil, nil)
+	return obj.svc.client.Request(
+		http.MethodPost,
+		fmt.Sprintf(
+			"node/%s/%s/%d/template",
+			obj.node,
+			obj.kind.String(),
+			obj.vmid,
+		),
+		nil,
+		nil,
+	)
 }
 
 func (obj *QEMUVirtualMachine) CPU() (vm.QEMUCPUProperties, error) {

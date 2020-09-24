@@ -28,7 +28,12 @@ func newTimeWithTimezone(timestamp int64, location string) (time.Time, error) {
 func (node *Node) getTime() (*getTimeResponseJSON, error) {
 	var res getTimeResponseJSON
 
-	err := node.svc.client.Request(http.MethodGet, fmt.Sprintf("nodes/%s/time", node.Name()), nil, &res)
+	err := node.svc.client.Request(
+		http.MethodGet,
+		fmt.Sprintf("nodes/%s/time", node.Name()),
+		nil,
+		&res,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +70,14 @@ func (node *Node) GetTimezone() (*time.Location, error) {
 }
 
 func (node *Node) SetTimezone(timezone *time.Location) error {
-	err := node.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/time", node.Name()), request.Values{
-		"timezone": {timezone.String()},
-	}, nil)
+	err := node.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("nodes/%s/time", node.Name()),
+		request.Values{
+			"timezone": {timezone.String()},
+		},
+		nil,
+	)
 
 	return err
 }

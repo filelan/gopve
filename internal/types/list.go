@@ -2,21 +2,42 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
-type PVEStringList []string
+type PVEStringList struct {
+	Separator string
 
-func (obj PVEStringList) String() string {
-	return strings.Join(obj, ",")
+	list []string
+}
+
+func (obj PVEStringList) Len() int {
+	return len(obj.list)
+}
+
+func (obj PVEStringList) Elem(index int) string {
+	return obj.list[index]
+}
+
+func (obj PVEStringList) List() []string {
+	return obj.list
+}
+
+func (obj *PVEStringList) Append(elem string) {
+	obj.list = append(obj.list, elem)
+}
+
+func (obj PVEStringList) Marshal() (string, error) {
+	return strings.Join(obj.list, ","), nil
 }
 
 func (obj *PVEStringList) Unmarshal(s string) error {
-	content := strings.Split(s, ",")
-
-	for _, c := range content {
-		*obj = append(*obj, c)
+	if obj.Separator == "" {
+		return fmt.Errorf("can't unmarshal, no separator defined")
 	}
+
+	obj.list = strings.Split(s, obj.Separator)
 
 	return nil
 }

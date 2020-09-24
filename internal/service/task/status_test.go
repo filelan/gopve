@@ -13,7 +13,14 @@ import (
 )
 
 func TestTaskGetStatus(t *testing.T) {
-	obj, _, exc := test.NewTask("test_node", "00000000:00000000:00000000", "test_action", "test_id", "test_user", "test_extra")
+	obj, _, exc := test.NewTask(
+		"test_node",
+		"00000000:00000000:00000000",
+		"test_action",
+		"test_id",
+		"test_user",
+		"test_extra",
+	)
 
 	options := map[string]struct {
 		GoldenFile string

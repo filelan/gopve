@@ -131,12 +131,12 @@ func (obj LogLimit) Marshal() (string, error) {
 }
 
 func (obj *LogLimit) Unmarshal(s string) error {
-	var props types.PVEStringList
+	props := types.PVEStringList{Separator: ","}
 	if err := props.Unmarshal(s); err != nil {
 		return err
 	}
 
-	for _, prop := range props {
+	for _, prop := range props.List() {
 		kv := types.PVEStringKV{Separator: "=", AllowNoValue: false}
 		if err := kv.Unmarshal(prop); err != nil {
 			return err

@@ -14,7 +14,9 @@ type getFirewallLogResponseJSON struct {
 	Contents   string `json:"t"`
 }
 
-func (obj *VirtualMachine) GetFirewallLog(opts firewall.GetLogOptions) (firewall.LogEntries, error) {
+func (obj *VirtualMachine) GetFirewallLog(
+	opts firewall.GetLogOptions,
+) (firewall.LogEntries, error) {
 	form := make(request.Values)
 
 	form.ConditionalAddUint("start", opts.LineStart, opts.LineStart != 0)
@@ -78,13 +80,25 @@ func (obj *VirtualMachine) GetFirewallProperties() (firewall.VMProperties, error
 	return res.Map()
 }
 
-func (obj *VirtualMachine) SetFirewallProperties(props firewall.VMProperties) error {
+func (obj *VirtualMachine) SetFirewallProperties(
+	props firewall.VMProperties,
+) error {
 	form, err := props.MapToValues()
 	if err != nil {
 		return err
 	}
 
-	return obj.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/%s/%d/firewall/options", obj.node, obj.kind.String(), obj.vmid), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf(
+			"nodes/%s/%s/%d/firewall/options",
+			obj.node,
+			obj.kind.String(),
+			obj.vmid,
+		),
+		form,
+		nil,
+	)
 }
 
 type getFirewallAliasResponseJSON struct {
@@ -95,8 +109,16 @@ type getFirewallAliasResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallAliasResponseJSON) Map(vm *VirtualMachine) (firewall.Alias, error) {
-	return NewFirewallAlias(vm, obj.Name, obj.Comment, obj.CIDR, obj.Digest), nil
+func (obj getFirewallAliasResponseJSON) Map(
+	vm *VirtualMachine,
+) (firewall.Alias, error) {
+	return NewFirewallAlias(
+		vm,
+		obj.Name,
+		obj.Comment,
+		obj.CIDR,
+		obj.Digest,
+	), nil
 }
 
 func (obj *VirtualMachine) ListFirewallAliases() ([]firewall.Alias, error) {
@@ -118,7 +140,9 @@ func (obj *VirtualMachine) ListFirewallAliases() ([]firewall.Alias, error) {
 	return aliases, nil
 }
 
-func (obj *VirtualMachine) GetFirewallAlias(name string) (firewall.Alias, error) {
+func (obj *VirtualMachine) GetFirewallAlias(
+	name string,
+) (firewall.Alias, error) {
 	var res getFirewallAliasResponseJSON
 	if err := obj.svc.client.Request(http.MethodGet, fmt.Sprintf("nodes/%s/%s/%d/firewall/aliases/%s", obj.node, obj.kind.String(), obj.vmid, name), nil, &res); err != nil {
 		return nil, err
@@ -134,8 +158,15 @@ type getFirewallIPSetResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallIPSetResponseJSON) Map(virtualMachine *VirtualMachine) (firewall.IPSet, error) {
-	return NewFirewallIPSet(virtualMachine, obj.Name, obj.Comment, obj.Digest), nil
+func (obj getFirewallIPSetResponseJSON) Map(
+	virtualMachine *VirtualMachine,
+) (firewall.IPSet, error) {
+	return NewFirewallIPSet(
+		virtualMachine,
+		obj.Name,
+		obj.Comment,
+		obj.Digest,
+	), nil
 }
 
 func (obj *VirtualMachine) ListFirewallIPSets() ([]firewall.IPSet, error) {
@@ -159,7 +190,9 @@ func (obj *VirtualMachine) ListFirewallIPSets() ([]firewall.IPSet, error) {
 	return ipSets, nil
 }
 
-func (obj *VirtualMachine) GetFirewallIPSet(name string) (firewall.IPSet, error) {
+func (obj *VirtualMachine) GetFirewallIPSet(
+	name string,
+) (firewall.IPSet, error) {
 	ipSets, err := obj.ListFirewallIPSets()
 	if err != nil {
 		return nil, err
@@ -181,7 +214,9 @@ type getFirewallServiceGroupResponseJSON struct {
 	Digest string `json:"digest"`
 }
 
-func (obj getFirewallServiceGroupResponseJSON) Map(vm *VirtualMachine) (firewall.ServiceGroup, error) {
+func (obj getFirewallServiceGroupResponseJSON) Map(
+	vm *VirtualMachine,
+) (firewall.ServiceGroup, error) {
 	alias := NewFirewallServiceGroup(vm, obj.Name, obj.Comment, obj.Digest)
 	return alias, nil
 }
@@ -206,7 +241,9 @@ func (obj *VirtualMachine) ListFirewallServiceGroups() ([]firewall.ServiceGroup,
 	return groups, nil
 }
 
-func (obj *VirtualMachine) GetFirewallServiceGroup(name string) (firewall.ServiceGroup, error) {
+func (obj *VirtualMachine) GetFirewallServiceGroup(
+	name string,
+) (firewall.ServiceGroup, error) {
 	serviceGroups, err := obj.ListFirewallServiceGroups()
 	if err != nil {
 		return nil, err
@@ -296,7 +333,10 @@ func (obj getFirewallRuleResponseJSON) Map() (firewall.Rule, error) {
 	case "group":
 		return obj.mapToSecurityGroupRule()
 	default:
-		return firewall.Rule{}, fmt.Errorf("unknown firewall rule type `%s`", obj.Type)
+		return firewall.Rule{}, fmt.Errorf(
+			"unknown firewall rule type `%s`",
+			obj.Type,
+		)
 	}
 }
 
@@ -336,23 +376,58 @@ func (obj *VirtualMachine) AddFirewallRule(rule firewall.Rule) error {
 		return err
 	}
 
-	return obj.svc.client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/%s/%d/firewall/rules", obj.node, obj.kind.String(), obj.vmid), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPost,
+		fmt.Sprintf(
+			"nodes/%s/%s/%d/firewall/rules",
+			obj.node,
+			obj.kind.String(),
+			obj.vmid,
+		),
+		form,
+		nil,
+	)
 }
 
-func (obj *VirtualMachine) EditFirewallRule(pos uint, rule firewall.Rule) error {
+func (obj *VirtualMachine) EditFirewallRule(
+	pos uint,
+	rule firewall.Rule,
+) error {
 	form, err := rule.MapToValues(true)
 	if err != nil {
 		return err
 	}
 
-	return obj.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/%s/%d/firewall/rules/%d", obj.node, obj.kind.String(), obj.vmid, pos), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf(
+			"nodes/%s/%s/%d/firewall/rules/%d",
+			obj.node,
+			obj.kind.String(),
+			obj.vmid,
+			pos,
+		),
+		form,
+		nil,
+	)
 }
 
 func (obj *VirtualMachine) MoveFirewallRule(pos uint, newpos uint) error {
 	form := request.Values{}
 	form.AddUint("moveto", newpos)
 
-	return obj.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/%s/%d/firewall/rules/%d", obj.node, obj.kind.String(), obj.vmid, pos), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf(
+			"nodes/%s/%s/%d/firewall/rules/%d",
+			obj.node,
+			obj.kind.String(),
+			obj.vmid,
+			pos,
+		),
+		form,
+		nil,
+	)
 }
 
 func (obj *VirtualMachine) DeleteFirewallRule(pos uint, digest string) error {
@@ -364,5 +439,16 @@ func (obj *VirtualMachine) DeleteFirewallRule(pos uint, digest string) error {
 		}
 	}
 
-	return obj.svc.client.Request(http.MethodDelete, fmt.Sprintf("nodes/%s/%s/%d/firewall/rules/%d", obj.node, obj.kind.String(), obj.vmid, pos), form, nil)
+	return obj.svc.client.Request(
+		http.MethodDelete,
+		fmt.Sprintf(
+			"nodes/%s/%s/%d/firewall/rules/%d",
+			obj.node,
+			obj.kind.String(),
+			obj.vmid,
+			pos,
+		),
+		form,
+		nil,
+	)
 }

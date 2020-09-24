@@ -16,7 +16,9 @@ func TestNodeFirewallProperties(t *testing.T) {
 	n, exc := test.NewNode()
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_firewall_options.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_firewall_options.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -70,7 +72,9 @@ func TestNodeFirewallProperties(t *testing.T) {
 				"protection_synflood":                  {"1"},
 				"protection_synflood_rate":             {"100"},
 				"protection_synflood_burst":            {"500"},
-				"digest":                               {"0000000000000000000000000000000000000000"},
+				"digest": {
+					"0000000000000000000000000000000000000000",
+				},
 			}).
 			Return(nil, nil).
 			Once()
@@ -104,7 +108,9 @@ func TestNodeFirewallRules(t *testing.T) {
 	n, exc := test.NewNode()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_firewall_rules.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_firewall_rules.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -168,7 +174,9 @@ func TestNodeFirewallRules(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_firewall_rules_{rule}.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_firewall_rules_{rule}.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -333,7 +341,10 @@ func TestNodeFirewallRules(t *testing.T) {
 			Return(nil, nil).
 			Once()
 
-		err := n.DeleteFirewallRule(0, "0102030405060708090a0b0c0d0e0f1011121314")
+		err := n.DeleteFirewallRule(
+			0,
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 		require.NoError(t, err)
 
 		exc.AssertExpectations(t)

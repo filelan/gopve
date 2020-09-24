@@ -88,7 +88,9 @@ func TestNodeNetworkHosts(t *testing.T) {
 	t.Run("Set", func(t *testing.T) {
 		exc.
 			On("Request", http.MethodPut, "nodes/test_node/hosts", url.Values{
-				"data":   {"127.0.0.1 localhost.localdomain localhost\\n10.0.0.1 test_node.pve.local test_node\\n\\n# The following lines are desirable for IPv6 capable hosts\\n\\n::1     ip6-localhost ip6-loopback\\nfe00::0 ip6-localnet\\nff00::0 ip6-mcastprefix\\nff02::1 ip6-allnodes\\nff02::2 ip6-allrouters\\nff02::3 ip6-allhosts\\n"},
+				"data": {
+					"127.0.0.1 localhost.localdomain localhost\\n10.0.0.1 test_node.pve.local test_node\\n\\n# The following lines are desirable for IPv6 capable hosts\\n\\n::1     ip6-localhost ip6-loopback\\nfe00::0 ip6-localnet\\nff00::0 ip6-mcastprefix\\nff02::1 ip6-allnodes\\nff02::2 ip6-allrouters\\nff02::3 ip6-allhosts\\n",
+				},
 				"digest": {"60985c46740a60b8744b58b70533dff50f50a1a3"},
 			}).
 			Return(nil, nil).

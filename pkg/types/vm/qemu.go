@@ -44,7 +44,11 @@ func (obj QEMUProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
 
 	values.ConditionalAddString("name", obj.Name, obj.Name != "")
-	values.ConditionalAddString("description", obj.Description, obj.Description != "")
+	values.ConditionalAddString(
+		"description",
+		obj.Description,
+		obj.Description != "",
+	)
 
 	cpuValues, err := obj.CPU.MapToValues()
 	if err != nil {
@@ -101,7 +105,9 @@ func (obj QEMUCPUProperties) MapToValues() (request.Values, error) {
 	values.AddUint("cores", cores)
 
 	if obj.VCPUs != 0 && (obj.VCPUs > sockets*cores) {
-		return nil, fmt.Errorf("Invalid CPU hotplugged cores, can't be greater than sockets * cores")
+		return nil, fmt.Errorf(
+			"Invalid CPU hotplugged cores, can't be greater than sockets * cores",
+		)
 	} else if obj.VCPUs != 0 {
 		values.AddUint("vcpus", obj.VCPUs)
 	}
@@ -113,7 +119,9 @@ func (obj QEMUCPUProperties) MapToValues() (request.Values, error) {
 	}
 
 	if obj.Units != 0 && (obj.Units < 2 || obj.Units > 262144) {
-		return nil, fmt.Errorf("Invalid CPU units, must be between 2 and 262144")
+		return nil, fmt.Errorf(
+			"Invalid CPU units, must be between 2 and 262144",
+		)
 	} else if obj.Units != 0 && obj.Units != 1024 {
 		values.AddUint("cpuunits", obj.Units)
 	}

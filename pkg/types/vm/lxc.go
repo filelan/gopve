@@ -32,7 +32,10 @@ func (obj LXCCreateOptions) MapToValues() (request.Values, error) {
 		return nil, err
 	}
 
-	values.AddString("ostemplate", fmt.Sprintf("%s:vztmpl/%s", obj.OSTemplateStorage, obj.OSTemplate))
+	values.AddString(
+		"ostemplate",
+		fmt.Sprintf("%s:vztmpl/%s", obj.OSTemplateStorage, obj.OSTemplate),
+	)
 
 	return values, nil
 }
@@ -52,9 +55,16 @@ func (obj LXCProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
 
 	values.ConditionalAddString("hostname", obj.Name, obj.Name != "")
-	values.ConditionalAddString("description", obj.Description, obj.Description != "")
+	values.ConditionalAddString(
+		"description",
+		obj.Description,
+		obj.Description != "",
+	)
 
-	values.AddString("rootfs", fmt.Sprintf("%s:%d", obj.RootFSStorage, obj.RootFSSize))
+	values.AddString(
+		"rootfs",
+		fmt.Sprintf("%s:%d", obj.RootFSStorage, obj.RootFSSize),
+	)
 
 	if cpuValues, err := obj.CPU.MapToValues(); err != nil {
 		return nil, err
@@ -100,7 +110,9 @@ func (obj LXCCPUProperties) MapToValues() (request.Values, error) {
 	}
 
 	if obj.Units != 0 && (obj.Units < 2 || obj.Units > 500000) {
-		return nil, fmt.Errorf("Invalid CPU units, must be between 2 and 500000")
+		return nil, fmt.Errorf(
+			"Invalid CPU units, must be between 2 and 500000",
+		)
 	} else if obj.Units != 0 {
 		values.AddUint("cpuunits", obj.Units)
 	}

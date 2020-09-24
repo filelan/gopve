@@ -45,6 +45,7 @@ func (v Values) AddObject(k string, o Marshaler) error {
 	}
 
 	v[k] = []string{val}
+
 	return nil
 }
 

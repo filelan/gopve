@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-const defaultSeparator = "="
-
 type PVEStringKV struct {
 	Separator    string
 	AllowNoValue bool
@@ -29,17 +27,16 @@ func (obj PVEStringKV) HasValue() bool {
 	return obj.hasValue
 }
 
-func (obj PVEStringKV) String() string {
-	return fmt.Sprintf("%s%s%s", obj.key, obj.Separator, obj.value)
+func (obj PVEStringKV) Marshal() (string, error) {
+	return fmt.Sprintf("%s%s%s", obj.key, obj.Separator, obj.value), nil
 }
 
 func (obj *PVEStringKV) Unmarshal(s string) error {
-	separator := obj.Separator
-	if separator == "" {
-		separator = defaultSeparator
+	if obj.Separator == "" {
+		return fmt.Errorf("can't unmarshal, no separator defined")
 	}
 
-	content := strings.Split(s, separator)
+	content := strings.Split(s, obj.Separator)
 
 	switch len(content) {
 	case 1:

@@ -16,7 +16,10 @@ func TestPoolMemberVirtualMachine(t *testing.T) {
 	svc, api, exc := test.NewService()
 
 	getPoolMember := func() types.PoolMemberVirtualMachine {
-		poolMember, err := pool.NewPoolMemberVirtualMachine(svc, "test_kind/100")
+		poolMember, err := pool.NewPoolMemberVirtualMachine(
+			svc,
+			"test_kind/100",
+		)
 		require.NoError(t, err)
 		require.IsType(t, new(pool.PoolMemberVirtualMachine), poolMember)
 
@@ -61,7 +64,10 @@ func TestPoolMemberStorage(t *testing.T) {
 	svc, api, exc := test.NewService()
 
 	getPoolMember := func() types.PoolMemberStorage {
-		poolMember, err := pool.NewPoolMemberStorage(svc, "storage/test_storage")
+		poolMember, err := pool.NewPoolMemberStorage(
+			svc,
+			"storage/test_storage",
+		)
 		require.NoError(t, err)
 		require.IsType(t, new(pool.PoolMemberStorage), poolMember)
 

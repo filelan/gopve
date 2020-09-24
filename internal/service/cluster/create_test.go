@@ -30,11 +30,21 @@ func TestClusterServiceCreate(t *testing.T) {
 				"link0":       {"address=10.0.0.1,priority=1"},
 			}).
 			Return(
-				[]byte("{\"data\":\"UPID:test_node::::clustercreate:test_cluster:root@pam:\"}"),
-				nil).
+				[]byte(
+					"{\"data\":\"UPID:test_node::::clustercreate:test_cluster:root@pam:\"}",
+				),
+				nil,
+			).
 			Once()
 
-		expectedTask, _, _ := task.NewTask("test_node", "::", "clustercreate", "test_cluster", "root@pam", "")
+		expectedTask, _, _ := task.NewTask(
+			"test_node",
+			"::",
+			"clustercreate",
+			"test_cluster",
+			"root@pam",
+			"",
+		)
 
 		api.TaskService.
 			On("Get", "UPID:test_node::::clustercreate:test_cluster:root@pam:").
@@ -99,25 +109,40 @@ func TestClusterServiceJoin(t *testing.T) {
 				"link0":       {"address=10.0.0.2,priority=1"},
 			}).
 			Return(
-				[]byte("{\"data\":\"UPID:test_node2::::clustercreate:test_cluster:root@pam:\"}"),
-				nil).
+				[]byte(
+					"{\"data\":\"UPID:test_node2::::clustercreate:test_cluster:root@pam:\"}",
+				),
+				nil,
+			).
 			Once()
 
-		expectedTask, _, _ := task.NewTask("test_node2", "::", "clustercreate", "test_cluster", "root@pam", "")
+		expectedTask, _, _ := task.NewTask(
+			"test_node2",
+			"::",
+			"clustercreate",
+			"test_cluster",
+			"root@pam",
+			"",
+		)
 
 		api.TaskService.
 			On("Get", "UPID:test_node2::::clustercreate:test_cluster:root@pam:").
 			Return(expectedTask, nil)
 
-		task, err := svc.Join("10.0.0.1", "test_password", "test_fingerprint", types.NodeProperties{
-			ID:    2,
-			Votes: 1,
+		task, err := svc.Join(
+			"10.0.0.1",
+			"test_password",
+			"test_fingerprint",
+			types.NodeProperties{
+				ID:    2,
+				Votes: 1,
 
-			Link0: types.NodeLink{
-				Address:  "10.0.0.2",
-				Priority: 1,
+				Link0: types.NodeLink{
+					Address:  "10.0.0.2",
+					Priority: 1,
+				},
 			},
-		})
+		)
 
 		require.NoError(t, err)
 		assert.Equal(t, expectedTask, task)
@@ -134,15 +159,20 @@ func TestClusterServiceJoin(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		_, err = svc.Join("10.0.0.1", "test_password", "test_fingerprint", types.NodeProperties{
-			ID:    2,
-			Votes: 1,
+		_, err = svc.Join(
+			"10.0.0.1",
+			"test_password",
+			"test_fingerprint",
+			types.NodeProperties{
+				ID:    2,
+				Votes: 1,
 
-			Link0: types.NodeLink{
-				Address:  "10.0.0.2",
-				Priority: 1,
+				Link0: types.NodeLink{
+					Address:  "10.0.0.2",
+					Priority: 1,
+				},
 			},
-		})
+		)
 		require.EqualError(t, err, types.ErrAlreadyInCluster.Error())
 
 		exc.AssertExpectations(t)

@@ -1,21 +1,9 @@
 package storage
 
 import (
-	"github.com/xabinapal/gopve/internal/client"
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
-
-type Service struct {
-	client client.Client
-	api    client.API
-}
-
-func NewService(cli client.Client, api client.API) *Service {
-	return &Service{
-		client: cli,
-		api:    api,
-	}
-}
 
 type Storage struct {
 	svc  *Service
@@ -23,10 +11,18 @@ type Storage struct {
 
 	name    string
 	kind    string
+	shared  types.PVEBool
 	content storage.Content
+
+	nodes []string
 }
 
-func NewStorage(svc *Service, name string, kind string, content storage.Content) *Storage {
+func NewStorage(
+	svc *Service,
+	name string,
+	kind string,
+	content storage.Content,
+) *Storage {
 	return &Storage{
 		svc: svc,
 

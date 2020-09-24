@@ -13,7 +13,9 @@ type getSyslogJSON struct {
 	Contents   string `json:"t"`
 }
 
-func (n *Node) GetSyslog(opts node.GetSyslogOptions) (node.SyslogEntries, error) {
+func (n *Node) GetSyslog(
+	opts node.GetSyslogOptions,
+) (node.SyslogEntries, error) {
 	var form request.Values
 
 	form.ConditionalAddUint("start", opts.LineStart, opts.LineStart != 0)

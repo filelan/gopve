@@ -119,7 +119,11 @@ type getQEMUResponseJSON struct {
 	MemoryShares     *uint `json:"shares"`
 }
 
-func (res getQEMUResponseJSON) Map(svc *Service, vmid uint, node string) (vm.QEMUVirtualMachine, error) {
+func (res getQEMUResponseJSON) Map(
+	svc *Service,
+	vmid uint,
+	node string,
+) (vm.QEMUVirtualMachine, error) {
 	var limit int
 	if res.CPULimit == "" {
 		limit = 0
@@ -205,7 +209,11 @@ type getLXCResponseJSON struct {
 	RootFS string `json:"rootfs"`
 }
 
-func (res getLXCResponseJSON) Map(svc *Service, vmid uint, node string) (vm.LXCVirtualMachine, error) {
+func (res getLXCResponseJSON) Map(
+	svc *Service,
+	vmid uint,
+	node string,
+) (vm.LXCVirtualMachine, error) {
 	return &LXCVirtualMachine{
 		VirtualMachine: VirtualMachine{
 			svc:  svc,
@@ -247,7 +255,11 @@ func (svc *Service) Get(vmid uint) (vm.VirtualMachine, error) {
 					return nil, err
 				}
 
-				return res.Map(svc, virtualMachine.VMID(), virtualMachine.Node())
+				return res.Map(
+					svc,
+					virtualMachine.VMID(),
+					virtualMachine.Node(),
+				)
 
 			case vm.KindLXC:
 				var res getLXCResponseJSON
@@ -255,7 +267,11 @@ func (svc *Service) Get(vmid uint) (vm.VirtualMachine, error) {
 					return nil, err
 				}
 
-				return res.Map(svc, virtualMachine.VMID(), virtualMachine.Node())
+				return res.Map(
+					svc,
+					virtualMachine.VMID(),
+					virtualMachine.Node(),
+				)
 
 			default:
 				panic("This should never happen")

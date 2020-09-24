@@ -8,7 +8,13 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
-func (svc *Service) deleteVM(kind string, vmid uint, node string, purge bool, force bool) (task.Task, error) {
+func (svc *Service) deleteVM(
+	kind string,
+	vmid uint,
+	node string,
+	purge bool,
+	force bool,
+) (task.Task, error) {
 	var task string
 	if err := svc.client.Request(http.MethodDelete, fmt.Sprintf("nodes/%s/%s/%d", node, kind, vmid), nil, &task); err != nil {
 		return nil, err
@@ -17,7 +23,11 @@ func (svc *Service) deleteVM(kind string, vmid uint, node string, purge bool, fo
 	return svc.api.Task().Get(task)
 }
 
-func (svc *Service) DeleteQEMU(vmid uint, purge bool, force bool) (task.Task, error) {
+func (svc *Service) DeleteQEMU(
+	vmid uint,
+	purge bool,
+	force bool,
+) (task.Task, error) {
 	virtualMachine, err := svc.Get(vmid)
 	if err != nil {
 		return nil, err
@@ -30,7 +40,11 @@ func (svc *Service) DeleteQEMU(vmid uint, purge bool, force bool) (task.Task, er
 	return nil, fmt.Errorf("invalid virtual machine kind")
 }
 
-func (svc *Service) DeleteLXC(vmid uint, purge bool, force bool) (task.Task, error) {
+func (svc *Service) DeleteLXC(
+	vmid uint,
+	purge bool,
+	force bool,
+) (task.Task, error) {
 	virtualMachine, err := svc.Get(vmid)
 	if err != nil {
 		return nil, err

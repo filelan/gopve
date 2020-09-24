@@ -12,7 +12,9 @@ type ticketResponseJSON struct {
 	CSRFToken string `json:"CSRFPreventionToken"`
 }
 
-func (cli *Client) AuthenticateWithCredentials(username, password string) error {
+func (cli *Client) AuthenticateWithCredentials(
+	username, password string,
+) error {
 	var res ticketResponseJSON
 	if err := cli.Request(http.MethodPost, "access/ticket", request.Values{
 		"username": {username},
@@ -21,7 +23,10 @@ func (cli *Client) AuthenticateWithCredentials(username, password string) error 
 		return err
 	}
 
-	cli.executor.SetAuthenticationTicket(res.Ticket, request.AuthenticationMethodCookie)
+	cli.executor.SetAuthenticationTicket(
+		res.Ticket,
+		request.AuthenticationMethodCookie,
+	)
 	cli.executor.SetCSRFToken(res.CSRFToken)
 
 	return nil
@@ -29,7 +34,10 @@ func (cli *Client) AuthenticateWithCredentials(username, password string) error 
 
 func (cli *Client) AuthenticateWithToken(id, secret string) error {
 	ticket := fmt.Sprintf("PVEAPIToken=%s!TOKENID=%s", id, secret)
-	cli.executor.SetAuthenticationTicket(ticket, request.AuthenticationMethodHeader)
+	cli.executor.SetAuthenticationTicket(
+		ticket,
+		request.AuthenticationMethodHeader,
+	)
 
 	// TODO: add request to validate token
 

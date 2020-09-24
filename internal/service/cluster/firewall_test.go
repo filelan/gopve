@@ -17,7 +17,9 @@ func TestClusterServiceFirewallProperties(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_options.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_options.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -91,7 +93,9 @@ func TestClusterServiceFirewallAliases(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_aliases.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_aliases.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -100,8 +104,20 @@ func TestClusterServiceFirewallAliases(t *testing.T) {
 			Once()
 
 		expectedAliases := []firewall.Alias{
-			cluster.NewFirewallAlias(svc, "local", "LAN network", "10.0.0.0/8", "0102030405060708090a0b0c0d0e0f1011121314"),
-			cluster.NewFirewallAlias(svc, "self", "PVE test_node", "10.0.0.1", "15161718191a1b1c1d1e1f202122232425262728"),
+			cluster.NewFirewallAlias(
+				svc,
+				"local",
+				"LAN network",
+				"10.0.0.0/8",
+				"0102030405060708090a0b0c0d0e0f1011121314",
+			),
+			cluster.NewFirewallAlias(
+				svc,
+				"self",
+				"PVE test_node",
+				"10.0.0.1",
+				"15161718191a1b1c1d1e1f202122232425262728",
+			),
 		}
 
 		aliases, err := svc.ListFirewallAliases()
@@ -112,7 +128,9 @@ func TestClusterServiceFirewallAliases(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_aliases_{name}.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_aliases_{name}.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -120,7 +138,13 @@ func TestClusterServiceFirewallAliases(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedAlias := cluster.NewFirewallAlias(svc, "local", "LAN network", "10.0.0.0/8", "0102030405060708090a0b0c0d0e0f1011121314")
+		expectedAlias := cluster.NewFirewallAlias(
+			svc,
+			"local",
+			"LAN network",
+			"10.0.0.0/8",
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 
 		alias, err := svc.GetFirewallAlias("local")
 		require.NoError(t, err)
@@ -134,7 +158,9 @@ func TestClusterServiceFirewallIPSets(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_ipset.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_ipset.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -143,8 +169,18 @@ func TestClusterServiceFirewallIPSets(t *testing.T) {
 			Once()
 
 		expectedIPSets := []firewall.IPSet{
-			cluster.NewFirewallIPSet(svc, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314"),
-			cluster.NewFirewallIPSet(svc, "dns", "DNS servers", "15161718191a1b1c1d1e1f202122232425262728"),
+			cluster.NewFirewallIPSet(
+				svc,
+				"internal",
+				"LAN hosts",
+				"0102030405060708090a0b0c0d0e0f1011121314",
+			),
+			cluster.NewFirewallIPSet(
+				svc,
+				"dns",
+				"DNS servers",
+				"15161718191a1b1c1d1e1f202122232425262728",
+			),
 		}
 
 		ipSets, err := svc.ListFirewallIPSets()
@@ -156,7 +192,9 @@ func TestClusterServiceFirewallIPSets(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_ipset.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_ipset.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -164,7 +202,12 @@ func TestClusterServiceFirewallIPSets(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedIPSet := cluster.NewFirewallIPSet(svc, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314")
+		expectedIPSet := cluster.NewFirewallIPSet(
+			svc,
+			"internal",
+			"LAN hosts",
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 
 		ipSet, err := svc.GetFirewallIPSet("internal")
 		require.NoError(t, err)
@@ -178,7 +221,9 @@ func TestClusterServiceFirewallServiceGroups(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_groups.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_groups.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -187,8 +232,18 @@ func TestClusterServiceFirewallServiceGroups(t *testing.T) {
 			Once()
 
 		expectedServiceGroups := []firewall.ServiceGroup{
-			cluster.NewFirewallServiceGroup(svc, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314"),
-			cluster.NewFirewallServiceGroup(svc, "dns", "DNS servers", "15161718191a1b1c1d1e1f202122232425262728"),
+			cluster.NewFirewallServiceGroup(
+				svc,
+				"internal",
+				"LAN hosts",
+				"0102030405060708090a0b0c0d0e0f1011121314",
+			),
+			cluster.NewFirewallServiceGroup(
+				svc,
+				"dns",
+				"DNS servers",
+				"15161718191a1b1c1d1e1f202122232425262728",
+			),
 		}
 
 		serviceGroups, err := svc.ListFirewallServiceGroups()
@@ -199,7 +254,9 @@ func TestClusterServiceFirewallServiceGroups(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_groups.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_groups.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -207,7 +264,12 @@ func TestClusterServiceFirewallServiceGroups(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedServiceGroup := cluster.NewFirewallServiceGroup(svc, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314")
+		expectedServiceGroup := cluster.NewFirewallServiceGroup(
+			svc,
+			"internal",
+			"LAN hosts",
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 
 		serviceGroup, err := svc.GetFirewallServiceGroup("internal")
 		require.NoError(t, err)
@@ -221,7 +283,9 @@ func TestClusterServiceFirewallRules(t *testing.T) {
 	svc, _, exc := test.NewService()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_rules.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_rules.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -285,7 +349,9 @@ func TestClusterServiceFirewallRules(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_cluster_firewall_rules_{rule}.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_cluster_firewall_rules_{rule}.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -448,7 +514,10 @@ func TestClusterServiceFirewallRules(t *testing.T) {
 			Return(nil, nil).
 			Once()
 
-		err := svc.DeleteFirewallRule(0, "0102030405060708090a0b0c0d0e0f1011121314")
+		err := svc.DeleteFirewallRule(
+			0,
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 		require.NoError(t, err)
 
 		exc.AssertExpectations(t)

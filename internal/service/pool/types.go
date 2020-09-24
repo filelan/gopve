@@ -40,7 +40,11 @@ func NewPool(svc *Service, name, description string) *Pool {
 	}
 }
 
-func NewFullPool(svc *Service, name, description string, members []pool.PoolMember) *Pool {
+func NewFullPool(
+	svc *Service,
+	name, description string,
+	members []pool.PoolMember,
+) *Pool {
 	return &Pool{
 		svc:  svc,
 		full: true,

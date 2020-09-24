@@ -76,7 +76,12 @@ func (obj *VirtualMachine) Clone(options vm.CloneOptions) (task.Task, error) {
 	}
 
 	var task string
-	err := obj.svc.client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/qemu/%d/clone", obj.node, obj.vmid), values, &task)
+	err := obj.svc.client.Request(
+		http.MethodPost,
+		fmt.Sprintf("nodes/%s/qemu/%d/clone", obj.node, obj.vmid),
+		values,
+		&task,
+	)
 	if err != nil {
 		return nil, err
 	}

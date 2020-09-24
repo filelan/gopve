@@ -13,7 +13,12 @@ type getStatusResponseJSON struct {
 
 func (t *Task) GetStatus() (task.Status, error) {
 	var res getStatusResponseJSON
-	err := t.svc.client.Request(http.MethodGet, fmt.Sprintf("nodes/%s/tasks/%s/status", t.node, t.upid), nil, &res)
+	err := t.svc.client.Request(
+		http.MethodGet,
+		fmt.Sprintf("nodes/%s/tasks/%s/status", t.node, t.upid),
+		nil,
+		&res,
+	)
 	if err != nil {
 		return task.StatusStopped, err
 	}

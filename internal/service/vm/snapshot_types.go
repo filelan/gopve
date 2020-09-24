@@ -21,7 +21,14 @@ type Snapshot struct {
 	parent string
 }
 
-func NewSnapshot(vm *VirtualMachine, name string, description string, timestamp time.Time, withRAM bool, parent string) *Snapshot {
+func NewSnapshot(
+	vm *VirtualMachine,
+	name string,
+	description string,
+	timestamp time.Time,
+	withRAM bool,
+	parent string,
+) *Snapshot {
 	return &Snapshot{
 		vm: vm,
 
@@ -118,5 +125,16 @@ func (obj *Snapshot) Delete() error {
 		return vm.ErrDeleteCurrentSnapshot
 	}
 
-	return obj.vm.svc.client.Request(http.MethodDelete, fmt.Sprintf("nodes/%s/%s/%d/snapshot/%s", obj.vm.node, obj.vm.kind.String(), obj.vm.vmid, obj.name), nil, nil)
+	return obj.vm.svc.client.Request(
+		http.MethodDelete,
+		fmt.Sprintf(
+			"nodes/%s/%s/%d/snapshot/%s",
+			obj.vm.node,
+			obj.vm.kind.String(),
+			obj.vm.vmid,
+			obj.name,
+		),
+		nil,
+		nil,
+	)
 }

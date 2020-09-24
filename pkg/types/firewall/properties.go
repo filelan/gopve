@@ -1,8 +1,7 @@
 package firewall
 
 import (
-	"strings"
-
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
@@ -69,7 +68,7 @@ type NodeProperties struct {
 }
 
 func (props NodeProperties) MapToValues() (request.Values, error) {
-	var delete []string
+	delete := types.PVEStringList{Separator: ","}
 	values := make(request.Values)
 
 	values.AddBool("enable", props.Enable)
@@ -77,20 +76,26 @@ func (props NodeProperties) MapToValues() (request.Values, error) {
 	values.AddObject("log_level_out", props.LogLevelOutgoing)
 
 	values.AddBool("log_nf_conntrack", props.LogTrackedConnections)
-	values.AddBool("nf_conntrack_allow_invalid", props.AllowInvalidConnectionPackets)
+	values.AddBool(
+		"nf_conntrack_allow_invalid",
+		props.AllowInvalidConnectionPackets,
+	)
 
-	if props.MaxTrackedConnections == 0 || props.MaxTrackedConnections == DefaultMaxTrackedConnections {
-		delete = append(delete, "nf_conntrack_max")
+	if props.MaxTrackedConnections == 0 ||
+		props.MaxTrackedConnections == DefaultMaxTrackedConnections {
+		delete.Append("nf_conntrack_max")
 	} else {
 		values.AddUint("nf_conntrack_max", props.MaxTrackedConnections)
 	}
-	if props.MaxConnectionEstablishTimeout == 0 || props.MaxConnectionEstablishTimeout == DefaultMaxConnectionEstablishTimeout {
-		delete = append(delete, "nf_conntrack_tcp_timeout_established")
+	if props.MaxConnectionEstablishTimeout == 0 ||
+		props.MaxConnectionEstablishTimeout == DefaultMaxConnectionEstablishTimeout {
+		delete.Append("nf_conntrack_tcp_timeout_established")
 	} else {
 		values.AddUint("nf_conntrack_tcp_timeout_established", props.MaxConnectionEstablishTimeout)
 	}
-	if props.MaxConnectionSYNACKTimeout == 0 || props.MaxConnectionSYNACKTimeout == DefaultMaxConectionSYNACKTimeout {
-		delete = append(delete, "nf_conntrack_tcp_timeout_syn_recv")
+	if props.MaxConnectionSYNACKTimeout == 0 ||
+		props.MaxConnectionSYNACKTimeout == DefaultMaxConectionSYNACKTimeout {
+		delete.Append("nf_conntrack_tcp_timeout_syn_recv")
 	} else {
 		values.AddUint("nf_conntrack_tcp_timeout_syn_recv", props.MaxConnectionSYNACKTimeout)
 	}
@@ -104,21 +109,27 @@ func (props NodeProperties) MapToValues() (request.Values, error) {
 	values.AddObject("tcp_flags_log_level", props.TCPFlagsFilterLogLevel)
 
 	values.AddBool("protection_synflood", props.EnableSYNFloodProtection)
-	if props.SYNFloodProtectionRate == 0 || props.SYNFloodProtectionRate == DefaultSYNFloodProtectionRate {
-		delete = append(delete, "protection_synflood_rate")
+	if props.SYNFloodProtectionRate == 0 ||
+		props.SYNFloodProtectionRate == DefaultSYNFloodProtectionRate {
+		delete.Append("protection_synflood_rate")
 	} else {
 		values.AddUint("protection_synflood_rate", props.SYNFloodProtectionRate)
 	}
 
-	if props.SYNFloodProtectionBurst == 0 || props.SYNFloodProtectionBurst == DefaultSYNFloodProtectionBurst {
-		delete = append(delete, "protection_synflood_burst")
+	if props.SYNFloodProtectionBurst == 0 ||
+		props.SYNFloodProtectionBurst == DefaultSYNFloodProtectionBurst {
+		delete.Append("protection_synflood_burst")
 	} else {
 		values.AddUint("protection_synflood_burst", props.SYNFloodProtectionBurst)
 	}
 
 	values.ConditionalAddString("digest", props.Digest, props.Digest != "")
 
-	values.ConditionalAddString("delete", strings.Join(delete, ","), len(delete) != 0)
+	values.ConditionalAddObject(
+		"delete",
+		delete,
+		delete.Len() != 0,
+	)
 
 	return values, nil
 }

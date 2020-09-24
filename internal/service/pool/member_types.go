@@ -3,7 +3,6 @@ package pool
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/pool"
@@ -32,7 +31,10 @@ type PoolMemberVirtualMachine struct {
 	vmid uint
 }
 
-func NewPoolMemberVirtualMachine(svc *Service, id string) (pool.PoolMember, error) {
+func NewPoolMemberVirtualMachine(
+	svc *Service,
+	id string,
+) (pool.PoolMember, error) {
 	memberID := types.PVEStringKV{Separator: "/", AllowNoValue: false}
 	if err := memberID.Unmarshal(id); err != nil {
 		return nil, err
@@ -69,12 +71,16 @@ type PoolMemberStorage struct {
 }
 
 func NewPoolMemberStorage(svc *Service, id string) (pool.PoolMember, error) {
-	memberID := strings.Split(id, "/")
-	if len(memberID) < 2 {
+	memberID := types.PVEStringList{Separator: "/"}
+	if err := memberID.Unmarshal(id); err != nil {
+		return nil, err
+	}
+
+	if memberID.Len() < 2 {
 		return nil, fmt.Errorf("unknown storage pool member id")
 	}
 
-	name := memberID[len(memberID)-1]
+	name := memberID.Elem(memberID.Len() - 1)
 
 	return &PoolMemberStorage{
 		PoolMember: PoolMember{

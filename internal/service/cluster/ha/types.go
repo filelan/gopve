@@ -103,7 +103,9 @@ func (obj *HighAvailabilityGroup) GetProperties() (cluster.HighAvailabilityGroup
 	}, nil
 }
 
-func (obj *HighAvailabilityGroup) SetProperties(props cluster.HighAvailabilityGroupProperties) error {
+func (obj *HighAvailabilityGroup) SetProperties(
+	props cluster.HighAvailabilityGroupProperties,
+) error {
 	var form request.Values
 
 	form.AddString("comment", props.Description)
@@ -135,9 +137,10 @@ func (obj *HighAvailabilityGroup) AddNodes(nodes map[string]uint) error {
 		nodeMap[HighAvailabilityGroupNode{obj.svc, node}] = priority
 	}
 
-	if err := obj.svc.client.Request(http.MethodPut, fmt.Sprintf("cluster/ha/groups/%s", obj.name), request.Values{
-		"nodes": {nodeMapToString(nodeMap)},
-	}, nil); err != nil {
+	form := request.Values{}
+	form.AddObject("nodes", nodeMapToList(nodeMap))
+
+	if err := obj.svc.client.Request(http.MethodPut, fmt.Sprintf("cluster/ha/groups/%s", obj.name), form, nil); err != nil {
 		return err
 	}
 
@@ -168,9 +171,10 @@ func (obj *HighAvailabilityGroup) DeleteNodes(nodes []string) error {
 		}
 	}
 
-	if err := obj.svc.client.Request(http.MethodPut, fmt.Sprintf("cluster/ha/groups/%s", obj.name), request.Values{
-		"nodes": {nodeMapToString(nodeMap)},
-	}, nil); err != nil {
+	form := request.Values{}
+	form.AddObject("nodes", nodeMapToList(nodeMap))
+
+	if err := obj.svc.client.Request(http.MethodPut, fmt.Sprintf("cluster/ha/groups/%s", obj.name), form, nil); err != nil {
 		return err
 	}
 
@@ -180,7 +184,12 @@ func (obj *HighAvailabilityGroup) DeleteNodes(nodes []string) error {
 }
 
 func (obj *HighAvailabilityGroup) Delete() error {
-	return obj.svc.client.Request(http.MethodDelete, fmt.Sprintf("cluster/ha/groups/%s", obj.name), nil, nil)
+	return obj.svc.client.Request(
+		http.MethodDelete,
+		fmt.Sprintf("cluster/ha/groups/%s", obj.name),
+		nil,
+		nil,
+	)
 }
 
 type HighAvailabilityGroupNode struct {

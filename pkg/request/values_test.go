@@ -9,7 +9,11 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
-func helpValuesContainsKVPair(t *testing.T, values request.Values, key, value string) {
+func helpValuesContainsKVPair(
+	t *testing.T,
+	values request.Values,
+	key, value string,
+) {
 	assert.Contains(t, values, key)
 	assert.Len(t, values[key], 1)
 	assert.Equal(t, []string{value}, values[key])

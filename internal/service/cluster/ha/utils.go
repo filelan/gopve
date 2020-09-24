@@ -3,25 +3,27 @@ package ha
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/cluster"
 )
 
-func nodeStringToMap(svc *Service, nodes string) (cluster.HighAvailabilityGroupNodes, error) {
+func nodeStringToMap(
+	svc *Service,
+	nodes string,
+) (cluster.HighAvailabilityGroupNodes, error) {
 	nodeMap := make(cluster.HighAvailabilityGroupNodes)
 
 	if nodes == "" {
 		return nodeMap, nil
 	}
 
-	var nodeList types.PVEStringList
+	nodeList := types.PVEStringList{Separator: ","}
 	if err := nodeList.Unmarshal(nodes); err != nil {
 		return nil, err
 	}
 
-	for _, node := range nodeList {
+	for _, node := range nodeList.List() {
 		nodeData := types.PVEStringKV{Separator: ":", AllowNoValue: true}
 		if err := nodeData.Unmarshal(node); err != nil {
 			return nil, err
@@ -44,20 +46,22 @@ func nodeStringToMap(svc *Service, nodes string) (cluster.HighAvailabilityGroupN
 	return nodeMap, nil
 }
 
-func nodeMapToString(nodes cluster.HighAvailabilityGroupNodes) string {
-	if nodes == nil {
-		return ""
-	}
+func nodeMapToList(
+	nodes cluster.HighAvailabilityGroupNodes,
+) types.PVEStringList {
+	nodeList := types.PVEStringList{Separator: ","}
 
-	var nodeList []string
+	if nodes == nil {
+		return nodeList
+	}
 
 	for node, priority := range nodes {
 		if priority == 0 {
-			nodeList = append(nodeList, node.Name())
+			nodeList.Append(node.Name())
 		} else {
-			nodeList = append(nodeList, fmt.Sprintf("%s:%d", node.Name(), priority))
+			nodeList.Append(fmt.Sprintf("%s:%d", node.Name(), priority))
 		}
 	}
 
-	return strings.Join(nodeList, ",")
+	return nodeList
 }

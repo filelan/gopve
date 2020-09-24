@@ -20,7 +20,9 @@ type getSnapshotResponseJSON struct {
 	Parent string `json:"parent"`
 }
 
-func (obj getSnapshotResponseJSON) Map(virtualMachine *VirtualMachine) (vm.Snapshot, error) {
+func (obj getSnapshotResponseJSON) Map(
+	virtualMachine *VirtualMachine,
+) (vm.Snapshot, error) {
 	if obj.Name == "current" {
 		return NewCurrentSnapshot(virtualMachine, obj.Parent), nil
 	}
@@ -31,7 +33,14 @@ func (obj getSnapshotResponseJSON) Map(virtualMachine *VirtualMachine) (vm.Snaps
 	}
 	timestamp := time.Unix(int64(obj.SnapTime), 0).In(loc)
 
-	return NewSnapshot(virtualMachine, obj.Name, obj.Description, timestamp, obj.VMState.Bool(), obj.Parent), nil
+	return NewSnapshot(
+		virtualMachine,
+		obj.Name,
+		obj.Description,
+		timestamp,
+		obj.VMState.Bool(),
+		obj.Parent,
+	), nil
 }
 
 func (obj *VirtualMachine) ListSnapshots() ([]vm.Snapshot, error) {
@@ -68,7 +77,10 @@ func (obj *VirtualMachine) GetSnapshot(name string) (vm.Snapshot, error) {
 	return nil, vm.ErrNoSnapshot
 }
 
-func (obj *VirtualMachine) CreateSnapshot(name string, props vm.SnapshotProperties) (task.Task, error) {
+func (obj *VirtualMachine) CreateSnapshot(
+	name string,
+	props vm.SnapshotProperties,
+) (task.Task, error) {
 	form, err := props.MapToValues()
 	if err != nil {
 		return nil, err

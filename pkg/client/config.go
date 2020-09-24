@@ -65,7 +65,9 @@ func (cfg Config) getURL(scheme string, port uint16) (*url.URL, error) {
 		return nil, ErrConfigNoHost
 	}
 
-	absoluteURL, err := url.Parse(fmt.Sprintf("%s://%s:%d/", scheme, cfg.Host, port))
+	absoluteURL, err := url.Parse(
+		fmt.Sprintf("%s://%s:%d/", scheme, cfg.Host, port),
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,12 @@ import (
 
 func NewVirtualMachine() (*vm.VirtualMachine, *test.API, *mocks.Executor) {
 	svc, api, exc := NewService()
-	return vm.NewVirtualMachine(svc, "test_node", types.Kind("test_kind"), 100), api, exc
+	return vm.NewVirtualMachine(
+		svc,
+		"test_node",
+		types.Kind("test_kind"),
+		100,
+	), api, exc
 }
 
 func NewQEMU() (*vm.QEMUVirtualMachine, *test.API, *mocks.Executor) {

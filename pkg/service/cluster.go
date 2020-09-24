@@ -13,7 +13,10 @@ type Cluster interface {
 
 	Get() (cluster.Cluster, error)
 	Create(name string, props cluster.NodeProperties) (task.Task, error)
-	Join(hostname, password, fingerprint string, props cluster.NodeProperties) (task.Task, error)
+	Join(
+		hostname, password, fingerprint string,
+		props cluster.NodeProperties,
+	) (task.Task, error)
 
 	GetFirewallProperties() (firewall.ClusterProperties, error)
 	SetFirewallProperties(props firewall.ClusterProperties) error
@@ -38,5 +41,9 @@ type Cluster interface {
 type HighAvailability interface {
 	ListGroups() ([]cluster.HighAvailabilityGroup, error)
 	GetGroup(name string) (cluster.HighAvailabilityGroup, error)
-	CreateGroup(name string, props cluster.HighAvailabilityGroupProperties, nodes cluster.HighAvailabilityGroupNodes) (cluster.HighAvailabilityGroup, error)
+	CreateGroup(
+		name string,
+		props cluster.HighAvailabilityGroupProperties,
+		nodes cluster.HighAvailabilityGroupNodes,
+	) (cluster.HighAvailabilityGroup, error)
 }

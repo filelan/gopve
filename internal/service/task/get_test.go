@@ -14,9 +14,19 @@ func TestServiceGet(t *testing.T) {
 	svc, _, _ := test.NewService()
 
 	t.Run("Valid", func(t *testing.T) {
-		expectedTask := task.NewTask(svc, "test_node", "00000000:00000000:00000000", "test_action", "test_id", "root@pam", "")
+		expectedTask := task.NewTask(
+			svc,
+			"test_node",
+			"00000000:00000000:00000000",
+			"test_action",
+			"test_id",
+			"root@pam",
+			"",
+		)
 
-		receivedTask, err := svc.Get("UPID:test_node:00000000:00000000:00000000:test_action:test_id:root@pam:")
+		receivedTask, err := svc.Get(
+			"UPID:test_node:00000000:00000000:00000000:test_action:test_id:root@pam:",
+		)
 		require.NoError(t, err)
 
 		assert.Equal(t, expectedTask, receivedTask)

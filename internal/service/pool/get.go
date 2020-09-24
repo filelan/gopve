@@ -16,7 +16,11 @@ type getResponseJSON struct {
 	} `json:"members"`
 }
 
-func (res getResponseJSON) Map(svc *Service, name string, full bool) (pool.Pool, error) {
+func (res getResponseJSON) Map(
+	svc *Service,
+	name string,
+	full bool,
+) (pool.Pool, error) {
 	if full {
 		var members []pool.PoolMember
 

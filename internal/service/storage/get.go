@@ -13,7 +13,10 @@ type getResponseJSON struct {
 	Content storage.Content `json:"content"`
 }
 
-func (res getResponseJSON) Map(svc *Service, full bool) (storage.Storage, error) {
+func (res getResponseJSON) Map(
+	svc *Service,
+	full bool,
+) (storage.Storage, error) {
 	storage := &Storage{
 		svc:  svc,
 		full: full,

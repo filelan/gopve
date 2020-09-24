@@ -1,8 +1,7 @@
 package firewall
 
 import (
-	"strings"
-
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/request"
 )
 
@@ -30,49 +29,53 @@ type Rule struct {
 }
 
 func (obj Rule) MapToValues(update bool) (request.Values, error) {
-	var delete []string
+	delete := types.PVEStringList{Separator: ","}
 	values := make(request.Values)
 
 	values.AddBool("enable", obj.Enable)
-	values.ConditionalAddString("comment", obj.Description, obj.Description != "")
+	values.ConditionalAddString(
+		"comment",
+		obj.Description,
+		obj.Description != "",
+	)
 
 	if obj.SecurityGroup == "" {
 		values.AddObject("type", obj.Direction)
 		values.AddObject("action", obj.Action)
 
 		if obj.SourceAddress == "" {
-			delete = append(delete, "source")
+			delete.Append("source")
 		} else {
 			values.AddString("source", obj.SourceAddress)
 		}
 		if obj.DestinationAddress == "" {
-			delete = append(delete, "dest")
+			delete.Append("dest")
 		} else {
 			values.AddString("dest", obj.DestinationAddress)
 		}
 
 		if obj.Macro == MacroNone {
-			delete = append(delete, "macro")
+			delete.Append("macro")
 
 			if obj.Protocol == ProtocolNone {
-				delete = append(delete, "proto")
+				delete.Append("proto")
 			} else {
 				values.ConditionalAddObject("proto", obj.Protocol, obj.Protocol != ProtocolNone)
 			}
 			if len(obj.SourcePorts) == 0 {
-				delete = append(delete, "sport")
+				delete.Append("sport")
 			} else {
 				values.ConditionalAddObject("sport", obj.SourcePorts, len(obj.SourcePorts) != 0)
 			}
 			if len(obj.DestinationPorts) == 0 {
-				delete = append(delete, "dport")
+				delete.Append("dport")
 			} else {
 				values.ConditionalAddObject("dport", obj.DestinationPorts, len(obj.DestinationPorts) != 0)
 			}
 		} else {
-			delete = append(delete, "proto")
-			delete = append(delete, "sport")
-			delete = append(delete, "dport")
+			delete.Append("proto")
+			delete.Append("sport")
+			delete.Append("dport")
 
 			values.AddObject("macro", obj.Macro)
 		}
@@ -88,7 +91,11 @@ func (obj Rule) MapToValues(update bool) (request.Values, error) {
 	values.ConditionalAddString("digest", obj.Digest, obj.Digest != "")
 
 	if update {
-		values.ConditionalAddString("delete", strings.Join(delete, ","), len(delete) != 0)
+		values.ConditionalAddObject(
+			"delete",
+			delete,
+			delete.Len() != 0,
+		)
 	}
 
 	return values, nil

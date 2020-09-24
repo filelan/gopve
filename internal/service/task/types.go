@@ -20,7 +20,10 @@ type Task struct {
 }
 
 func NewTask(svc *Service, node, uuid, action, id, user, extra string) *Task {
-	upid := strings.Join([]string{"UPID", node, uuid, action, id, user, extra}, ":")
+	upid := strings.Join(
+		[]string{"UPID", node, uuid, action, id, user, extra},
+		":",
+	)
 
 	t := &Task{
 		svc:  svc,

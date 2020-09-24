@@ -2,8 +2,8 @@ package task
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/task"
 )
 
@@ -12,14 +12,27 @@ func (svc *Service) List() ([]task.Task, error) {
 }
 
 func (svc *Service) Get(upid string) (task.Task, error) {
-	splits := strings.Split(upid, ":")
-	if len(splits) != 9 {
+	splits := types.PVEStringList{Separator: ":"}
+	if err := splits.Unmarshal(upid); err != nil {
+		return nil, err
+	}
+
+	if splits.Len() != 9 {
 		return nil, task.ErrInvalidUPID
-	} else if splits[0] != "UPID" {
+	} else if splits.Elem(0) != "UPID" {
 		return nil, task.ErrInvalidUPID
 	}
 
-	t := NewTask(svc, splits[1], fmt.Sprintf("%s:%s:%s", splits[2], splits[3], splits[4]), splits[5], splits[6], splits[7], splits[8])
+	tElems := splits.List()
+	t := NewTask(
+		svc,
+		tElems[1],
+		fmt.Sprintf("%s:%s:%s", tElems[2], tElems[3], tElems[4]),
+		tElems[5],
+		tElems[6],
+		tElems[7],
+		tElems[8],
+	)
 
 	switch t.action {
 	case task.ActionQMCreate, task.ActionVZCreate:

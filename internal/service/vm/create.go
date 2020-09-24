@@ -10,7 +10,12 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
-func (svc *Service) createVM(kind string, vmid uint, node string, values request.Values) (task.Task, error) {
+func (svc *Service) createVM(
+	kind string,
+	vmid uint,
+	node string,
+	values request.Values,
+) (task.Task, error) {
 	svc.client.StartAtomicBlock()
 	defer svc.client.EndAtomicBlock()
 
@@ -80,7 +85,9 @@ func (svc *Service) getNode(n string) (string, error) {
 			}
 		}
 
-		return "", fmt.Errorf("cannot create virtual machine, there are no online nodes")
+		return "", fmt.Errorf(
+			"cannot create virtual machine, there are no online nodes",
+		)
 	}
 
 	if n, err := svc.api.Node().Get(n); err != nil {

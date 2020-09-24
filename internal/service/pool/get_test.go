@@ -51,11 +51,16 @@ func TestServiceGet(t *testing.T) {
 	member3, err := pool.NewPoolMemberStorage(svc, "storage/test_node/local")
 	require.NoError(t, err)
 
-	expectedPool := pool.NewFullPool(svc, "test_pool", "test_description", []types.PoolMember{
-		member1,
-		member2,
-		member3,
-	})
+	expectedPool := pool.NewFullPool(
+		svc,
+		"test_pool",
+		"test_description",
+		[]types.PoolMember{
+			member1,
+			member2,
+			member3,
+		},
+	)
 
 	exc.
 		On("Request", http.MethodGet, "pools/test_pool", url.Values(nil)).

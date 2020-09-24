@@ -17,7 +17,9 @@ func TestVirtualMachineFirewallProperties(t *testing.T) {
 	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_options.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_options.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -96,7 +98,9 @@ func TestVirtualMachineServiceFirewallAliases(t *testing.T) {
 	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_aliases.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_aliases.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -105,8 +109,20 @@ func TestVirtualMachineServiceFirewallAliases(t *testing.T) {
 			Once()
 
 		expectedAliases := []firewall.Alias{
-			vm.NewFirewallAlias(virtualMachine, "local", "LAN network", "10.0.0.0/8", "0102030405060708090a0b0c0d0e0f1011121314"),
-			vm.NewFirewallAlias(virtualMachine, "self", "PVE test_node", "10.0.0.1", "15161718191a1b1c1d1e1f202122232425262728"),
+			vm.NewFirewallAlias(
+				virtualMachine,
+				"local",
+				"LAN network",
+				"10.0.0.0/8",
+				"0102030405060708090a0b0c0d0e0f1011121314",
+			),
+			vm.NewFirewallAlias(
+				virtualMachine,
+				"self",
+				"PVE test_node",
+				"10.0.0.1",
+				"15161718191a1b1c1d1e1f202122232425262728",
+			),
 		}
 
 		aliases, err := virtualMachine.ListFirewallAliases()
@@ -117,7 +133,9 @@ func TestVirtualMachineServiceFirewallAliases(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_aliases_{name}.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_aliases_{name}.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -125,7 +143,13 @@ func TestVirtualMachineServiceFirewallAliases(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedAlias := vm.NewFirewallAlias(virtualMachine, "local", "LAN network", "10.0.0.0/8", "0102030405060708090a0b0c0d0e0f1011121314")
+		expectedAlias := vm.NewFirewallAlias(
+			virtualMachine,
+			"local",
+			"LAN network",
+			"10.0.0.0/8",
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 
 		alias, err := virtualMachine.GetFirewallAlias("local")
 		require.NoError(t, err)
@@ -139,7 +163,9 @@ func TestVirtualMachineServiceFirewallIPSets(t *testing.T) {
 	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_ipset.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_ipset.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -148,8 +174,18 @@ func TestVirtualMachineServiceFirewallIPSets(t *testing.T) {
 			Once()
 
 		expectedIPSets := []firewall.IPSet{
-			vm.NewFirewallIPSet(virtualMachine, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314"),
-			vm.NewFirewallIPSet(virtualMachine, "dns", "DNS servers", "15161718191a1b1c1d1e1f202122232425262728"),
+			vm.NewFirewallIPSet(
+				virtualMachine,
+				"internal",
+				"LAN hosts",
+				"0102030405060708090a0b0c0d0e0f1011121314",
+			),
+			vm.NewFirewallIPSet(
+				virtualMachine,
+				"dns",
+				"DNS servers",
+				"15161718191a1b1c1d1e1f202122232425262728",
+			),
 		}
 
 		ipSets, err := virtualMachine.ListFirewallIPSets()
@@ -161,7 +197,9 @@ func TestVirtualMachineServiceFirewallIPSets(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_ipset.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_ipset.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -169,7 +207,12 @@ func TestVirtualMachineServiceFirewallIPSets(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedIPSet := vm.NewFirewallIPSet(virtualMachine, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314")
+		expectedIPSet := vm.NewFirewallIPSet(
+			virtualMachine,
+			"internal",
+			"LAN hosts",
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 
 		ipSet, err := virtualMachine.GetFirewallIPSet("internal")
 		require.NoError(t, err)
@@ -183,7 +226,9 @@ func TestVirtualMachineServiceFirewallServiceGroups(t *testing.T) {
 	virtualMachine, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_groups.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_groups.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -192,8 +237,18 @@ func TestVirtualMachineServiceFirewallServiceGroups(t *testing.T) {
 			Once()
 
 		expectedServiceGroups := []firewall.ServiceGroup{
-			vm.NewFirewallServiceGroup(virtualMachine, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314"),
-			vm.NewFirewallServiceGroup(virtualMachine, "dns", "DNS servers", "15161718191a1b1c1d1e1f202122232425262728"),
+			vm.NewFirewallServiceGroup(
+				virtualMachine,
+				"internal",
+				"LAN hosts",
+				"0102030405060708090a0b0c0d0e0f1011121314",
+			),
+			vm.NewFirewallServiceGroup(
+				virtualMachine,
+				"dns",
+				"DNS servers",
+				"15161718191a1b1c1d1e1f202122232425262728",
+			),
 		}
 
 		serviceGroups, err := virtualMachine.ListFirewallServiceGroups()
@@ -204,7 +259,9 @@ func TestVirtualMachineServiceFirewallServiceGroups(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_groups.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_groups.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -212,7 +269,12 @@ func TestVirtualMachineServiceFirewallServiceGroups(t *testing.T) {
 			Return(response, nil).
 			Once()
 
-		expectedServiceGroup := vm.NewFirewallServiceGroup(virtualMachine, "internal", "LAN hosts", "0102030405060708090a0b0c0d0e0f1011121314")
+		expectedServiceGroup := vm.NewFirewallServiceGroup(
+			virtualMachine,
+			"internal",
+			"LAN hosts",
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 
 		serviceGroup, err := virtualMachine.GetFirewallServiceGroup("internal")
 		require.NoError(t, err)
@@ -226,7 +288,9 @@ func TestVirtualMachineFirewallRules(t *testing.T) {
 	vm, _, exc := test.NewVirtualMachine()
 
 	t.Run("List", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_rules.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_rules.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -290,7 +354,9 @@ func TestVirtualMachineFirewallRules(t *testing.T) {
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		response, err := ioutil.ReadFile("./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_rules_{rule}.json")
+		response, err := ioutil.ReadFile(
+			"./testdata/get_nodes_{node}_{kind}_{vmid}_firewall_rules_{rule}.json",
+		)
 		require.NoError(t, err)
 
 		exc.
@@ -453,7 +519,10 @@ func TestVirtualMachineFirewallRules(t *testing.T) {
 			Return(nil, nil).
 			Once()
 
-		err := vm.DeleteFirewallRule(0, "0102030405060708090a0b0c0d0e0f1011121314")
+		err := vm.DeleteFirewallRule(
+			0,
+			"0102030405060708090a0b0c0d0e0f1011121314",
+		)
 		require.NoError(t, err)
 
 		exc.AssertExpectations(t)

@@ -17,7 +17,10 @@ type getGroupResponseJSON struct {
 	Nodes       string        `json:"nodes"`
 }
 
-func (res getGroupResponseJSON) Map(svc *Service, full bool) (cluster.HighAvailabilityGroup, error) {
+func (res getGroupResponseJSON) Map(
+	svc *Service,
+	full bool,
+) (cluster.HighAvailabilityGroup, error) {
 	if !full {
 		return &HighAvailabilityGroup{
 			svc:  svc,
@@ -64,7 +67,9 @@ func (svc *Service) ListGroups() ([]cluster.HighAvailabilityGroup, error) {
 	return groups, nil
 }
 
-func (svc *Service) GetGroup(name string) (cluster.HighAvailabilityGroup, error) {
+func (svc *Service) GetGroup(
+	name string,
+) (cluster.HighAvailabilityGroup, error) {
 	var res getGroupResponseJSON
 	if err := svc.client.Request(http.MethodGet, fmt.Sprintf("cluster/ha/groups/%s", name), nil, &res); err != nil {
 		return nil, err
@@ -73,7 +78,11 @@ func (svc *Service) GetGroup(name string) (cluster.HighAvailabilityGroup, error)
 	return res.Map(svc, true)
 }
 
-func (svc *Service) CreateGroup(name string, props cluster.HighAvailabilityGroupProperties, nodes cluster.HighAvailabilityGroupNodes) (cluster.HighAvailabilityGroup, error) {
+func (svc *Service) CreateGroup(
+	name string,
+	props cluster.HighAvailabilityGroupProperties,
+	nodes cluster.HighAvailabilityGroupNodes,
+) (cluster.HighAvailabilityGroup, error) {
 	if len(nodes) == 0 {
 		return nil, fmt.Errorf("at least one node is required")
 	}
@@ -87,7 +96,7 @@ func (svc *Service) CreateGroup(name string, props cluster.HighAvailabilityGroup
 	form.AddBool("restricted", props.RestrictedResourceExecution)
 	form.AddBool("nofailback", !props.MigrateResourcesToHigherPriority)
 
-	form.AddString("nodes", nodeMapToString(nodes))
+	form.AddObject("nodes", nodeMapToList(nodes))
 
 	if err := svc.client.Request(http.MethodPost, "cluster/ha/groups", form, nil); err != nil {
 		return nil, err

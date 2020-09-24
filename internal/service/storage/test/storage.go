@@ -9,5 +9,10 @@ import (
 
 func NewStorage() (*storage.Storage, *test.API, *mocks.Executor) {
 	svc, api, exc := NewService()
-	return storage.NewStorage(svc, "test_storage", "test_kind", types.ContentQEMUData), api, exc
+	return storage.NewStorage(
+		svc,
+		"test_storage",
+		"test_kind",
+		types.ContentQEMUData,
+	), api, exc
 }

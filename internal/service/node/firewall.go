@@ -14,7 +14,9 @@ type getFirewallLogResponseJSON struct {
 	Contents   string `json:"t"`
 }
 
-func (n *Node) GetFirewallLog(opts firewall.GetLogOptions) (firewall.LogEntries, error) {
+func (n *Node) GetFirewallLog(
+	opts firewall.GetLogOptions,
+) (firewall.LogEntries, error) {
 	form := make(request.Values)
 
 	form.ConditionalAddUint("start", opts.LineStart, opts.LineStart != 0)
@@ -137,7 +139,12 @@ func (n *Node) SetFirewallProperties(props firewall.NodeProperties) error {
 		return err
 	}
 
-	return n.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/firewall/options", n.name), form, nil)
+	return n.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("nodes/%s/firewall/options", n.name),
+		form,
+		nil,
+	)
 }
 
 type getFirewallRuleResponseJSON struct {
@@ -215,7 +222,10 @@ func (obj getFirewallRuleResponseJSON) Map() (firewall.Rule, error) {
 	case "group":
 		return obj.mapToSecurityGroupRule()
 	default:
-		return firewall.Rule{}, fmt.Errorf("unknown firewall rule type `%s`", obj.Type)
+		return firewall.Rule{}, fmt.Errorf(
+			"unknown firewall rule type `%s`",
+			obj.Type,
+		)
 	}
 }
 
@@ -254,7 +264,12 @@ func (obj *Node) AddFirewallRule(rule firewall.Rule) error {
 		return err
 	}
 
-	return obj.svc.client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/firewall/rules", obj.name), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPost,
+		fmt.Sprintf("nodes/%s/firewall/rules", obj.name),
+		form,
+		nil,
+	)
 }
 
 func (obj *Node) EditFirewallRule(pos uint, rule firewall.Rule) error {
@@ -263,14 +278,24 @@ func (obj *Node) EditFirewallRule(pos uint, rule firewall.Rule) error {
 		return err
 	}
 
-	return obj.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/firewall/rules/%d", obj.name, pos), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("nodes/%s/firewall/rules/%d", obj.name, pos),
+		form,
+		nil,
+	)
 }
 
 func (obj *Node) MoveFirewallRule(pos uint, newpos uint) error {
 	form := request.Values{}
 	form.AddUint("moveto", newpos)
 
-	return obj.svc.client.Request(http.MethodPut, fmt.Sprintf("nodes/%s/firewall/rules/%d", obj.name, pos), form, nil)
+	return obj.svc.client.Request(
+		http.MethodPut,
+		fmt.Sprintf("nodes/%s/firewall/rules/%d", obj.name, pos),
+		form,
+		nil,
+	)
 }
 
 func (obj *Node) DeleteFirewallRule(pos uint, digest string) error {
@@ -282,5 +307,10 @@ func (obj *Node) DeleteFirewallRule(pos uint, digest string) error {
 		}
 	}
 
-	return obj.svc.client.Request(http.MethodDelete, fmt.Sprintf("nodes/%s/firewall/rules/%d", obj.name, pos), form, nil)
+	return obj.svc.client.Request(
+		http.MethodDelete,
+		fmt.Sprintf("nodes/%s/firewall/rules/%d", obj.name, pos),
+		form,
+		nil,
+	)
 }

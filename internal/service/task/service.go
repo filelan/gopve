@@ -13,7 +13,11 @@ type Service struct {
 	poolingInterval time.Duration
 }
 
-func NewService(cli client.Client, api client.API, poolingInterval time.Duration) *Service {
+func NewService(
+	cli client.Client,
+	api client.API,
+	poolingInterval time.Duration,
+) *Service {
 	return &Service{
 		client: cli,
 		api:    api,
