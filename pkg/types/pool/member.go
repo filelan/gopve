@@ -42,6 +42,7 @@ func (obj *MemberKind) UnmarshalJSON(b []byte) error {
 type PoolMember interface {
 	ID() string
 	Kind() MemberKind
+	MemberID() string
 }
 
 type PoolMemberVirtualMachine interface {

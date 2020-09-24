@@ -105,6 +105,7 @@ func (obj *HighAvailabilityGroup) GetProperties() (cluster.HighAvailabilityGroup
 
 func (obj *HighAvailabilityGroup) SetProperties(props cluster.HighAvailabilityGroupProperties) error {
 	var form request.Values
+
 	form.AddString("comment", props.Description)
 	form.AddBool("restricted", props.RestrictedResourceExecution)
 	form.AddBool("nofailback", !props.MigrateResourcesToHigherPriority)
@@ -151,9 +152,11 @@ func (obj *HighAvailabilityGroup) DeleteNodes(nodes []string) error {
 	}
 
 	var nodeMap cluster.HighAvailabilityGroupNodes
+
 	nodeKeys := make(map[string]*cluster.HighAvailabilityGroupNode)
 
-	for node, priority := range obj.nodes {
+	for n, priority := range obj.nodes {
+		node := n
 		nodeMap[node] = priority
 		nodeKeys[node.Name()] = &node
 	}

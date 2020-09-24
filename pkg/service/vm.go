@@ -14,4 +14,7 @@ type VirtualMachine interface {
 
 	CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, error)
 	CreateLXC(opts vm.LXCCreateOptions) (task.Task, error)
+
+	DeleteQEMU(vmid uint, purge bool, force bool) (task.Task, error)
+	DeleteLXC(vmid uint, purge bool, force bool) (task.Task, error)
 }

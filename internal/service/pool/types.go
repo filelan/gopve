@@ -31,7 +31,7 @@ type Pool struct {
 	members []pool.PoolMember
 }
 
-func NewPool(svc *Service, name string, description string) *Pool {
+func NewPool(svc *Service, name, description string) *Pool {
 	return &Pool{
 		svc: svc,
 

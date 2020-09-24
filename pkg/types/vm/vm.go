@@ -7,13 +7,14 @@ import (
 )
 
 type VirtualMachine interface {
-	Node() string
-
-	GetNode() (node.Node, error)
 	Kind() Kind
+
+	Node() string
+	GetNode() (node.Node, error)
 
 	VMID() uint
 	Name() string
+	Description() string
 	IsTemplate() bool
 
 	Status() (Status, error)

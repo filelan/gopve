@@ -54,6 +54,7 @@ func (svc *Service) List() ([]pool.Pool, error) {
 	}
 
 	pools := make([]pool.Pool, len(res))
+
 	for i, pool := range res {
 		out, err := pool.Map(svc, pool.Name, false)
 		if err != nil {

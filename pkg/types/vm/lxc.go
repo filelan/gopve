@@ -12,6 +12,7 @@ type LXCVirtualMachine interface {
 	CPU() (LXCCPUProperties, error)
 	Memory() (LXCMemoryProperties, error)
 
+	GetProperties() (LXCProperties, error)
 	SetProperties(props LXCProperties) error
 }
 
@@ -48,7 +49,7 @@ type LXCProperties struct {
 }
 
 func (obj LXCProperties) MapToValues() (request.Values, error) {
-	var values request.Values
+	values := request.Values{}
 
 	values.ConditionalAddString("hostname", obj.Name, obj.Name != "")
 	values.ConditionalAddString("description", obj.Description, obj.Description != "")
@@ -82,7 +83,7 @@ type LXCCPUProperties struct {
 }
 
 func (obj LXCCPUProperties) MapToValues() (request.Values, error) {
-	var values request.Values
+	values := request.Values{}
 
 	cores := obj.Cores
 	if cores == 0 {
@@ -113,7 +114,7 @@ type LXCMemoryProperties struct {
 }
 
 func (obj LXCMemoryProperties) MapToValues() (request.Values, error) {
-	var values request.Values
+	values := request.Values{}
 
 	memory := obj.Memory
 	if memory == 0 {

@@ -61,6 +61,52 @@ func (_m *VirtualMachine) CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, erro
 	return r0, r1
 }
 
+// DeleteLXC provides a mock function with given fields: vmid, purge, force
+func (_m *VirtualMachine) DeleteLXC(vmid uint, purge bool, force bool) (task.Task, error) {
+	ret := _m.Called(vmid, purge, force)
+
+	var r0 task.Task
+	if rf, ok := ret.Get(0).(func(uint, bool, bool) task.Task); ok {
+		r0 = rf(vmid, purge, force)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(task.Task)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint, bool, bool) error); ok {
+		r1 = rf(vmid, purge, force)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteQEMU provides a mock function with given fields: vmid, purge, force
+func (_m *VirtualMachine) DeleteQEMU(vmid uint, purge bool, force bool) (task.Task, error) {
+	ret := _m.Called(vmid, purge, force)
+
+	var r0 task.Task
+	if rf, ok := ret.Get(0).(func(uint, bool, bool) task.Task); ok {
+		r0 = rf(vmid, purge, force)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(task.Task)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(uint, bool, bool) error); ok {
+		r1 = rf(vmid, purge, force)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Get provides a mock function with given fields: vmid
 func (_m *VirtualMachine) Get(vmid uint) (vm.VirtualMachine, error) {
 	ret := _m.Called(vmid)

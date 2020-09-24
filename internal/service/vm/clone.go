@@ -10,16 +10,17 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
-func (virtualMachine *VirtualMachine) Clone(options vm.CloneOptions) (task.Task, error) {
-	virtualMachine.svc.client.StartAtomicBlock()
-	defer virtualMachine.svc.client.EndAtomicBlock()
+func (obj *VirtualMachine) Clone(options vm.CloneOptions) (task.Task, error) {
+	obj.svc.client.StartAtomicBlock()
+	defer obj.svc.client.EndAtomicBlock()
 
 	vmid := options.VMID
 	if vmid == 0 {
-		freeVMID, err := virtualMachine.svc.GetNextVMID()
+		freeVMID, err := obj.svc.GetNextVMID()
 		if err != nil {
 			return nil, err
 		}
+
 		vmid = freeVMID
 	}
 
@@ -28,7 +29,7 @@ func (virtualMachine *VirtualMachine) Clone(options vm.CloneOptions) (task.Task,
 	}
 
 	if options.Name != "" {
-		switch virtualMachine.kind {
+		switch obj.kind {
 		case vm.KindQEMU:
 			values.AddString("name", options.Name)
 		case vm.KindLXC:
@@ -55,7 +56,7 @@ func (virtualMachine *VirtualMachine) Clone(options vm.CloneOptions) (task.Task,
 	}
 
 	fullClone := options.TemplateFullClone
-	if virtualMachine.isTemplate {
+	if obj.isTemplate {
 		values.AddBool("full", options.TemplateFullClone)
 	} else {
 		fullClone = true
@@ -75,10 +76,10 @@ func (virtualMachine *VirtualMachine) Clone(options vm.CloneOptions) (task.Task,
 	}
 
 	var task string
-	err := virtualMachine.svc.client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/qemu/%d/clone", virtualMachine.node, virtualMachine.vmid), values, &task)
+	err := obj.svc.client.Request(http.MethodPost, fmt.Sprintf("nodes/%s/qemu/%d/clone", obj.node, obj.vmid), values, &task)
 	if err != nil {
 		return nil, err
 	}
 
-	return virtualMachine.svc.api.Task().Get(task)
+	return obj.svc.api.Task().Get(task)
 }

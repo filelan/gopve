@@ -9,5 +9,6 @@ import (
 func NewService() (*cluster.Service, *test.API, *mocks.Executor) {
 	cli, exc := test.NewClient()
 	api := test.NewAPI()
+
 	return cluster.NewService(cli, api), api, exc
 }

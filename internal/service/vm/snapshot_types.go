@@ -80,9 +80,9 @@ func (obj *Snapshot) Parent() string {
 func (obj *Snapshot) GetParent() (vm.Snapshot, error) {
 	if obj.parent == "" {
 		return nil, vm.ErrRootParentSnapshot
-	} else {
-		return obj.vm.GetSnapshot(obj.parent)
 	}
+
+	return obj.vm.GetSnapshot(obj.parent)
 }
 
 func (obj *Snapshot) GetProperties() (vm.SnapshotProperties, error) {

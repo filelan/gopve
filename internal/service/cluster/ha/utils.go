@@ -10,6 +10,7 @@ import (
 
 func nodeStringToMap(svc *Service, nodes string) (cluster.HighAvailabilityGroupNodes, error) {
 	nodeMap := make(cluster.HighAvailabilityGroupNodes)
+
 	if nodes == "" {
 		return nodeMap, nil
 	}
@@ -19,6 +20,7 @@ func nodeStringToMap(svc *Service, nodes string) (cluster.HighAvailabilityGroupN
 		nodeData := strings.Split(node, ":")
 
 		key := HighAvailabilityGroupNode{svc, nodeData[0]}
+
 		if len(nodeData) == 1 {
 			nodeMap[key] = 0
 		} else {
@@ -39,6 +41,7 @@ func nodeMapToString(nodes cluster.HighAvailabilityGroupNodes) string {
 	}
 
 	var nodeList []string
+
 	for node, priority := range nodes {
 		if priority == 0 {
 			nodeList = append(nodeList, node.Name())

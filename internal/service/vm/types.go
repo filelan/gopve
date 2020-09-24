@@ -6,7 +6,6 @@ import (
 
 	"github.com/xabinapal/gopve/internal/client"
 	"github.com/xabinapal/gopve/pkg/types/node"
-	"github.com/xabinapal/gopve/pkg/types/task"
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
@@ -26,11 +25,14 @@ type VirtualMachine struct {
 	svc  *Service
 	full bool
 
-	node       string
-	kind       vm.Kind
-	vmid       uint
-	name       string
-	isTemplate bool
+	kind vm.Kind
+
+	node string
+
+	vmid        uint
+	name        string
+	description string
+	isTemplate  bool
 }
 
 func NewVirtualMachine(svc *Service, node string, kind vm.Kind, vmid uint) *VirtualMachine {
@@ -53,8 +55,8 @@ func NewQEMU(svc *Service, node string, vmid uint) *QEMUVirtualMachine {
 	return &QEMUVirtualMachine{
 		VirtualMachine: VirtualMachine{
 			svc:  svc,
-			node: node,
 			kind: vm.KindQEMU,
+			node: node,
 			vmid: vmid,
 		},
 	}
@@ -91,8 +93,8 @@ func NewLXC(svc *Service, node string, vmid uint) *LXCVirtualMachine {
 	return &LXCVirtualMachine{
 		VirtualMachine: VirtualMachine{
 			svc:  svc,
-			node: node,
 			kind: vm.KindLXC,
+			node: node,
 			vmid: vmid,
 		},
 	}
@@ -118,6 +120,10 @@ func (obj *LXCVirtualMachine) Load() error {
 	return nil
 }
 
+func (vm *VirtualMachine) Kind() vm.Kind {
+	return vm.kind
+}
+
 func (vm *VirtualMachine) GetNode() (node.Node, error) {
 	return vm.svc.api.Node().Get(vm.node)
 }
@@ -126,16 +132,16 @@ func (vm *VirtualMachine) Node() string {
 	return vm.node
 }
 
-func (vm *VirtualMachine) Kind() vm.Kind {
-	return vm.kind
-}
-
 func (vm *VirtualMachine) VMID() uint {
 	return vm.vmid
 }
 
 func (vm *VirtualMachine) Name() string {
 	return vm.name
+}
+
+func (vm *VirtualMachine) Description() string {
+	return vm.description
 }
 
 func (vm *VirtualMachine) IsTemplate() bool {
@@ -162,15 +168,6 @@ func (obj *VirtualMachine) ConvertToTemplate() error {
 	return obj.svc.client.Request(http.MethodPost, fmt.Sprintf("node/%s/%s/%d/template", obj.node, obj.kind.String(), obj.vmid), nil, nil)
 }
 
-func (obj *VirtualMachine) Delete(purge bool, force bool) (task.Task, error) {
-	var task string
-	if err := obj.svc.client.Request(http.MethodDelete, fmt.Sprintf("nodes/%s/%s/%d", obj.node, obj.kind.String(), obj.vmid), nil, &task); err != nil {
-		return nil, err
-	}
-
-	return obj.svc.api.Task().Get(task)
-}
-
 func (obj *QEMUVirtualMachine) CPU() (vm.QEMUCPUProperties, error) {
 	if err := obj.Load(); err != nil {
 		return vm.QEMUCPUProperties{}, err
@@ -185,6 +182,20 @@ func (obj *QEMUVirtualMachine) Memory() (vm.QEMUMemoryProperties, error) {
 	}
 
 	return obj.memory, nil
+}
+
+func (obj *QEMUVirtualMachine) GetProperties() (vm.QEMUProperties, error) {
+	if err := obj.Load(); err != nil {
+		return vm.QEMUProperties{}, err
+	}
+
+	return vm.QEMUProperties{
+		Name:        obj.name,
+		Description: obj.description,
+
+		CPU:    obj.cpu,
+		Memory: obj.memory,
+	}, nil
 }
 
 func (obj *QEMUVirtualMachine) SetProperties(props vm.QEMUProperties) error {
@@ -214,6 +225,20 @@ func (obj *LXCVirtualMachine) Memory() (vm.LXCMemoryProperties, error) {
 	}
 
 	return obj.memory, nil
+}
+
+func (obj *LXCVirtualMachine) GetProperties() (vm.LXCProperties, error) {
+	if err := obj.Load(); err != nil {
+		return vm.LXCProperties{}, err
+	}
+
+	return vm.LXCProperties{
+		Name:        obj.name,
+		Description: obj.description,
+
+		CPU:    obj.cpu,
+		Memory: obj.memory,
+	}, nil
 }
 
 func (obj *LXCVirtualMachine) SetProperties(props vm.LXCProperties) error {

@@ -53,6 +53,10 @@ func NewPoolMemberVirtualMachine(svc *Service, id string) (pool.PoolMember, erro
 	}, nil
 }
 
+func (obj *PoolMemberVirtualMachine) MemberID() string {
+	return strconv.Itoa(int(obj.vmid))
+}
+
 func (obj *PoolMemberVirtualMachine) Get() (vm.VirtualMachine, error) {
 	return obj.svc.api.VirtualMachine().Get(obj.vmid)
 }
@@ -80,6 +84,10 @@ func NewPoolMemberStorage(svc *Service, id string) (pool.PoolMember, error) {
 
 		name: name,
 	}, nil
+}
+
+func (obj *PoolMemberStorage) MemberID() string {
+	return obj.name
 }
 
 func (obj *PoolMemberStorage) Get() (storage.Storage, error) {

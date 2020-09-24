@@ -12,6 +12,7 @@ type QEMUVirtualMachine interface {
 	CPU() (QEMUCPUProperties, error)
 	Memory() (QEMUMemoryProperties, error)
 
+	GetProperties() (QEMUProperties, error)
 	SetProperties(props QEMUProperties) error
 }
 
@@ -40,7 +41,7 @@ type QEMUProperties struct {
 }
 
 func (obj QEMUProperties) MapToValues() (request.Values, error) {
-	var values request.Values
+	values := request.Values{}
 
 	values.ConditionalAddString("name", obj.Name, obj.Name != "")
 	values.ConditionalAddString("description", obj.Description, obj.Description != "")
@@ -81,7 +82,7 @@ type QEMUCPUProperties struct {
 }
 
 func (obj QEMUCPUProperties) MapToValues() (request.Values, error) {
-	var values request.Values
+	values := request.Values{}
 
 	sockets := obj.Sockets
 	if sockets == 0 {
@@ -95,7 +96,7 @@ func (obj QEMUCPUProperties) MapToValues() (request.Values, error) {
 	if cores == 0 {
 		cores = 1
 	} else if cores > 128 {
-		return nil, fmt.Errorf("Invalid CPU sockets, the maximum allowed is 128")
+		return nil, fmt.Errorf("Invalid CPU cores, the maximum allowed is 128")
 	}
 	values.AddUint("cores", cores)
 
@@ -113,7 +114,7 @@ func (obj QEMUCPUProperties) MapToValues() (request.Values, error) {
 
 	if obj.Units != 0 && (obj.Units < 2 || obj.Units > 262144) {
 		return nil, fmt.Errorf("Invalid CPU units, must be between 2 and 262144")
-	} else if obj.Units != 0 {
+	} else if obj.Units != 0 && obj.Units != 1024 {
 		values.AddUint("cpuunits", obj.Units)
 	}
 
@@ -133,7 +134,7 @@ type QEMUMemoryProperties struct {
 }
 
 func (obj *QEMUMemoryProperties) MapToValues() (request.Values, error) {
-	var values request.Values
+	values := request.Values{}
 
 	memory := obj.Memory
 	if memory == 0 {

@@ -9,5 +9,6 @@ import (
 func NewService() (*node.Service, *mocks.Executor) {
 	cli, exc := test.NewClient()
 	api := test.NewAPI()
+
 	return node.NewService(cli, api), exc
 }

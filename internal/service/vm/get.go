@@ -54,6 +54,7 @@ func (svc *Service) List() ([]vm.VirtualMachine, error) {
 	}
 
 	vms := make([]vm.VirtualMachine, len(res))
+
 	for i, vm := range res {
 		out, err := vm.Map(svc)
 		if err != nil {
@@ -79,6 +80,7 @@ func (svc *Service) ListByKind(kind vm.Kind) ([]vm.VirtualMachine, error) {
 	}
 
 	var vms []vm.VirtualMachine
+
 	for _, vm := range res {
 		if vm.Kind == kind {
 			out, err := vm.Map(svc)
@@ -98,7 +100,9 @@ func (svc *Service) ListByKind(kind vm.Kind) ([]vm.VirtualMachine, error) {
 }
 
 type getQEMUResponseJSON struct {
-	Name       string        `json:"name"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+
 	IsTemplate types.PVEBool `json:"template"`
 
 	CPUType            string        `json:"cpu"`
@@ -116,21 +120,28 @@ type getQEMUResponseJSON struct {
 }
 
 func (res getQEMUResponseJSON) Map(svc *Service, vmid uint, node string) (vm.QEMUVirtualMachine, error) {
-	limit, err := strconv.Atoi(res.CPULimit)
-	if err != nil {
-		return nil, err
+	var limit int
+	if res.CPULimit == "" {
+		limit = 0
+	} else {
+		var err error
+		limit, err = strconv.Atoi(res.CPULimit)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	vm := &QEMUVirtualMachine{
+	virtualMachine := &QEMUVirtualMachine{
 		VirtualMachine: VirtualMachine{
 			svc:  svc,
 			full: true,
 
-			node:       node,
-			kind:       vm.KindQEMU,
-			vmid:       vmid,
-			name:       res.Name,
-			isTemplate: res.IsTemplate.Bool(),
+			node:        node,
+			kind:        vm.KindQEMU,
+			vmid:        vmid,
+			name:        res.Name,
+			description: res.Description,
+			isTemplate:  res.IsTemplate.Bool(),
 		},
 
 		cpu: vm.QEMUCPUProperties{
@@ -152,34 +163,35 @@ func (res getQEMUResponseJSON) Map(svc *Service, vmid uint, node string) (vm.QEM
 		},
 	}
 
-	if vm.cpu.VCPUs == 0 {
-		vm.cpu.VCPUs = vm.cpu.Cores * vm.cpu.Sockets
+	if virtualMachine.cpu.VCPUs == 0 {
+		virtualMachine.cpu.VCPUs = virtualMachine.cpu.Cores * virtualMachine.cpu.Sockets
 	}
 
 	if res.MemoryBallooning == nil {
-		vm.memory.Ballooning = true
-		vm.memory.MinimumMemory = vm.memory.Memory
-		vm.memory.Shares = 0
+		virtualMachine.memory.Ballooning = true
+		virtualMachine.memory.MinimumMemory = virtualMachine.memory.Memory
+		virtualMachine.memory.Shares = 0
 	} else if *res.MemoryBallooning == 0 {
-		vm.memory.Ballooning = false
-		vm.memory.MinimumMemory = vm.memory.Memory
-		vm.memory.Shares = 0
+		virtualMachine.memory.Ballooning = false
+		virtualMachine.memory.MinimumMemory = virtualMachine.memory.Memory
+		virtualMachine.memory.Shares = 0
 	} else {
-		vm.memory.Ballooning = true
-		vm.memory.MinimumMemory = uint(*res.MemoryBallooning)
+		virtualMachine.memory.Ballooning = true
+		virtualMachine.memory.MinimumMemory = *res.MemoryBallooning
 		if res.MemoryShares == nil {
-			vm.memory.Shares = 1000
+			virtualMachine.memory.Shares = 1000
 		} else {
-			vm.memory.Shares = *res.MemoryShares
+			virtualMachine.memory.Shares = *res.MemoryShares
 		}
 	}
 
-	return vm, nil
+	return virtualMachine, nil
 }
 
 type getLXCResponseJSON struct {
-	Name       string        `json:"hostname"`
-	IsTemplate types.PVEBool `json:"template"`
+	Name        string        `json:"hostname"`
+	Description string        `json:"description"`
+	IsTemplate  types.PVEBool `json:"template"`
 
 	OSType string `json:"ostype"`
 
@@ -199,11 +211,12 @@ func (res getLXCResponseJSON) Map(svc *Service, vmid uint, node string) (vm.LXCV
 			svc:  svc,
 			full: true,
 
-			node:       node,
-			kind:       vm.KindLXC,
-			vmid:       vmid,
-			name:       res.Name,
-			isTemplate: res.IsTemplate.Bool(),
+			kind:        vm.KindLXC,
+			node:        node,
+			vmid:        vmid,
+			name:        res.Name,
+			description: res.Description,
+			isTemplate:  res.IsTemplate.Bool(),
 		},
 
 		cpu: vm.LXCCPUProperties{
@@ -222,7 +235,7 @@ func (res getLXCResponseJSON) Map(svc *Service, vmid uint, node string) (vm.LXCV
 func (svc *Service) Get(vmid uint) (vm.VirtualMachine, error) {
 	vms, err := svc.List()
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	for _, virtualMachine := range vms {
@@ -250,13 +263,12 @@ func (svc *Service) Get(vmid uint) (vm.VirtualMachine, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("virtual machine not found")
+	return nil, vm.ErrNotFound
 }
 
 func (svc *Service) GetNextVMID() (uint, error) {
 	var res string
-	err := svc.client.Request(http.MethodGet, "cluster/nextid", nil, &res)
-	if err != nil {
+	if err := svc.client.Request(http.MethodGet, "cluster/nextid", nil, &res); err != nil {
 		return 0, err
 	}
 
