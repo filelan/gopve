@@ -30,14 +30,14 @@ func TestClusterServiceCreate(t *testing.T) {
 				"link0":       {"address=10.0.0.1,priority=1"},
 			}).
 			Return(
-				[]byte("{\"data\":\"UPID:test_node:00000000:00000000:00000000:clustercreate:test_cluster:root@pam:\"}"),
+				[]byte("{\"data\":\"UPID:test_node::::clustercreate:test_cluster:root@pam:\"}"),
 				nil).
 			Once()
 
-		expectedTask := task.NewTask("test_node", "UPID:test_node:00000000:00000000:00000000:clustercreate:test_cluster:root@pam:")
+		expectedTask, _, _ := task.NewTask("test_node", "::", "clustercreate", "test_cluster", "root@pam", "")
 
 		api.TaskService.
-			On("Get", "UPID:test_node:00000000:00000000:00000000:clustercreate:test_cluster:root@pam:").
+			On("Get", "UPID:test_node::::clustercreate:test_cluster:root@pam:").
 			Return(expectedTask, nil)
 
 		task, err := svc.Create("test_cluster", types.NodeProperties{
@@ -99,14 +99,14 @@ func TestClusterServiceJoin(t *testing.T) {
 				"link0":       {"address=10.0.0.2,priority=1"},
 			}).
 			Return(
-				[]byte("{\"data\":\"UPID:test_node2:00000000:00000000:00000000:clustercreate:test_cluster:root@pam:\"}"),
+				[]byte("{\"data\":\"UPID:test_node2::::clustercreate:test_cluster:root@pam:\"}"),
 				nil).
 			Once()
 
-		expectedTask := task.NewTask("test_node2", "UPID:test_node2:00000000:00000000:00000000:clustercreate:test_cluster:root@pam:")
+		expectedTask, _, _ := task.NewTask("test_node2", "::", "clustercreate", "test_cluster", "root@pam", "")
 
 		api.TaskService.
-			On("Get", "UPID:test_node2:00000000:00000000:00000000:clustercreate:test_cluster:root@pam:").
+			On("Get", "UPID:test_node2::::clustercreate:test_cluster:root@pam:").
 			Return(expectedTask, nil)
 
 		task, err := svc.Join("10.0.0.1", "test_password", "test_fingerprint", types.NodeProperties{

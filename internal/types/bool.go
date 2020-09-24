@@ -9,9 +9,9 @@ type PVEBool bool
 func (obj PVEBool) String() string {
 	if obj {
 		return "1"
-	} else {
-		return "0"
 	}
+
+	return "0"
 }
 
 func (obj PVEBool) Bool() bool {

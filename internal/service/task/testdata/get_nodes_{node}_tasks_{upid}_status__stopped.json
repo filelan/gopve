@@ -1,0 +1,14 @@
+{
+    "data": {
+      "upid": "UPID:test_node:00000000:00000000:00000000:test_action:test_id:root@pam:",
+      "node": "test_node",
+      "type": "test_action",
+      "id": "test_id",
+      "user": "test_user",
+      "pid": 0,
+      "pstart": 0,
+      "starttime": 0,
+      "status": "stopped",
+      "exitstatus": "OK"
+    }
+  }

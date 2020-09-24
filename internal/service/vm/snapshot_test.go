@@ -71,13 +71,13 @@ func TestVirtualMachineSnapshot(t *testing.T) {
 				"description": {"First snapshot"},
 			}).
 			Return(
-				[]byte("{\"data\":\"UPID:test_node:00000000:00000000:00000000:qmsnapshot:100:root@pam:\"}"), nil).
+				[]byte("{\"data\":\"UPID:test_node::::qmsnapshot:100:root@pam:\"}"), nil).
 			Once()
 
-		expectedTask := task.NewTask("test_node", "		UPID:test_node:00000000:00000000:00000000:qmsnapshot:100:root@pam:")
+		expectedTask, _, _ := task.NewTask("test_node", "::", "qmsnapshot", "100", "root@pam", "")
 
 		api.TaskService.
-			On("Get", "UPID:test_node:00000000:00000000:00000000:qmsnapshot:100:root@pam:").
+			On("Get", "UPID:test_node::::qmsnapshot:100:root@pam:").
 			Return(expectedTask, nil)
 
 		task, err := virtualMachine.CreateSnapshot("first", types.SnapshotProperties{
@@ -93,13 +93,13 @@ func TestVirtualMachineSnapshot(t *testing.T) {
 		exc.
 			On("Request", http.MethodPost, "nodes/test_node/test_kind/100/snapshot/first/rollback", url.Values(nil)).
 			Return(
-				[]byte("{\"data\":\"UPID:test_node:00000000:00000000:00000000:qmrollback:100:root@pam:\"}"), nil).
+				[]byte("{\"data\":\"UPID:test_node::::qmrollback:100:root@pam:\"}"), nil).
 			Once()
 
-		expectedTask := task.NewTask("test_node", "		UPID:test_node:00000000:00000000:00000000:qmrollback:100:root@pam:")
+		expectedTask, _, _ := task.NewTask("test_node", "::", "qmrollback", "100", "root@pam", "")
 
 		api.TaskService.
-			On("Get", "UPID:test_node:00000000:00000000:00000000:qmrollback:100:root@pam:").
+			On("Get", "UPID:test_node::::qmrollback:100:root@pam:").
 			Return(expectedTask, nil)
 
 		task, err := virtualMachine.RollbackToSnapshot("first")
