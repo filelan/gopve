@@ -10,11 +10,26 @@ import (
 type Content int
 
 const (
-	ContentQEMUData Content = 1 << iota
+	ContentNone Content = 0
+
+	ContentUnknown Content = 1 << (iota - 1)
+
+	// ContentQEMUData represents QEMU virtual machine image files. It's treated as the internal "images" type, which shows up as "Disk image" in the UI.
+	ContentQEMUData
+
+	// ContentContainerData represents LXC container filesystems. It's treated as the internal "rootdir" type, which shows up  as "ISO image" in the UI.
 	ContentContainerData
-	ContentContainerTemplate
+
+	// ContentISO represents ISO image files. It's treated as the internal "iso" type, which shows up as "ISO files" in the UI.
 	ContentISO
+
+	// ContentContainerTemplate represents LXC container template files. It's treated as the internal "vztml" type, which shows up as  "Container template" in the UI.
+	ContentContainerTemplate
+
+	// ContentBackup represents QEMU and LXC backup files. It's treated as the internal "backup" type, which shows up as "VZDump backup file" in the UI.
 	ContentBackup
+
+	// ContentSnippet represents snippet files like guest hook scripts. It's treated as the internal "snippets" type, which shows up as "Snippets" in the UI.
 	ContentSnippet
 )
 

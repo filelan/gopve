@@ -4,33 +4,42 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
 type getResponseJSON struct {
-	Name    string          `json:"storage"`
-	Kind    string          `json:"type"`
-	Content storage.Content `json:"content"`
+	Name     string          `json:"storage"`
+	Type     storage.Kind    `json:"type"`
+	Content  storage.Content `json:"content"`
+	Nodes    string          `json:"nodes"`
+	Disabled types.PVEBool   `json:"disable"`
+
+	Shared types.PVEBool `json:"shared"`
+
+	ImageFormat     storage.ImageFormat `json:"format"`
+	MaxBackupsPerVM uint                `json:"maxfiles"`
 }
 
 func (res getResponseJSON) Map(
 	svc *Service,
 	full bool,
 ) (storage.Storage, error) {
-	storage := &Storage{
-		svc:  svc,
-		full: full,
-
-		name:    res.Name,
-		kind:    res.Kind,
-		content: res.Content,
-	}
+	var out *Storage
 
 	if full {
-		// TODO
+		nodes := types.PVEStringList{Separator: ","}
+		if err := nodes.Unmarshal(res.Nodes); err != nil {
+			return nil, err
+		}
+
+		out = NewFullStorage(svc, res.Name, res.Type, res.Content, nodes.List())
+		out.nodes = nodes.List()
+		return out, nil
 	}
 
-	return storage, nil
+	out = NewStorage(svc, res.Name, res.Type, res.Content)
+	return out, nil
 }
 
 func (svc *Service) List() ([]storage.Storage, error) {

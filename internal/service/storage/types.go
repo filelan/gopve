@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
@@ -10,9 +9,12 @@ type Storage struct {
 	full bool
 
 	name    string
-	kind    string
-	shared  types.PVEBool
+	kind    storage.Kind
+	shared  bool
 	content storage.Content
+
+	imageFormat     storage.ImageFormat
+	maxBackupsPerVM uint
 
 	nodes []string
 }
@@ -20,7 +22,7 @@ type Storage struct {
 func NewStorage(
 	svc *Service,
 	name string,
-	kind string,
+	kind storage.Kind,
 	content storage.Content,
 ) *Storage {
 	return &Storage{
@@ -30,6 +32,20 @@ func NewStorage(
 		kind:    kind,
 		content: content,
 	}
+}
+
+func NewFullStorage(
+	svc *Service,
+	name string,
+	kind storage.Kind,
+	content storage.Content,
+	nodes []string,
+) *Storage {
+	obj := NewStorage(svc, name, kind, content)
+	obj.full = true
+	obj.nodes = nodes
+
+	return obj
 }
 
 func (obj *Storage) Load() error {
@@ -56,18 +72,50 @@ func (obj *Storage) Name() string {
 	return obj.name
 }
 
-func (obj *Storage) Kind() (string, error) {
+func (obj *Storage) Kind() (storage.Kind, error) {
 	if err := obj.Load(); err != nil {
-		return "", err
+		return storage.KindUnknown, err
 	}
 
 	return obj.kind, nil
 }
 
+func (obj *Storage) Shared() (bool, error) {
+	if err := obj.Load(); err != nil {
+		return false, err
+	}
+
+	return obj.shared, nil
+}
+
 func (obj *Storage) Content() (storage.Content, error) {
 	if err := obj.Load(); err != nil {
-		return storage.Content(0), err
+		return storage.ContentUnknown, err
 	}
 
 	return obj.content, nil
+}
+
+func (obj *Storage) ImageFormat() (storage.ImageFormat, error) {
+	if err := obj.Load(); err != nil {
+		return storage.ImageFormatUnknown, err
+	}
+
+	return obj.imageFormat, nil
+}
+
+func (obj *Storage) MaxBackupsPerVM() (uint, error) {
+	if err := obj.Load(); err != nil {
+		return 0, err
+	}
+
+	return obj.maxBackupsPerVM, nil
+}
+
+func (obj *Storage) Nodes() ([]string, error) {
+	if err := obj.Load(); err != nil {
+		return nil, err
+	}
+
+	return obj.nodes, nil
 }

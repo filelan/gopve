@@ -12,7 +12,7 @@ func NewStorage() (*storage.Storage, *test.API, *mocks.Executor) {
 	return storage.NewStorage(
 		svc,
 		"test_storage",
-		"test_kind",
+		types.KindDir,
 		types.ContentQEMUData,
 	), api, exc
 }
