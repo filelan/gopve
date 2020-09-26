@@ -25,7 +25,7 @@ func (obj NFSVersion) Marshal() (string, error) {
 	case NFSVersion42:
 		return "4.2", nil
 	default:
-		return "", fmt.Errorf("unknown smb version")
+		return "", fmt.Errorf("unknown nfs version")
 	}
 }
 
@@ -35,12 +35,12 @@ func (obj *NFSVersion) Unmarshal(s string) error {
 		*obj = NFSVersion30
 	case "4":
 		*obj = NFSVersion40
-	case "4,1":
+	case "4.1":
 		*obj = NFSVersion41
-	case "4,2":
+	case "4.2":
 		*obj = NFSVersion42
 	default:
-		return fmt.Errorf("can't unmarshal smb version %s", s)
+		return fmt.Errorf("can't unmarshal nfs version %s", s)
 	}
 
 	return nil

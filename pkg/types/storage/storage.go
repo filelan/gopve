@@ -27,13 +27,15 @@ const (
 type Storage interface {
 	Name() string
 	Kind() (Kind, error)
-	Shared() (bool, error)
 	Content() (Content, error)
 
-	Nodes() ([]string, error)
+	Shared() (bool, error)
+	Disabled() (bool, error)
 
 	ImageFormat() (ImageFormat, error)
 	MaxBackupsPerVM() (uint, error)
+
+	Nodes() ([]string, error)
 }
 
 type StorageDir interface {
@@ -57,7 +59,11 @@ type StorageLVM interface {
 	VolumeGroup() string
 
 	SafeRemove() bool
-	SafeRemoveThroughput() uint
+
+	// Limit the thoughput of the data stream, in bytes per second. If the value is positive, tries to keep the overall rate at the specified value for the whole session. If the value is negative, it is an upper limit for each read/write system call pair. In other words, the negative number will never exceed that limit, the positive number will exceed it to make good for previous underutilization
+	SafeRemoveThroughput() int
+
+	TaggedOnly() bool
 }
 
 const (
@@ -87,9 +93,11 @@ type StorageNFS interface {
 	Storage
 
 	Server() string
-	ExportPath() string
-	LocalPath() string
 	NFSVersion() NFSVersion
+
+	ServerPath() string
+	LocalPath() string
+	CreateLocalPath() bool
 }
 
 const (
@@ -104,11 +112,15 @@ type StorageCIFS interface {
 	Storage
 
 	Server() string
-	Share() string
+	SMBVersion() SMBVersion
+
 	Domain() string
 	Username() string
 	Password() string
-	SMBVersion() SMBVersion
+
+	ServerShare() string
+	LocalPath() string
+	CreateLocalPath() bool
 }
 
 const (
