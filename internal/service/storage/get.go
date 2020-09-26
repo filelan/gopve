@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -9,37 +10,48 @@ import (
 )
 
 type getResponseJSON struct {
-	Name     string          `json:"storage"`
-	Type     storage.Kind    `json:"type"`
-	Content  storage.Content `json:"content"`
-	Nodes    string          `json:"nodes"`
-	Disabled types.PVEBool   `json:"disable"`
+	Name string       `json:"storage"`
+	Type storage.Kind `json:"type"`
 
-	Shared types.PVEBool `json:"shared"`
+	Content  storage.Content `json:"content"`
+	Shared   types.PVEBool   `json:"shared"`
+	Disabled types.PVEBool   `json:"disable"`
 
 	ImageFormat     storage.ImageFormat `json:"format"`
 	MaxBackupsPerVM uint                `json:"maxfiles"`
+
+	Nodes types.PVEStringList `json:"nodes"`
+
+	ExtraProperties map[string]interface{} `json:"-"`
+}
+
+func (obj *getResponseJSON) UnmarshalJSON(b []byte) error {
+	type UnmarshalJSON getResponseJSON
+	var x UnmarshalJSON
+	if err := json.Unmarshal(b, x); err != nil {
+		return err
+	}
+
+	*obj = getResponseJSON(x)
+	return nil
 }
 
 func (res getResponseJSON) Map(
 	svc *Service,
 	full bool,
 ) (storage.Storage, error) {
-	var out *Storage
+	return NewStorage(svc, res.Name, res.Type, StorageProperties{
+		Content:  res.Content,
+		Shared:   res.Shared.Bool(),
+		Disabled: res.Disabled.Bool(),
 
-	if full {
-		nodes := types.PVEStringList{Separator: ","}
-		if err := nodes.Unmarshal(res.Nodes); err != nil {
-			return nil, err
-		}
+		ImageFormat:     res.ImageFormat,
+		MaxBackupsPerVM: res.MaxBackupsPerVM,
 
-		out = NewFullStorage(svc, res.Name, res.Type, res.Content, nodes.List())
-		out.nodes = nodes.List()
-		return out, nil
-	}
+		Nodes: res.Nodes.List(),
 
-	out = NewStorage(svc, res.Name, res.Type, res.Content)
-	return out, nil
+		ExtraProperties: res.ExtraProperties,
+	})
 }
 
 func (svc *Service) List() ([]storage.Storage, error) {
