@@ -8,6 +8,6 @@ func (err ClientError) Error() string {
 
 func (err ClientError) Is(target error) bool {
 	ts := target.Error()
-	es := string(err)
+	es := err.Error()
 	return ts == es
 }

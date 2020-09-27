@@ -12,6 +12,7 @@ const (
 	KindDir
 	KindLVM
 	KindLVMThin
+	KindZFS
 	KindNFS
 	KindCIFS
 	KindGlusterFS
@@ -19,7 +20,7 @@ const (
 	KindISCSIUserMode
 	KindCephFS
 	KindRBD
-	KindZFS
+	KindZFSOverISCSI
 )
 
 func (obj Kind) Marshal() (string, error) {
@@ -30,6 +31,8 @@ func (obj Kind) Marshal() (string, error) {
 		return "lvm", nil
 	case KindLVMThin:
 		return "lvmthin", nil
+	case KindZFS:
+		return "zfspool", nil
 	case KindNFS:
 		return "nfs", nil
 	case KindCIFS:
@@ -44,8 +47,8 @@ func (obj Kind) Marshal() (string, error) {
 		return "cephfs", nil
 	case KindRBD:
 		return "rbd", nil
-	case KindZFS:
-		return "zfspool", nil
+	case KindZFSOverISCSI:
+		return "zfs", nil
 
 	default:
 		return "", fmt.Errorf("unknown storage kind")
@@ -60,6 +63,8 @@ func (obj *Kind) Unmarshal(s string) error {
 		*obj = KindLVM
 	case "lvmthin":
 		*obj = KindLVMThin
+	case "zfspool":
+		*obj = KindZFS
 	case "nfs":
 		*obj = KindNFS
 	case "cifs":
@@ -74,8 +79,8 @@ func (obj *Kind) Unmarshal(s string) error {
 		*obj = KindCephFS
 	case "rbd":
 		*obj = KindRBD
-	case "zfspool":
-		*obj = KindZFS
+	case "zfs":
+		*obj = KindZFSOverISCSI
 
 	default:
 		*obj = KindUnknown

@@ -5,6 +5,37 @@ import (
 	"fmt"
 )
 
+type StorageCIFS interface {
+	Storage
+
+	Server() string
+	SMBVersion() SMBVersion
+
+	Domain() string
+	Username() string
+	Password() string
+
+	ServerShare() string
+	LocalPath() string
+	CreateLocalPath() bool
+}
+
+const (
+	StorageCIFSContents    = ContentQEMUData & ContentContainerData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
+	StorageCIFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
+	StorageCIFSShared      = AllowShareForced
+	StorageCIFSSnapshots   = AllowSnapshotQcow2
+	StorageCIFSClones      = AllowCloneQcow2
+)
+
+const (
+	DefaultStorageCIFSSMBVersion      = SMBVersion30
+	DefaultStorageCIFSDomain          = ""
+	DefaultStorageCIFSUsername        = ""
+	DefaultStorageCIFSPassword        = ""
+	DefaultStorageCIFSCreateLocalPath = false
+)
+
 type SMBVersion uint
 
 const (

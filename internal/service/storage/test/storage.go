@@ -13,6 +13,6 @@ func NewStorage() (*storage.Storage, *test.API, *mocks.Executor) {
 		svc,
 		"test_storage",
 		types.KindDir,
-		types.ContentQEMUData,
+		types.Properties{},
 	), api, exc
 }

@@ -9,10 +9,9 @@ import (
 
 type Content int
 
+const ContentNone Content = 0
 const (
-	ContentNone Content = 0
-
-	ContentUnknown Content = 1 << (iota - 1)
+	ContentUnknown Content = 1 << iota
 
 	// ContentQEMUData represents QEMU virtual machine image files. It's treated as the internal "images" type, which shows up as "Disk image" in the UI.
 	ContentQEMUData

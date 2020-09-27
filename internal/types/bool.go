@@ -6,6 +6,14 @@ import (
 
 type PVEBool bool
 
+func NewPVEBoolFromInt(x int) PVEBool {
+	if x == 0 {
+		return PVEBool(false)
+	}
+
+	return PVEBool(true)
+}
+
 func (obj PVEBool) String() string {
 	if obj {
 		return "1"

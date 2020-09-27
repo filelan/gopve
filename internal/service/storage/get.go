@@ -25,14 +25,14 @@ type getResponseJSON struct {
 	ExtraProperties map[string]interface{} `json:"-"`
 }
 
-func (obj *getResponseJSON) UnmarshalJSON(b []byte) error {
+func (res *getResponseJSON) UnmarshalJSON(b []byte) error {
 	type UnmarshalJSON getResponseJSON
 	var x UnmarshalJSON
-	if err := json.Unmarshal(b, x); err != nil {
+	if err := json.Unmarshal(b, &x); err != nil {
 		return err
 	}
 
-	*obj = getResponseJSON(x)
+	*res = getResponseJSON(x)
 	return nil
 }
 
@@ -40,7 +40,7 @@ func (res getResponseJSON) Map(
 	svc *Service,
 	full bool,
 ) (storage.Storage, error) {
-	return NewStorage(svc, res.Name, res.Type, StorageProperties{
+	return NewDynamicStorage(svc, res.Name, res.Type, storage.Properties{
 		Content:  res.Content,
 		Shared:   res.Shared.Bool(),
 		Disabled: res.Disabled.Bool(),

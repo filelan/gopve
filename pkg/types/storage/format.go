@@ -7,9 +7,9 @@ import (
 
 type ImageFormat int
 
+const ImageFormatUnknown ImageFormat = -1
 const (
-	ImageFormatUnknown ImageFormat = 1 << iota
-	ImageFormatRaw
+	ImageFormatRaw ImageFormat = 1 << iota
 	ImageFormatQcow2
 	ImageFormatVMDK
 	ImageFormatSubVolume

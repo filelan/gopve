@@ -66,7 +66,7 @@ func TestPoolMemberStorage(t *testing.T) {
 	getPoolMember := func() types.PoolMemberStorage {
 		poolMember, err := pool.NewPoolMemberStorage(
 			svc,
-			"storage/test_storage",
+			"storage/test_node/test_storage",
 		)
 		require.NoError(t, err)
 		require.IsType(t, new(pool.PoolMemberStorage), poolMember)

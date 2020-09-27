@@ -5,6 +5,29 @@ import (
 	"fmt"
 )
 
+type StorageNFS interface {
+	Storage
+
+	Server() string
+	NFSVersion() NFSVersion
+
+	ServerPath() string
+	LocalPath() string
+	CreateLocalPath() bool
+}
+
+const (
+	StorageNFSContents    = ContentQEMUData & ContentContainerData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
+	StorageNFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
+	StorageNFSShared      = AllowShareForced
+	StorageNFSSnapshots   = AllowSnapshotQcow2
+	StorageNFSClones      = AllowCloneQcow2
+)
+
+const (
+	DefaultStorageNFSCreateLocalPath = false
+)
+
 type NFSVersion uint
 
 const (

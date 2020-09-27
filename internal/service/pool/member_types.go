@@ -76,11 +76,11 @@ func NewPoolMemberStorage(svc *Service, id string) (pool.PoolMember, error) {
 		return nil, err
 	}
 
-	if memberID.Len() < 2 {
+	if memberID.Len() != 3 {
 		return nil, fmt.Errorf("unknown storage pool member id")
 	}
 
-	name := memberID.Elem(memberID.Len() - 1)
+	name := memberID.Elem(2)
 
 	return &PoolMemberStorage{
 		PoolMember: PoolMember{
