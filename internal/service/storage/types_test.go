@@ -9,11 +9,59 @@ import (
 	types "github.com/xabinapal/gopve/pkg/types/storage"
 )
 
+func helperCreateStorage(kind types.Kind, props storage.ExtraProperties) (types.Storage, error) {
+	return storage.NewDynamicStorage(
+		nil,
+		"test_storage",
+		kind,
+		types.Properties{
+			ExtraProperties: props,
+		},
+	)
+}
+
+func helperFilterOptionalProperties(props storage.ExtraProperties, optionalProps []string) storage.ExtraProperties {
+	finalProps := make(storage.ExtraProperties, len(props))
+	for k, v := range props {
+		finalProps[k] = v
+	}
+
+	for _, prop := range optionalProps {
+		delete(finalProps, prop)
+	}
+
+	return finalProps
+}
+
+func helperTestRequiredProperties(t *testing.T, kind types.Kind, props storage.ExtraProperties, requiredProps []string) func(t *testing.T) {
+	t.Helper()
+
+	return func(t *testing.T) {
+		for _, prop := range requiredProps {
+			finalProps := make(storage.ExtraProperties, len(props))
+			for k, v := range props {
+				finalProps[k] = v
+			}
+
+			delete(finalProps, prop)
+
+			_, err := helperCreateStorage(kind, finalProps)
+
+			expectedError := types.ErrMissingProperty
+			expectedError.AddKey("name", prop)
+
+			assert.EqualError(t, err, expectedError.Error())
+		}
+	}
+}
+
 func TestStorageNew(t *testing.T) {
 }
 
 func TestStorageNewDir(t *testing.T) {
-	allProps := map[string](interface{}){
+	kind := types.KindDir
+
+	props := storage.ExtraProperties{
 		"path":          "test_path",
 		"mkdir":         1,
 		"is_mountpoint": 1,
@@ -23,61 +71,30 @@ func TestStorageNewDir(t *testing.T) {
 
 	optionalProps := []string{"mkdir", "is_mountpoint"}
 
-	newStorage := func(props map[string](interface{})) (types.Storage, error) {
-		return storage.NewDynamicStorage(
-			nil,
-			"test_storage",
-			types.KindDir,
-			types.Properties{
-				ExtraProperties: props,
-			},
-		)
-	}
-
 	t.Run("Create", func(t *testing.T) {
-		obj, err := newStorage(allProps)
-
+		obj, err := helperCreateStorage(kind, props)
 		require.NoError(t, err)
+
 		require.Implements(t, (*types.StorageDir)(nil), obj)
 
-		concreteStorage := obj.(types.StorageDir)
+		concreteStorage, ok := obj.(types.StorageDir)
+		require.Equal(t, true, ok)
 
 		assert.Equal(t, "test_path", concreteStorage.LocalPath())
 		assert.Equal(t, true, concreteStorage.LocalPathCreate())
 		assert.Equal(t, true, concreteStorage.LocalPathIsManaged())
 	})
 
-	t.Run("RequiredProperties", func(t *testing.T) {
-		for _, prop := range requiredProps {
-			finalProps := make(map[string]interface{}, len(allProps))
-			for k, v := range allProps {
-				finalProps[k] = v
-			}
-			delete(finalProps, prop)
-
-			_, err := newStorage(finalProps)
-
-			expectedError := types.ErrMissingProperty
-			expectedError.AddKey("name", prop)
-
-			assert.EqualError(t, err, expectedError.Error())
-		}
-	})
+	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
 
 	t.Run("DefaultProperties", func(t *testing.T) {
-		finalProps := make(map[string]interface{}, len(allProps))
-		for k, v := range allProps {
-			finalProps[k] = v
-		}
-		for _, prop := range optionalProps {
-			delete(finalProps, prop)
-		}
+		finalProps := helperFilterOptionalProperties(props, optionalProps)
 
-		obj, err := newStorage(finalProps)
-
+		obj, err := helperCreateStorage(kind, finalProps)
 		require.NoError(t, err)
 
-		concreteStorage := obj.(types.StorageDir)
+		concreteStorage, ok := obj.(types.StorageDir)
+		require.Equal(t, true, ok)
 
 		assert.Equal(
 			t,
@@ -93,7 +110,9 @@ func TestStorageNewDir(t *testing.T) {
 }
 
 func TestStorageNewLVM(t *testing.T) {
-	allProps := map[string](interface{}){
+	kind := types.KindLVM
+
+	props := storage.ExtraProperties{
 		"base":                  "test_base",
 		"vgname":                "test_vg",
 		"saferemove":            1,
@@ -110,24 +129,13 @@ func TestStorageNewLVM(t *testing.T) {
 		"tagged_only",
 	}
 
-	newStorage := func(props map[string](interface{})) (types.Storage, error) {
-		return storage.NewDynamicStorage(
-			nil,
-			"test_storage",
-			types.KindLVM,
-			types.Properties{
-				ExtraProperties: props,
-			},
-		)
-	}
-
 	t.Run("Create", func(t *testing.T) {
-		obj, err := newStorage(allProps)
-
+		obj, err := helperCreateStorage(kind, props)
 		require.NoError(t, err)
 		require.Implements(t, (*types.StorageLVM)(nil), obj)
 
-		concreteStorage := obj.(types.StorageLVM)
+		concreteStorage, ok := obj.(types.StorageLVM)
+		require.Equal(t, true, ok)
 
 		assert.Equal(t, "test_base", concreteStorage.BaseStorage())
 		assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
@@ -136,37 +144,17 @@ func TestStorageNewLVM(t *testing.T) {
 		assert.Equal(t, true, concreteStorage.TaggedOnly())
 	})
 
-	t.Run("RequiredProperties", func(t *testing.T) {
-		for _, prop := range requiredProps {
-			finalProps := make(map[string]interface{}, len(allProps))
-			for k, v := range allProps {
-				finalProps[k] = v
-			}
-			delete(finalProps, prop)
-
-			_, err := newStorage(finalProps)
-
-			expectedError := types.ErrMissingProperty
-			expectedError.AddKey("name", prop)
-
-			assert.EqualError(t, err, expectedError.Error())
-		}
-	})
+	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
 
 	t.Run("DefaultProperties", func(t *testing.T) {
-		finalProps := make(map[string]interface{}, len(allProps))
-		for k, v := range allProps {
-			finalProps[k] = v
-		}
-		for _, prop := range optionalProps {
-			delete(finalProps, prop)
-		}
+		finalProps := helperFilterOptionalProperties(props, optionalProps)
 
-		obj, err := newStorage(finalProps)
-
+		obj, err := helperCreateStorage(kind, finalProps)
 		require.NoError(t, err)
+		require.Implements(t, (*types.StorageLVM)(nil), obj)
 
-		concreteStorage := obj.(types.StorageLVM)
+		concreteStorage, ok := obj.(types.StorageLVM)
+		require.Equal(t, true, ok)
 
 		assert.Equal(
 			t,
@@ -192,56 +180,34 @@ func TestStorageNewLVM(t *testing.T) {
 }
 
 func TestStorageNewLVMThin(t *testing.T) {
-	allProps := map[string](interface{}){
+	kind := types.KindLVMThin
+
+	props := storage.ExtraProperties{
 		"thinpool": "test_pool",
 		"vgname":   "test_vg",
 	}
 
 	requiredProps := []string{"thinpool", "vgname"}
 
-	newStorage := func(props map[string](interface{})) (types.Storage, error) {
-		return storage.NewDynamicStorage(
-			nil,
-			"test_storage",
-			types.KindLVMThin,
-			types.Properties{
-				ExtraProperties: props,
-			},
-		)
-	}
-
 	t.Run("Create", func(t *testing.T) {
-		obj, err := newStorage(allProps)
-
+		obj, err := helperCreateStorage(kind, props)
 		require.NoError(t, err)
 		require.Implements(t, (*types.StorageLVMThin)(nil), obj)
 
-		concreteStorage := obj.(types.StorageLVMThin)
+		concreteStorage, ok := obj.(types.StorageLVMThin)
+		require.Equal(t, true, ok)
 
 		assert.Equal(t, "test_pool", concreteStorage.ThinPool())
 		assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
 	})
 
-	t.Run("RequiredProperties", func(t *testing.T) {
-		for _, prop := range requiredProps {
-			finalProps := make(map[string]interface{}, len(allProps))
-			for k, v := range allProps {
-				finalProps[k] = v
-			}
-			delete(finalProps, prop)
-
-			_, err := newStorage(finalProps)
-
-			expectedError := types.ErrMissingProperty
-			expectedError.AddKey("name", prop)
-
-			assert.EqualError(t, err, expectedError.Error())
-		}
-	})
+	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
 }
 
 func TestStorageNewZFS(t *testing.T) {
-	allProps := map[string](interface{}){
+	kind := types.KindZFS
+
+	props := storage.ExtraProperties{
 		"pool":       "test_pool",
 		"blocksize":  1024,
 		"sparse":     1,
@@ -252,24 +218,13 @@ func TestStorageNewZFS(t *testing.T) {
 
 	optionalProps := []string{"blocksize", "sparse", "mountpoint"}
 
-	newStorage := func(props map[string](interface{})) (types.Storage, error) {
-		return storage.NewDynamicStorage(
-			nil,
-			"test_storage",
-			types.KindZFS,
-			types.Properties{
-				ExtraProperties: props,
-			},
-		)
-	}
-
 	t.Run("Create", func(t *testing.T) {
-		obj, err := newStorage(allProps)
-
+		obj, err := helperCreateStorage(kind, props)
 		require.NoError(t, err)
 		require.Implements(t, (*types.StorageZFS)(nil), obj)
 
-		concreteStorage := obj.(types.StorageZFS)
+		concreteStorage, ok := obj.(types.StorageZFS)
+		require.Equal(t, true, ok)
 
 		assert.Equal(t, "test_pool", concreteStorage.PoolName())
 		assert.Equal(t, uint(1024), concreteStorage.BlockSize())
@@ -277,37 +232,17 @@ func TestStorageNewZFS(t *testing.T) {
 		assert.Equal(t, "test_mountpoint", concreteStorage.LocalPath())
 	})
 
-	t.Run("RequiredProperties", func(t *testing.T) {
-		for _, prop := range requiredProps {
-			finalProps := make(map[string]interface{}, len(allProps))
-			for k, v := range allProps {
-				finalProps[k] = v
-			}
-			delete(finalProps, prop)
-
-			_, err := newStorage(finalProps)
-
-			expectedError := types.ErrMissingProperty
-			expectedError.AddKey("name", prop)
-
-			assert.EqualError(t, err, expectedError.Error())
-		}
-	})
+	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
 
 	t.Run("DefaultProperties", func(t *testing.T) {
-		finalProps := make(map[string]interface{}, len(allProps))
-		for k, v := range allProps {
-			finalProps[k] = v
-		}
-		for _, prop := range optionalProps {
-			delete(finalProps, prop)
-		}
+		finalProps := helperFilterOptionalProperties(props, optionalProps)
 
-		obj, err := newStorage(finalProps)
-
+		obj, err := helperCreateStorage(kind, finalProps)
 		require.NoError(t, err)
+		require.Implements(t, (*types.StorageZFS)(nil), obj)
 
-		concreteStorage := obj.(types.StorageZFS)
+		concreteStorage, ok := obj.(types.StorageZFS)
+		require.Equal(t, true, ok)
 
 		assert.Equal(
 			t,

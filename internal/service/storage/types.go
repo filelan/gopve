@@ -7,6 +7,8 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
+type ExtraProperties map[string]interface{}
+
 type Storage struct {
 	svc *Service
 
@@ -126,7 +128,7 @@ type StorageDir struct {
 
 func NewStorageDir(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageDir, error) {
 	localPath, ok := props["path"].(string)
 	if !ok {
@@ -184,7 +186,7 @@ type StorageLVM struct {
 
 func NewStorageLVM(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageLVM, error) {
 	baseStorage, ok := props["base"].(string)
 	if !ok {
@@ -259,7 +261,7 @@ type StorageLVMThin struct {
 
 func NewStorageLVMThin(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageLVMThin, error) {
 	thinPool, ok := props["thinpool"].(string)
 	if !ok {
@@ -304,7 +306,7 @@ type StorageZFS struct {
 
 func NewStorageZFS(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageZFS, error) {
 	poolName, ok := props["pool"].(string)
 	if !ok {
@@ -373,7 +375,7 @@ type StorageNFS struct {
 
 func NewStorageNFS(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageNFS, error) {
 	server, ok := props["server"].(string)
 	if !ok {
@@ -431,7 +433,7 @@ type StorageCIFS struct {
 
 func NewStorageCIFS(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageCIFS, error) {
 	server, ok := props["server"].(string)
 	if !ok {
@@ -509,7 +511,7 @@ type StorageGlusterFS struct {
 
 func NewStorageGlusterFS(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageGlusterFS, error) {
 	mainServer, ok := props["server"].(string)
 	if !ok {
@@ -555,7 +557,7 @@ type StorageISCSIKernel struct {
 
 func NewStorageISCSIKernelMode(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageISCSIKernel, error) {
 	portal, ok := props["portal"].(string)
 	if !ok {
@@ -588,7 +590,7 @@ type StorageISCSIUser struct {
 
 func NewStorageISCSIUserMode(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageISCSIUser, error) {
 	portal, ok := props["portal"].(string)
 	if !ok {
@@ -626,7 +628,7 @@ type StorageCephFS struct {
 
 func NewStorageCephFS(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageCephFS, error) {
 	monitorHosts := types.PVEStringList{Separator: " "}
 	hosts, ok := props["monhost"].(string)
@@ -684,7 +686,7 @@ type StorageRBD struct {
 
 func NewStorageRBD(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageRBD, error) {
 	monitorHosts := types.PVEStringList{Separator: " "}
 	hosts, ok := props["monhost"].(string)
@@ -744,7 +746,7 @@ type StorageZFSOverISCSI struct {
 
 func NewStorageZFSOverISCSI(
 	obj Storage,
-	props map[string]interface{},
+	props ExtraProperties,
 ) (*StorageZFSOverISCSI, error) {
 	portal, ok := props["portal"].(string)
 	if !ok {
