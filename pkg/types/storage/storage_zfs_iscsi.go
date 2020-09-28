@@ -33,13 +33,12 @@ const (
 )
 
 const (
-	DefaultStorageZFSOverISCSIUseSparse = false
-	DefaultStorageZFSOverISCSIWriteCache  = true
-	DefaultStorageZFSOverISCSIComstarHostGroup = ""
-	DefaultStorageZFSOverISCSIComstarTargetGroup = ""
+	DefaultStorageZFSOverISCSIUseSparse            = false
+	DefaultStorageZFSOverISCSIWriteCache           = true
+	DefaultStorageZFSOverISCSIComstarHostGroup     = ""
+	DefaultStorageZFSOverISCSIComstarTargetGroup   = ""
 	DefaultStorageZFSOverISCSILIOTargetPortalGroup = ""
 )
-
 
 type ISCSIProvider uint
 

@@ -61,6 +61,8 @@ func NewDynamicStorage(
 		return NewStorageLVM(*obj, props.ExtraProperties)
 	case storage.KindLVMThin:
 		return NewStorageLVMThin(*obj, props.ExtraProperties)
+	case storage.KindZFS:
+		return NewStorageZFS(*obj, props.ExtraProperties)
 	case storage.KindNFS:
 		return NewStorageNFS(*obj, props.ExtraProperties)
 	case storage.KindCIFS:
@@ -75,8 +77,8 @@ func NewDynamicStorage(
 		return NewStorageCephFS(*obj, props.ExtraProperties)
 	case storage.KindRBD:
 		return NewStorageRBD(*obj, props.ExtraProperties)
-	case storage.KindZFS:
-		return NewStorageZFS(*obj, props.ExtraProperties)
+	case storage.KindZFSOverISCSI:
+		return NewStorageZFSOverISCSI(*obj, props.ExtraProperties)
 	default:
 		return nil, storage.ErrInvalidKind
 	}
@@ -122,7 +124,10 @@ type StorageDir struct {
 	localPathIsManaged bool
 }
 
-func NewStorageDir(obj Storage, props map[string]interface{}) (*StorageDir, error) {
+func NewStorageDir(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageDir, error) {
 	localPath, ok := props["path"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -134,14 +139,14 @@ func NewStorageDir(obj Storage, props map[string]interface{}) (*StorageDir, erro
 	if v, ok := props["mkdir"].(int); ok {
 		localPathCreate = types.NewPVEBoolFromInt(v)
 	} else {
-		localPathCreate = types.PVEBool(storage.DefaultStorageLocalPathCreate)
+		localPathCreate = types.PVEBool(storage.DefaultStorageDirLocalPathCreate)
 	}
 
 	var localPathIsManaged types.PVEBool
 	if v, ok := props["is_mountpoint"].(int); ok {
 		localPathIsManaged = types.NewPVEBoolFromInt(v)
 	} else {
-		localPathIsManaged = types.PVEBool(storage.DefaultStorageLocalIsManaged)
+		localPathIsManaged = types.PVEBool(storage.DefaultStorageDirLocalIsManaged)
 	}
 
 	return &StorageDir{
@@ -177,12 +182,13 @@ type StorageLVM struct {
 	taggedOnly bool
 }
 
-func NewStorageLVM(obj Storage, props map[string]interface{}) (*StorageLVM, error) {
+func NewStorageLVM(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageLVM, error) {
 	baseStorage, ok := props["base"].(string)
 	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "base")
-		return nil, err
+		baseStorage = storage.DefaultStorageLVMBaseStorage
 	}
 
 	volumeGroup, ok := props["vgname"].(string)
@@ -201,7 +207,7 @@ func NewStorageLVM(obj Storage, props map[string]interface{}) (*StorageLVM, erro
 
 	safeRemoveThroughput, ok := props["saferemove_throughput"].(int)
 	if !ok {
-		safeRemoveThroughput = storage.DefaultStorageLVMSaveRemoveThroughput
+		safeRemoveThroughput = storage.DefaultStorageLVMSafeRemoveThroughput
 	}
 
 	var taggedOnly types.PVEBool
@@ -224,6 +230,26 @@ func NewStorageLVM(obj Storage, props map[string]interface{}) (*StorageLVM, erro
 	}, nil
 }
 
+func (obj *StorageLVM) BaseStorage() string {
+	return obj.baseStorage
+}
+
+func (obj *StorageLVM) VolumeGroup() string {
+	return obj.volumeGroup
+}
+
+func (obj *StorageLVM) SafeRemove() bool {
+	return obj.safeRemove
+}
+
+func (obj *StorageLVM) SafeRemoveThroughput() int {
+	return obj.safeRemoveThroughput
+}
+
+func (obj *StorageLVM) TaggedOnly() bool {
+	return obj.taggedOnly
+}
+
 type StorageLVMThin struct {
 	Storage
 
@@ -231,7 +257,10 @@ type StorageLVMThin struct {
 	volumeGroup string
 }
 
-func NewStorageLVMThin(obj Storage, props map[string]interface{}) (*StorageLVMThin, error) {
+func NewStorageLVMThin(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageLVMThin, error) {
 	thinPool, ok := props["thinpool"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -254,6 +283,14 @@ func NewStorageLVMThin(obj Storage, props map[string]interface{}) (*StorageLVMTh
 	}, nil
 }
 
+func (obj *StorageLVMThin) ThinPool() string {
+	return obj.thinPool
+}
+
+func (obj *StorageLVMThin) VolumeGroup() string {
+	return obj.volumeGroup
+}
+
 type StorageZFS struct {
 	Storage
 
@@ -265,7 +302,10 @@ type StorageZFS struct {
 	localPath string
 }
 
-func NewStorageZFS(obj Storage, props map[string]interface{}) (*StorageZFS, error) {
+func NewStorageZFS(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageZFS, error) {
 	poolName, ok := props["pool"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -273,8 +313,10 @@ func NewStorageZFS(obj Storage, props map[string]interface{}) (*StorageZFS, erro
 		return nil, err
 	}
 
-	blockSize, ok := props["blocksize"].(uint)
-	if !ok {
+	var blockSize uint
+	if v, ok := props["blocksize"].(int); ok {
+		blockSize = uint(v)
+	} else {
 		blockSize = storage.DefaultStorageZFSBlockSize
 	}
 
@@ -287,7 +329,7 @@ func NewStorageZFS(obj Storage, props map[string]interface{}) (*StorageZFS, erro
 
 	localPath, ok := props["mountpoint"].(string)
 	if !ok {
-		poolName = storage.DefaultStorageZFSPoolName
+		localPath = storage.DefaultStorageZFSMountPoint
 	}
 
 	return &StorageZFS{
@@ -302,6 +344,22 @@ func NewStorageZFS(obj Storage, props map[string]interface{}) (*StorageZFS, erro
 	}, nil
 }
 
+func (obj *StorageZFS) PoolName() string {
+	return obj.poolName
+}
+
+func (obj *StorageZFS) BlockSize() uint {
+	return obj.blockSize
+}
+
+func (obj *StorageZFS) UseSparse() bool {
+	return obj.useSparse
+}
+
+func (obj *StorageZFS) LocalPath() string {
+	return obj.localPath
+}
+
 type StorageNFS struct {
 	Storage
 
@@ -313,7 +371,10 @@ type StorageNFS struct {
 	createLocalPath bool
 }
 
-func NewStorageNFS(obj Storage, props map[string]interface{}) (*StorageNFS, error) {
+func NewStorageNFS(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageNFS, error) {
 	server, ok := props["server"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -368,7 +429,10 @@ type StorageCIFS struct {
 	createLocalPath bool
 }
 
-func NewStorageCIFS(obj Storage, props map[string]interface{}) (*StorageCIFS, error) {
+func NewStorageCIFS(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageCIFS, error) {
 	server, ok := props["server"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -443,7 +507,10 @@ type StorageGlusterFS struct {
 	volume string
 }
 
-func NewStorageGlusterFS(obj Storage, props map[string]interface{}) (*StorageGlusterFS, error) {
+func NewStorageGlusterFS(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageGlusterFS, error) {
 	mainServer, ok := props["server"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -486,7 +553,10 @@ type StorageISCSIKernel struct {
 	target string
 }
 
-func NewStorageISCSIKernelMode(obj Storage, props map[string]interface{}) (*StorageISCSIKernel, error) {
+func NewStorageISCSIKernelMode(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageISCSIKernel, error) {
 	portal, ok := props["portal"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -516,7 +586,10 @@ type StorageISCSIUser struct {
 	target string
 }
 
-func NewStorageISCSIUserMode(obj Storage, props map[string]interface{}) (*StorageISCSIUser, error) {
+func NewStorageISCSIUserMode(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageISCSIUser, error) {
 	portal, ok := props["portal"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -551,7 +624,10 @@ type StorageCephFS struct {
 	localPath  string
 }
 
-func NewStorageCephFS(obj Storage, props map[string]interface{}) (*StorageCephFS, error) {
+func NewStorageCephFS(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageCephFS, error) {
 	monitorHosts := types.PVEStringList{Separator: " "}
 	hosts, ok := props["monhost"].(string)
 	if ok {
@@ -606,7 +682,10 @@ type StorageRBD struct {
 	poolName string
 }
 
-func NewStorageRBD(obj Storage, props map[string]interface{}) (*StorageRBD, error) {
+func NewStorageRBD(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageRBD, error) {
 	monitorHosts := types.PVEStringList{Separator: " "}
 	hosts, ok := props["monhost"].(string)
 	if ok {
@@ -663,7 +742,10 @@ type StorageZFSOverISCSI struct {
 	lioTargetPortalGroup string
 }
 
-func NewStorageZFSOverISCSI(obj Storage, props map[string]interface{}) (*StorageZFSOverISCSI, error) {
+func NewStorageZFSOverISCSI(
+	obj Storage,
+	props map[string]interface{},
+) (*StorageZFSOverISCSI, error) {
 	portal, ok := props["portal"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -734,16 +816,16 @@ func NewStorageZFSOverISCSI(obj Storage, props map[string]interface{}) (*Storage
 		portal: portal,
 		target: target,
 
-		poolName:poolName,
+		poolName: poolName,
 
-		blockSize : blockSize,
-		useSparse: useSparse.Bool(),
+		blockSize:  blockSize,
+		useSparse:  useSparse.Bool(),
 		writeCache: writeCache.Bool(),
 
 		iSCSIProvider: iSCSIProvider,
 
-		comstarHostGroup: comstarHostGroup,
-		comstarTargetGroup   : comstarTargetGroup,
-		lioTargetPortalGroup : lioTargetPortalGroup,
+		comstarHostGroup:     comstarHostGroup,
+		comstarTargetGroup:   comstarTargetGroup,
+		lioTargetPortalGroup: lioTargetPortalGroup,
 	}, nil
 }

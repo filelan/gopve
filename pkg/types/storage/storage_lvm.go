@@ -28,22 +28,8 @@ const (
 )
 
 const (
+	DefaultStorageLVMBaseStorage          = ""
 	DefaultStorageLVMSafeRemove           = false
-	DefaultStorageLVMSaveRemoveThroughput = -10485760
+	DefaultStorageLVMSafeRemoveThroughput = -10485760
 	DefaultStorageLVMTaggedOnly           = false
-)
-
-type StorageLVMThin interface {
-	Storage
-
-	VolumeGroup() string
-	ThinPool() string
-}
-
-const (
-	StorageLVMThinContents    = ContentQEMUData & ContentContainerData
-	StorageLVMThinImageFormat = ImageFormatRaw
-	StorageLVMThinShared      = AllowShareNever
-	StorageLVMThinSnapshots   = AllowSnapshotAll
-	StorageLVMThinClones      = AllowCloneAll
 )

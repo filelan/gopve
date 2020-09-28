@@ -10,7 +10,10 @@ type KeyedClientError struct {
 	keys map[string]interface{}
 }
 
-func NewKeyedClientError(msg string, keys map[string]interface{}) KeyedClientError {
+func NewKeyedClientError(
+	msg string,
+	keys map[string]interface{},
+) KeyedClientError {
 	return KeyedClientError{
 		msg:  msg,
 		keys: keys,

@@ -20,7 +20,7 @@ const (
 )
 
 const (
-	DefaultStorageZFSBlockSize = 8192
-	DefaultStorageZFSUseSparse = false
-	DefaultStorageZFSPoolName  = "rbd"
+	DefaultStorageZFSBlockSize  uint = 8192
+	DefaultStorageZFSUseSparse       = false
+	DefaultStorageZFSMountPoint      = ""
 )

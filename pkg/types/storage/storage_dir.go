@@ -22,6 +22,6 @@ const (
 )
 
 const (
-	DefaultStorageLocalPathCreate = true
-	DefaultStorageLocalIsManaged  = false
+	DefaultStorageDirLocalPathCreate = true
+	DefaultStorageDirLocalIsManaged  = false
 )
