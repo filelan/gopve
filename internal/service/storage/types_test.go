@@ -261,3 +261,51 @@ func TestStorageNewZFS(t *testing.T) {
 		)
 	})
 }
+
+func TestStorageNewNFS(t *testing.T) {
+	kind := types.KindNFS
+
+	props := storage.ExtraProperties{
+		"server": "test_server",
+		"export": "/test_path",
+		"path":   "/test_path",
+		"mkdir":  1,
+	}
+
+	requiredProps := []string{"server", "export", "path"}
+
+	optionalProps := []string{"mkdir"}
+
+	t.Run("Create", func(t *testing.T) {
+		obj, err := helperCreateStorage(kind, props)
+		require.NoError(t, err)
+		require.Implements(t, (*types.StorageNFS)(nil), obj)
+
+		concreteStorage, ok := obj.(types.StorageNFS)
+		require.Equal(t, true, ok)
+
+		assert.Equal(t, "test_server", concreteStorage.Server())
+		assert.Equal(t, "/test_path", concreteStorage.ServerPath())
+		assert.Equal(t, "/test_path", concreteStorage.LocalPath())
+		assert.Equal(t, true, concreteStorage.CreateLocalPath())
+	})
+
+	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+
+	t.Run("DefaultProperties", func(t *testing.T) {
+		finalProps := helperFilterOptionalProperties(props, optionalProps)
+
+		obj, err := helperCreateStorage(kind, finalProps)
+		require.NoError(t, err)
+		require.Implements(t, (*types.StorageNFS)(nil), obj)
+
+		concreteStorage, ok := obj.(types.StorageNFS)
+		require.Equal(t, true, ok)
+
+		assert.Equal(
+			t,
+			types.DefaultStorageNFSCreateLocalPath,
+			concreteStorage.CreateLocalPath(),
+		)
+	})
+}

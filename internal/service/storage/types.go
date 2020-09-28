@@ -384,6 +384,28 @@ func NewStorageNFS(
 		return nil, err
 	}
 
+	nfsVersion := storage.DefaultStorageNFSVersion
+	if v, ok := props["options"].(string); ok {
+		nfsOptions := types.PVEStringList{Separator: ","}
+		if err := (&nfsOptions).Unmarshal(v); err != nil {
+			return nil, fmt.Errorf("invalid options value")
+		}
+
+		for _, option := range nfsOptions.List() {
+			nfsOption := types.PVEStringKV{Separator: "=", AllowNoValue: true}
+			if err := (&nfsOption).Unmarshal(option); err != nil {
+				return nil, fmt.Errorf("invalid option value")
+			}
+
+			if nfsOption.Key() == "vers" {
+				if err := (&nfsVersion).Unmarshal(nfsOption.Value()); err != nil {
+					return nil, fmt.Errorf("invalid option value")
+				}
+				break
+			}
+		}
+	}
+
 	serverPath, ok := props["export"].(string)
 	if !ok {
 		err := storage.ErrMissingProperty
@@ -408,12 +430,33 @@ func NewStorageNFS(
 	return &StorageNFS{
 		Storage: obj,
 
-		server: server,
+		server:     server,
+		nfsVersion: nfsVersion,
 
 		serverPath:      serverPath,
 		localPath:       localPath,
 		createLocalPath: createLocalPath.Bool(),
 	}, nil
+}
+
+func (obj *StorageNFS) Server() string {
+	return obj.server
+}
+
+func (obj *StorageNFS) NFSVersion() storage.NFSVersion {
+	return obj.nfsVersion
+}
+
+func (obj *StorageNFS) ServerPath() string {
+	return obj.serverPath
+}
+
+func (obj *StorageNFS) LocalPath() string {
+	return obj.localPath
+}
+
+func (obj *StorageNFS) CreateLocalPath() bool {
+	return obj.createLocalPath
 }
 
 type StorageCIFS struct {

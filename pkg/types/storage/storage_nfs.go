@@ -25,13 +25,15 @@ const (
 )
 
 const (
+	DefaultStorageNFSVersion         = NFSVersionNone
 	DefaultStorageNFSCreateLocalPath = false
 )
 
 type NFSVersion uint
 
 const (
-	NFSVersion30 NFSVersion = iota
+	NFSVersionNone NFSVersion = iota
+	NFSVersion30
 	NFSVersion40
 	NFSVersion41
 	NFSVersion42
