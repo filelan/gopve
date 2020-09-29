@@ -71,14 +71,16 @@ func NewDynamicStorage(
 		return NewStorageCIFS(*obj, props.ExtraProperties)
 	case storage.KindGlusterFS:
 		return NewStorageGlusterFS(*obj, props.ExtraProperties)
-	case storage.KindISCSIKernelMode:
-		return NewStorageISCSIKernelMode(*obj, props.ExtraProperties)
-	case storage.KindISCSIUserMode:
-		return NewStorageISCSIUserMode(*obj, props.ExtraProperties)
+	case storage.KindISCSIKernel:
+		return NewStorageISCSIKernel(*obj, props.ExtraProperties)
+	case storage.KindISCSIUser:
+		return NewStorageISCSIUser(*obj, props.ExtraProperties)
 	case storage.KindCephFS:
 		return NewStorageCephFS(*obj, props.ExtraProperties)
 	case storage.KindRBD:
 		return NewStorageRBD(*obj, props.ExtraProperties)
+	case storage.KindDRBD:
+		return NewStorageDRBD(*obj, props.ExtraProperties)
 	case storage.KindZFSOverISCSI:
 		return NewStorageZFSOverISCSI(*obj, props.ExtraProperties)
 	default:
@@ -370,7 +372,7 @@ type StorageNFS struct {
 
 	serverPath      string
 	localPath       string
-	createLocalPath bool
+	localPathCreate bool
 }
 
 func NewStorageNFS(
@@ -420,11 +422,11 @@ func NewStorageNFS(
 		return nil, err
 	}
 
-	var createLocalPath types.PVEBool
+	var localPathCreate types.PVEBool
 	if v, ok := props["mkdir"].(int); ok {
-		createLocalPath = types.NewPVEBoolFromInt(v)
+		localPathCreate = types.NewPVEBoolFromInt(v)
 	} else {
-		createLocalPath = types.PVEBool(storage.DefaultStorageNFSCreateLocalPath)
+		localPathCreate = types.PVEBool(storage.DefaultStorageNFSLocalPathCreate)
 	}
 
 	return &StorageNFS{
@@ -435,7 +437,7 @@ func NewStorageNFS(
 
 		serverPath:      serverPath,
 		localPath:       localPath,
-		createLocalPath: createLocalPath.Bool(),
+		localPathCreate: localPathCreate.Bool(),
 	}, nil
 }
 
@@ -455,15 +457,15 @@ func (obj *StorageNFS) LocalPath() string {
 	return obj.localPath
 }
 
-func (obj *StorageNFS) CreateLocalPath() bool {
-	return obj.createLocalPath
+func (obj *StorageNFS) LocalPathCreate() bool {
+	return obj.localPathCreate
 }
 
 type StorageCIFS struct {
 	Storage
 
-	server  string
-	version storage.SMBVersion
+	server     string
+	smbVersion storage.SMBVersion
 
 	domain   string
 	username string
@@ -471,7 +473,7 @@ type StorageCIFS struct {
 
 	serverShare     string
 	localPath       string
-	createLocalPath bool
+	localPathCreate bool
 }
 
 func NewStorageCIFS(
@@ -485,8 +487,10 @@ func NewStorageCIFS(
 		return nil, err
 	}
 
-	version, ok := props["smbversion"].(storage.SMBVersion)
-	if !ok {
+	var version storage.SMBVersion
+	if v, ok := props["smbversion"].(string); ok {
+		(&version).Unmarshal(v)
+	} else {
 		version = storage.DefaultStorageCIFSSMBVersion
 	}
 
@@ -500,7 +504,7 @@ func NewStorageCIFS(
 		username = storage.DefaultStorageCIFSUsername
 	}
 
-	password, ok := props["username"].(string)
+	password, ok := props["password"].(string)
 	if !ok {
 		password = storage.DefaultStorageCIFSPassword
 	}
@@ -519,18 +523,18 @@ func NewStorageCIFS(
 		return nil, err
 	}
 
-	var createLocalPath types.PVEBool
+	var localPathCreate types.PVEBool
 	if v, ok := props["mkdir"].(int); ok {
-		createLocalPath = types.NewPVEBoolFromInt(v)
+		localPathCreate = types.NewPVEBoolFromInt(v)
 	} else {
-		createLocalPath = types.PVEBool(storage.DefaultStorageCIFSCreateLocalPath)
+		localPathCreate = types.PVEBool(storage.DefaultStorageCIFSLocalPathCreate)
 	}
 
 	return &StorageCIFS{
 		Storage: obj,
 
-		server:  server,
-		version: version,
+		server:     server,
+		smbVersion: version,
 
 		domain:   domain,
 		username: username,
@@ -538,8 +542,40 @@ func NewStorageCIFS(
 
 		serverShare:     serverShare,
 		localPath:       localPath,
-		createLocalPath: createLocalPath.Bool(),
+		localPathCreate: localPathCreate.Bool(),
 	}, nil
+}
+
+func (obj *StorageCIFS) Server() string {
+	return obj.server
+}
+
+func (obj *StorageCIFS) SMBVersion() storage.SMBVersion {
+	return obj.smbVersion
+}
+
+func (obj *StorageCIFS) Domain() string {
+	return obj.domain
+}
+
+func (obj *StorageCIFS) Username() string {
+	return obj.username
+}
+
+func (obj *StorageCIFS) Password() string {
+	return obj.password
+}
+
+func (obj *StorageCIFS) ServerShare() string {
+	return obj.serverShare
+}
+
+func (obj *StorageCIFS) LocalPath() string {
+	return obj.localPath
+}
+
+func (obj *StorageCIFS) LocalPathCreate() bool {
+	return obj.localPathCreate
 }
 
 type StorageGlusterFS struct {
@@ -565,11 +601,13 @@ func NewStorageGlusterFS(
 
 	backupServer, ok := props["server2"].(string)
 	if !ok {
-		backupServer = storage.DefaultStorageGlusterFSBackupService
+		backupServer = storage.DefaultStorageGlusterFSBackupServer
 	}
 
-	transport, ok := props["transport"].(storage.GlusterFSTransport)
-	if !ok {
+	var transport storage.GlusterFSTransport
+	if v, ok := props["transport"].(string); ok {
+		(&transport).Unmarshal(v)
+	} else {
 		transport = storage.DefaultStorageGlusterFSTransport
 	}
 
@@ -591,6 +629,22 @@ func NewStorageGlusterFS(
 	}, nil
 }
 
+func (obj *StorageGlusterFS) MainServer() string {
+	return obj.mainServer
+}
+
+func (obj *StorageGlusterFS) BackupServer() string {
+	return obj.backupServer
+}
+
+func (obj *StorageGlusterFS) Transport() storage.GlusterFSTransport {
+	return obj.transport
+}
+
+func (obj *StorageGlusterFS) Volume() string {
+	return obj.volume
+}
+
 type StorageISCSIKernel struct {
 	Storage
 
@@ -598,7 +652,7 @@ type StorageISCSIKernel struct {
 	target string
 }
 
-func NewStorageISCSIKernelMode(
+func NewStorageISCSIKernel(
 	obj Storage,
 	props ExtraProperties,
 ) (*StorageISCSIKernel, error) {
@@ -624,6 +678,14 @@ func NewStorageISCSIKernelMode(
 	}, nil
 }
 
+func (obj *StorageISCSIKernel) Portal() string {
+	return obj.portal
+}
+
+func (obj *StorageISCSIKernel) Target() string {
+	return obj.target
+}
+
 type StorageISCSIUser struct {
 	Storage
 
@@ -631,7 +693,7 @@ type StorageISCSIUser struct {
 	target string
 }
 
-func NewStorageISCSIUserMode(
+func NewStorageISCSIUser(
 	obj Storage,
 	props ExtraProperties,
 ) (*StorageISCSIUser, error) {
@@ -657,6 +719,14 @@ func NewStorageISCSIUserMode(
 	}, nil
 }
 
+func (obj *StorageISCSIUser) Portal() string {
+	return obj.portal
+}
+
+func (obj *StorageISCSIUser) Target() string {
+	return obj.target
+}
+
 type StorageCephFS struct {
 	Storage
 
@@ -673,12 +743,15 @@ func NewStorageCephFS(
 	obj Storage,
 	props ExtraProperties,
 ) (*StorageCephFS, error) {
-	monitorHosts := types.PVEStringList{Separator: " "}
+	var monitorHosts types.PVEStringList
 	hosts, ok := props["monhost"].(string)
 	if ok {
+		monitorHosts = types.PVEStringList{Separator: " "}
 		if err := (&monitorHosts).Unmarshal(hosts); err != nil {
 			return nil, fmt.Errorf("invalid monhost value")
 		}
+	} else {
+		monitorHosts = types.NewPVEStringList(" ", storage.DefaultStorageCephFSMonitorHosts)
 	}
 
 	username, ok := props["username"].(string)
@@ -700,7 +773,9 @@ func NewStorageCephFS(
 
 	localPath, ok := props["path"].(string)
 	if !ok {
-		localPath = fmt.Sprintf(storage.DefaultStorageCephFSLocalPath, obj.name)
+		err := storage.ErrMissingProperty
+		err.AddKey("name", "path")
+		return nil, err
 	}
 
 	return &StorageCephFS{
@@ -714,6 +789,26 @@ func NewStorageCephFS(
 		serverPath: serverPath,
 		localPath:  localPath,
 	}, nil
+}
+
+func (obj *StorageCephFS) MonitorHosts() []string {
+	return obj.monitorHosts
+}
+
+func (obj *StorageCephFS) Username() string {
+	return obj.username
+}
+
+func (obj *StorageCephFS) UseFUSE() bool {
+	return obj.useFUSE
+}
+
+func (obj *StorageCephFS) ServerPath() string {
+	return obj.serverPath
+}
+
+func (obj *StorageCephFS) LocalPath() string {
+	return obj.localPath
 }
 
 type StorageRBD struct {
@@ -731,12 +826,15 @@ func NewStorageRBD(
 	obj Storage,
 	props ExtraProperties,
 ) (*StorageRBD, error) {
-	monitorHosts := types.PVEStringList{Separator: " "}
+	var monitorHosts types.PVEStringList
 	hosts, ok := props["monhost"].(string)
 	if ok {
+		monitorHosts = types.PVEStringList{Separator: " "}
 		if err := (&monitorHosts).Unmarshal(hosts); err != nil {
 			return nil, fmt.Errorf("invalid monhost value")
 		}
+	} else {
+		monitorHosts = types.NewPVEStringList(" ", storage.DefaultStorageRBDMonitorHosts)
 	}
 
 	username, ok := props["username"].(string)
@@ -766,6 +864,50 @@ func NewStorageRBD(
 
 		poolName: poolName,
 	}, nil
+}
+
+func (obj *StorageRBD) MonitorHosts() []string {
+	return obj.monitorHosts
+}
+
+func (obj *StorageRBD) Username() string {
+	return obj.username
+}
+
+func (obj *StorageRBD) UseKRBD() bool {
+	return obj.useKRBD
+}
+
+func (obj *StorageRBD) PoolName() string {
+	return obj.poolName
+}
+
+type StorageDRBD struct {
+	Storage
+
+	redundancy uint
+}
+
+func NewStorageDRBD(
+	obj Storage,
+	props ExtraProperties,
+) (*StorageDRBD, error) {
+	var redundancy uint
+	if v, ok := props["redundancy"].(int); ok {
+		redundancy = uint(v)
+	} else {
+		redundancy = storage.DefaultStorageDRBDRedundancy
+	}
+
+	return &StorageDRBD{
+		Storage: obj,
+
+		redundancy: redundancy,
+	}, nil
+}
+
+func (obj *StorageDRBD) Redundancy() uint {
+	return obj.redundancy
 }
 
 type StorageZFSOverISCSI struct {
@@ -812,8 +954,10 @@ func NewStorageZFSOverISCSI(
 		return nil, err
 	}
 
-	blockSize, ok := props["blocksize"].(uint)
-	if !ok {
+	var blockSize uint
+	if v, ok := props["blocksize"].(int); ok {
+		blockSize = uint(v)
+	} else {
 		err := storage.ErrMissingProperty
 		err.AddKey("name", "blocksize")
 		return nil, err
@@ -833,8 +977,11 @@ func NewStorageZFSOverISCSI(
 		writeCache = types.PVEBool(storage.DefaultStorageZFSOverISCSIWriteCache)
 	}
 
-	iSCSIProvider, ok := props["iscsiprovider"].(storage.ISCSIProvider)
-	if !ok {
+	var iSCSIProvider storage.ISCSIProvider
+
+	if v, ok := props["iscsiprovider"].(string); ok {
+		(&iSCSIProvider).Unmarshal(v)
+	} else {
 		err := storage.ErrMissingProperty
 		err.AddKey("name", "iscsiprovider")
 		return nil, err
@@ -873,4 +1020,44 @@ func NewStorageZFSOverISCSI(
 		comstarTargetGroup:   comstarTargetGroup,
 		lioTargetPortalGroup: lioTargetPortalGroup,
 	}, nil
+}
+
+func (obj *StorageZFSOverISCSI) Portal() string {
+	return obj.portal
+}
+
+func (obj *StorageZFSOverISCSI) Target() string {
+	return obj.target
+}
+
+func (obj *StorageZFSOverISCSI) PoolName() string {
+	return obj.poolName
+}
+
+func (obj *StorageZFSOverISCSI) BlockSize() uint {
+	return obj.blockSize
+}
+
+func (obj *StorageZFSOverISCSI) UseSparse() bool {
+	return obj.useSparse
+}
+
+func (obj *StorageZFSOverISCSI) WriteCache() bool {
+	return obj.writeCache
+}
+
+func (obj *StorageZFSOverISCSI) ISCSIProvider() storage.ISCSIProvider {
+	return obj.iSCSIProvider
+}
+
+func (obj *StorageZFSOverISCSI) ComstarHostGroup() string {
+	return obj.comstarHostGroup
+}
+
+func (obj *StorageZFSOverISCSI) ComstarTargetGroup() string {
+	return obj.comstarTargetGroup
+}
+
+func (obj *StorageZFSOverISCSI) LIOTargetPortalGroup() string {
+	return obj.lioTargetPortalGroup
 }

@@ -16,10 +16,11 @@ const (
 	KindNFS
 	KindCIFS
 	KindGlusterFS
-	KindISCSIKernelMode
-	KindISCSIUserMode
+	KindISCSIKernel
+	KindISCSIUser
 	KindCephFS
 	KindRBD
+	KindDRBD
 	KindZFSOverISCSI
 )
 
@@ -39,14 +40,16 @@ func (obj Kind) Marshal() (string, error) {
 		return "cifs", nil
 	case KindGlusterFS:
 		return "glusterfs", nil
-	case KindISCSIKernelMode:
+	case KindISCSIKernel:
 		return "iscsi", nil
-	case KindISCSIUserMode:
+	case KindISCSIUser:
 		return "iscsidirect", nil
 	case KindCephFS:
 		return "cephfs", nil
 	case KindRBD:
 		return "rbd", nil
+	case KindDRBD:
+		return "drbd", nil
 	case KindZFSOverISCSI:
 		return "zfs", nil
 
@@ -72,13 +75,15 @@ func (obj *Kind) Unmarshal(s string) error {
 	case "glusterfs":
 		*obj = KindGlusterFS
 	case "iscsi":
-		*obj = KindISCSIKernelMode
+		*obj = KindISCSIKernel
 	case "iscsidirect":
-		*obj = KindISCSIUserMode
+		*obj = KindISCSIUser
 	case "cephfs":
 		*obj = KindCephFS
 	case "rbd":
 		*obj = KindRBD
+	case "drbd":
+		*obj = KindDRBD
 	case "zfs":
 		*obj = KindZFSOverISCSI
 

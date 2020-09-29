@@ -23,6 +23,7 @@ func NewKeyedClientError(
 func (err KeyedClientError) Error() string {
 	var b strings.Builder
 	b.WriteString(err.msg)
+
 	if err.keys != nil {
 		for k, v := range err.keys {
 			fmt.Fprintf(&b, " %s=%v", k, v)

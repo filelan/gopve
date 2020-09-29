@@ -20,6 +20,8 @@ const (
 	StorageRBDClones      = AllowCloneAll
 )
 
+var DefaultStorageRBDMonitorHosts = []string{}
+
 const (
 	DefaultStorageRBDUsername = ""
 	DefaultStorageRBDUseKRBD  = false

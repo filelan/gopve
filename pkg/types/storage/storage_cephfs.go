@@ -21,9 +21,10 @@ const (
 	StorageCephFSClones      = AllowCloneNever
 )
 
+var DefaultStorageCephFSMonitorHosts = []string{}
+
 const (
 	DefaultStorageCephFSUsername   = ""
 	DefaultStorageCephFSUseFUSE    = false
 	DefaultStorageCephFSServerPath = "/"
-	DefaultStorageCephFSLocalPath  = "/mnt/pve/%s"
 )

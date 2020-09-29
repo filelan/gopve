@@ -17,7 +17,7 @@ type StorageCIFS interface {
 
 	ServerShare() string
 	LocalPath() string
-	CreateLocalPath() bool
+	LocalPathCreate() bool
 }
 
 const (
@@ -33,7 +33,7 @@ const (
 	DefaultStorageCIFSDomain          = ""
 	DefaultStorageCIFSUsername        = ""
 	DefaultStorageCIFSPassword        = ""
-	DefaultStorageCIFSCreateLocalPath = false
+	DefaultStorageCIFSLocalPathCreate = false
 )
 
 type SMBVersion uint

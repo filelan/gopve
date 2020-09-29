@@ -13,7 +13,7 @@ type StorageNFS interface {
 
 	ServerPath() string
 	LocalPath() string
-	CreateLocalPath() bool
+	LocalPathCreate() bool
 }
 
 const (
@@ -26,7 +26,7 @@ const (
 
 const (
 	DefaultStorageNFSVersion         = NFSVersionNone
-	DefaultStorageNFSCreateLocalPath = false
+	DefaultStorageNFSLocalPathCreate = false
 )
 
 type NFSVersion uint

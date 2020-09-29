@@ -24,6 +24,10 @@ var KindCases = map[string](struct {
 		Object: storage.KindLVMThin,
 		Value:  "lvmthin",
 	},
+	"ZFS": {
+		Object: storage.KindZFS,
+		Value:  "zfspool",
+	},
 	"NFS": {
 		Object: storage.KindNFS,
 		Value:  "nfs",
@@ -36,12 +40,12 @@ var KindCases = map[string](struct {
 		Object: storage.KindGlusterFS,
 		Value:  "glusterfs",
 	},
-	"ISCSIKernelMode": {
-		Object: storage.KindISCSIKernelMode,
+	"ISCSIKernel": {
+		Object: storage.KindISCSIKernel,
 		Value:  "iscsi",
 	},
-	"ISCSIUserMode": {
-		Object: storage.KindISCSIUserMode,
+	"ISCSIUser": {
+		Object: storage.KindISCSIUser,
 		Value:  "iscsidirect",
 	},
 	"CephFS": {
@@ -52,9 +56,13 @@ var KindCases = map[string](struct {
 		Object: storage.KindRBD,
 		Value:  "rbd",
 	},
-	"ZFS": {
-		Object: storage.KindZFS,
-		Value:  "zfspool",
+	"DRBD": {
+		Object: storage.KindDRBD,
+		Value:  "drbd",
+	},
+	"ZFSOverISCSI": {
+		Object: storage.KindZFSOverISCSI,
+		Value:  "zfs",
 	},
 }
 

@@ -12,8 +12,20 @@ type PVEStringList struct {
 	list []string
 }
 
+func NewPVEStringList(separator string, list []string) PVEStringList {
+	return PVEStringList{
+		Separator: separator,
+
+		list: list,
+	}
+}
+
 func (obj PVEStringList) Len() int {
 	return len(obj.list)
+}
+
+func (obj *PVEStringList) Append(elem string) {
+	obj.list = append(obj.list, elem)
 }
 
 func (obj PVEStringList) Elem(index int) string {
@@ -22,10 +34,6 @@ func (obj PVEStringList) Elem(index int) string {
 
 func (obj PVEStringList) List() []string {
 	return obj.list
-}
-
-func (obj *PVEStringList) Append(elem string) {
-	obj.list = append(obj.list, elem)
 }
 
 func (obj PVEStringList) Marshal() (string, error) {

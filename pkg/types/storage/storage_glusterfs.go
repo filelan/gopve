@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	DefaultStorageGlusterFSBackupService = ""
-	DefaultStorageGlusterFSTransport     = GlusterFSTransportNone
+	DefaultStorageGlusterFSBackupServer = ""
+	DefaultStorageGlusterFSTransport    = GlusterFSTransportNone
 )
 
 type GlusterFSTransport uint
