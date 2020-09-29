@@ -35,7 +35,7 @@ func NewPoolMemberVirtualMachine(
 	svc *Service,
 	id string,
 ) (pool.PoolMember, error) {
-	memberID := types.PVEStringKV{Separator: "/", AllowNoValue: false}
+	memberID := types.PVEKeyValue{Separator: "/", AllowNoValue: false}
 	if err := memberID.Unmarshal(id); err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ type PoolMemberStorage struct {
 }
 
 func NewPoolMemberStorage(svc *Service, id string) (pool.PoolMember, error) {
-	memberID := types.PVEStringList{Separator: "/"}
+	memberID := types.PVEList{Separator: "/"}
 	if err := memberID.Unmarshal(id); err != nil {
 		return nil, err
 	}

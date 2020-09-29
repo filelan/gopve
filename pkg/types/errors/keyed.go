@@ -22,6 +22,7 @@ func NewKeyedClientError(
 
 func (err KeyedClientError) Error() string {
 	var b strings.Builder
+
 	b.WriteString(err.msg)
 
 	if err.keys != nil {
@@ -33,7 +34,7 @@ func (err KeyedClientError) Error() string {
 	return b.String()
 }
 
-func (err KeyedClientError) AddKey(key string, value interface{}) {
+func (err *KeyedClientError) AddKey(key string, value interface{}) {
 	if err.keys == nil {
 		err.keys = make(map[string]interface{})
 	}

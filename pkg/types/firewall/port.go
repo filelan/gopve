@@ -36,7 +36,7 @@ func (obj PortRanges) Marshal() (string, error) {
 func (obj *PortRanges) Unmarshal(s string) error {
 	var err error
 
-	ranges := types.PVEStringList{Separator: ","}
+	ranges := types.PVEList{Separator: ","}
 	if err := ranges.Unmarshal(s); err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (obj *PortRanges) Unmarshal(s string) error {
 	for _, portRange := range ranges.List() {
 		var start, end int
 
-		rangeValues := types.PVEStringKV{Separator: ":", AllowNoValue: true}
+		rangeValues := types.PVEKeyValue{Separator: ":", AllowNoValue: true}
 		if err := rangeValues.Unmarshal(portRange); err != nil {
 			return err
 		}

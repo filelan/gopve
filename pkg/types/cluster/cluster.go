@@ -70,7 +70,7 @@ func (obj NodeLink) Marshal() (string, error) {
 }
 
 func (obj *NodeLink) Unmarshal(s string) error {
-	content := types.PVEStringList{Separator: ","}
+	content := types.PVEList{Separator: ","}
 	if err := content.Unmarshal(s); err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (obj *NodeLink) Unmarshal(s string) error {
 	var addressIsSet bool
 
 	for _, c := range content.List() {
-		kv := types.PVEStringKV{Separator: "=", AllowNoValue: true}
+		kv := types.PVEKeyValue{Separator: "=", AllowNoValue: true}
 		if err := kv.Unmarshal(c); err != nil {
 			return err
 		}

@@ -13,7 +13,7 @@ type StorageZFSOverISCSI interface {
 
 	PoolName() string
 
-	BlockSize() uint
+	BlockSize() string
 	UseSparse() bool
 	WriteCache() bool
 

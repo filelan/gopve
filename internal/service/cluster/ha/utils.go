@@ -18,13 +18,13 @@ func nodeStringToMap(
 		return nodeMap, nil
 	}
 
-	nodeList := types.PVEStringList{Separator: ","}
+	nodeList := types.PVEList{Separator: ","}
 	if err := nodeList.Unmarshal(nodes); err != nil {
 		return nil, err
 	}
 
 	for _, node := range nodeList.List() {
-		nodeData := types.PVEStringKV{Separator: ":", AllowNoValue: true}
+		nodeData := types.PVEKeyValue{Separator: ":", AllowNoValue: true}
 		if err := nodeData.Unmarshal(node); err != nil {
 			return nil, err
 		}
@@ -48,8 +48,8 @@ func nodeStringToMap(
 
 func nodeMapToList(
 	nodes cluster.HighAvailabilityGroupNodes,
-) types.PVEStringList {
-	nodeList := types.PVEStringList{Separator: ","}
+) types.PVEList {
+	nodeList := types.PVEList{Separator: ","}
 
 	if nodes == nil {
 		return nodeList

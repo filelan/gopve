@@ -12,7 +12,7 @@ func (svc *Service) List() ([]task.Task, error) {
 }
 
 func (svc *Service) Get(upid string) (task.Task, error) {
-	splits := types.PVEStringList{Separator: ":"}
+	splits := types.PVEList{Separator: ":"}
 	if err := splits.Unmarshal(upid); err != nil {
 		return nil, err
 	}

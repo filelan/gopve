@@ -5,7 +5,7 @@ type StorageZFS interface {
 
 	PoolName() string
 
-	BlockSize() uint
+	BlockSize() string
 	UseSparse() bool
 
 	LocalPath() string
@@ -20,7 +20,7 @@ const (
 )
 
 const (
-	DefaultStorageZFSBlockSize  uint = 8192
-	DefaultStorageZFSUseSparse       = false
-	DefaultStorageZFSMountPoint      = ""
+	DefaultStorageZFSBlockSize  = "8192"
+	DefaultStorageZFSUseSparse  = false
+	DefaultStorageZFSMountPoint = ""
 )

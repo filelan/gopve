@@ -68,7 +68,7 @@ type NodeProperties struct {
 }
 
 func (props NodeProperties) MapToValues() (request.Values, error) {
-	delete := types.PVEStringList{Separator: ","}
+	delete := types.PVEList{Separator: ","}
 	values := make(request.Values)
 
 	values.AddBool("enable", props.Enable)

@@ -29,7 +29,7 @@ type Rule struct {
 }
 
 func (obj Rule) MapToValues(update bool) (request.Values, error) {
-	delete := types.PVEStringList{Separator: ","}
+	delete := types.PVEList{Separator: ","}
 	values := make(request.Values)
 
 	values.AddBool("enable", obj.Enable)

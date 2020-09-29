@@ -20,25 +20,41 @@ type getResponseJSON struct {
 	ImageFormat     storage.ImageFormat `json:"format"`
 	MaxBackupsPerVM uint                `json:"maxfiles"`
 
-	Nodes types.PVEStringList `json:"nodes"`
+	Nodes types.PVEList `json:"nodes"`
 
 	ExtraProperties ExtraProperties `json:"-"`
 }
 
 func (res *getResponseJSON) UnmarshalJSON(b []byte) error {
 	type UnmarshalJSON getResponseJSON
+
 	var x UnmarshalJSON
+	x.Nodes.Separator = ","
+
 	if err := json.Unmarshal(b, &x); err != nil {
 		return err
 	}
 
+	if err := json.Unmarshal(b, &x.ExtraProperties); err != nil {
+		return err
+	}
+
+	delete(x.ExtraProperties, "storage")
+	delete(x.ExtraProperties, "type")
+	delete(x.ExtraProperties, "content")
+	delete(x.ExtraProperties, "shared")
+	delete(x.ExtraProperties, "disable")
+	delete(x.ExtraProperties, "format")
+	delete(x.ExtraProperties, "maxfiles")
+	delete(x.ExtraProperties, "nodes")
+
 	*res = getResponseJSON(x)
+
 	return nil
 }
 
 func (res getResponseJSON) Map(
 	svc *Service,
-	full bool,
 ) (storage.Storage, error) {
 	return NewDynamicStorage(svc, res.Name, res.Type, storage.Properties{
 		Content:  res.Content,
@@ -62,7 +78,7 @@ func (svc *Service) List() ([]storage.Storage, error) {
 
 	storages := make([]storage.Storage, len(res))
 	for i, storage := range res {
-		out, err := storage.Map(svc, false)
+		out, err := storage.Map(svc)
 		if err != nil {
 			return nil, err
 		}
@@ -79,5 +95,5 @@ func (svc *Service) Get(name string) (storage.Storage, error) {
 		return nil, err
 	}
 
-	return res.Map(svc, true)
+	return res.Map(svc)
 }

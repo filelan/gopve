@@ -35,7 +35,7 @@ func (res listResponseJSON) Map(svc *Service) (vm.VirtualMachine, error) {
 		isTemplate: res.IsTemplate.Bool(),
 	}
 
-	switch res.Kind {
+	switch out.kind {
 	case vm.KindQEMU:
 		return &QEMUVirtualMachine{VirtualMachine: out}, nil
 	case vm.KindLXC:

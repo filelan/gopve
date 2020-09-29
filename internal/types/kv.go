@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type PVEStringKV struct {
+type PVEKeyValue struct {
 	Separator    string
 	AllowNoValue bool
 
@@ -15,25 +15,25 @@ type PVEStringKV struct {
 	hasValue bool
 }
 
-func (obj PVEStringKV) Key() string {
+func (obj PVEKeyValue) Key() string {
 	return obj.key
 }
 
-func (obj PVEStringKV) Value() string {
+func (obj PVEKeyValue) Value() string {
 	return obj.value
 }
 
-func (obj PVEStringKV) HasValue() bool {
+func (obj PVEKeyValue) HasValue() bool {
 	return obj.hasValue
 }
 
-func (obj PVEStringKV) Marshal() (string, error) {
+func (obj PVEKeyValue) Marshal() (string, error) {
 	return fmt.Sprintf("%s%s%s", obj.key, obj.Separator, obj.value), nil
 }
 
-func (obj *PVEStringKV) Unmarshal(s string) error {
+func (obj *PVEKeyValue) Unmarshal(s string) error {
 	if obj.Separator == "" {
-		return fmt.Errorf("can't unmarshal, no separator defined")
+		return fmt.Errorf("can't unmarshal kv, no separator defined")
 	}
 
 	content := strings.Split(s, obj.Separator)
@@ -59,7 +59,7 @@ func (obj *PVEStringKV) Unmarshal(s string) error {
 	return nil
 }
 
-func (obj *PVEStringKV) UnmarshalJSON(b []byte) error {
+func (obj *PVEKeyValue) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err

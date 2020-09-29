@@ -196,7 +196,7 @@ func TestStorageNewZFS(t *testing.T) {
 
 	props := storage.ExtraProperties{
 		"pool":       "test_pool",
-		"blocksize":  1024,
+		"blocksize":  "1024",
 		"sparse":     1,
 		"mountpoint": "test_mountpoint",
 	}
@@ -212,7 +212,7 @@ func TestStorageNewZFS(t *testing.T) {
 		require.Equal(t, true, ok)
 
 		assert.Equal(t, "test_pool", concreteStorage.PoolName())
-		assert.Equal(t, uint(1024), concreteStorage.BlockSize())
+		assert.Equal(t, "1024", concreteStorage.BlockSize())
 		assert.Equal(t, true, concreteStorage.UseSparse())
 		assert.Equal(t, "test_mountpoint", concreteStorage.LocalPath())
 	})
@@ -658,7 +658,7 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 		"portal":        "test_portal",
 		"target":        "test_target",
 		"pool":          "test_pool",
-		"blocksize":     1024,
+		"blocksize":     "1024",
 		"sparse":        1,
 		"nowritecache":  1,
 		"iscsiprovider": "iet",
@@ -680,7 +680,7 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 		assert.Equal(t, "test_portal", concreteStorage.Portal())
 		assert.Equal(t, "test_target", concreteStorage.Target())
 		assert.Equal(t, "test_pool", concreteStorage.PoolName())
-		assert.Equal(t, uint(1024), concreteStorage.BlockSize())
+		assert.Equal(t, "1024", concreteStorage.BlockSize())
 		assert.Equal(t, true, concreteStorage.UseSparse())
 		assert.Equal(t, false, concreteStorage.WriteCache())
 		assert.Equal(t, types.ISCSIProviderIET, concreteStorage.ISCSIProvider())

@@ -33,7 +33,7 @@ const (
 )
 
 func (obj Content) Marshal() (string, error) {
-	content := types.PVEStringList{Separator: ","}
+	content := types.PVEList{Separator: ","}
 
 	if obj&ContentQEMUData != 0 {
 		content.Append("images")
@@ -63,7 +63,7 @@ func (obj Content) Marshal() (string, error) {
 }
 
 func (obj *Content) Unmarshal(s string) error {
-	content := types.PVEStringList{Separator: ","}
+	content := types.PVEList{Separator: ","}
 	if err := content.Unmarshal(s); err != nil {
 		return err
 	}

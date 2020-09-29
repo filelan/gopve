@@ -300,7 +300,7 @@ type StorageZFS struct {
 
 	poolName string
 
-	blockSize uint
+	blockSize string
 	useSparse bool
 
 	localPath string
@@ -317,9 +317,9 @@ func NewStorageZFS(
 		return nil, err
 	}
 
-	var blockSize uint
-	if v, ok := props["blocksize"].(int); ok {
-		blockSize = uint(v)
+	var blockSize string
+	if v, ok := props["blocksize"].(string); ok {
+		blockSize = v
 	} else {
 		blockSize = storage.DefaultStorageZFSBlockSize
 	}
@@ -352,7 +352,7 @@ func (obj *StorageZFS) PoolName() string {
 	return obj.poolName
 }
 
-func (obj *StorageZFS) BlockSize() uint {
+func (obj *StorageZFS) BlockSize() string {
 	return obj.blockSize
 }
 
@@ -388,21 +388,17 @@ func NewStorageNFS(
 
 	nfsVersion := storage.DefaultStorageNFSVersion
 	if v, ok := props["options"].(string); ok {
-		nfsOptions := types.PVEStringList{Separator: ","}
+		nfsOptions := types.PVEDictionary{ListSeparator: ",", KeyValueSeparator: "=", AllowNoValue: true}
 		if err := (&nfsOptions).Unmarshal(v); err != nil {
 			return nil, fmt.Errorf("invalid options value")
 		}
 
 		for _, option := range nfsOptions.List() {
-			nfsOption := types.PVEStringKV{Separator: "=", AllowNoValue: true}
-			if err := (&nfsOption).Unmarshal(option); err != nil {
-				return nil, fmt.Errorf("invalid option value")
-			}
-
-			if nfsOption.Key() == "vers" {
-				if err := (&nfsVersion).Unmarshal(nfsOption.Value()); err != nil {
+			if option.Key() == "vers" {
+				if err := (&nfsVersion).Unmarshal(option.Value()); err != nil {
 					return nil, fmt.Errorf("invalid option value")
 				}
+
 				break
 			}
 		}
@@ -743,15 +739,15 @@ func NewStorageCephFS(
 	obj Storage,
 	props ExtraProperties,
 ) (*StorageCephFS, error) {
-	var monitorHosts types.PVEStringList
+	var monitorHosts types.PVEList
 	hosts, ok := props["monhost"].(string)
 	if ok {
-		monitorHosts = types.PVEStringList{Separator: " "}
+		monitorHosts = types.PVEList{Separator: " "}
 		if err := (&monitorHosts).Unmarshal(hosts); err != nil {
 			return nil, fmt.Errorf("invalid monhost value")
 		}
 	} else {
-		monitorHosts = types.NewPVEStringList(" ", storage.DefaultStorageCephFSMonitorHosts)
+		monitorHosts = types.NewPVEList(" ", storage.DefaultStorageCephFSMonitorHosts)
 	}
 
 	username, ok := props["username"].(string)
@@ -826,15 +822,15 @@ func NewStorageRBD(
 	obj Storage,
 	props ExtraProperties,
 ) (*StorageRBD, error) {
-	var monitorHosts types.PVEStringList
+	var monitorHosts types.PVEList
 	hosts, ok := props["monhost"].(string)
 	if ok {
-		monitorHosts = types.PVEStringList{Separator: " "}
+		monitorHosts = types.PVEList{Separator: " "}
 		if err := (&monitorHosts).Unmarshal(hosts); err != nil {
 			return nil, fmt.Errorf("invalid monhost value")
 		}
 	} else {
-		monitorHosts = types.NewPVEStringList(" ", storage.DefaultStorageRBDMonitorHosts)
+		monitorHosts = types.NewPVEList(" ", storage.DefaultStorageRBDMonitorHosts)
 	}
 
 	username, ok := props["username"].(string)
@@ -918,7 +914,7 @@ type StorageZFSOverISCSI struct {
 
 	poolName string
 
-	blockSize  uint
+	blockSize  string
 	useSparse  bool
 	writeCache bool
 
@@ -954,10 +950,8 @@ func NewStorageZFSOverISCSI(
 		return nil, err
 	}
 
-	var blockSize uint
-	if v, ok := props["blocksize"].(int); ok {
-		blockSize = uint(v)
-	} else {
+	blockSize, ok := props["blocksize"].(string)
+	if !ok {
 		err := storage.ErrMissingProperty
 		err.AddKey("name", "blocksize")
 		return nil, err
@@ -1034,7 +1028,7 @@ func (obj *StorageZFSOverISCSI) PoolName() string {
 	return obj.poolName
 }
 
-func (obj *StorageZFSOverISCSI) BlockSize() uint {
+func (obj *StorageZFSOverISCSI) BlockSize() string {
 	return obj.blockSize
 }
 

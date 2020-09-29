@@ -131,13 +131,13 @@ func (obj LogLimit) Marshal() (string, error) {
 }
 
 func (obj *LogLimit) Unmarshal(s string) error {
-	props := types.PVEStringList{Separator: ","}
+	props := types.PVEList{Separator: ","}
 	if err := props.Unmarshal(s); err != nil {
 		return err
 	}
 
 	for _, prop := range props.List() {
-		kv := types.PVEStringKV{Separator: "=", AllowNoValue: false}
+		kv := types.PVEKeyValue{Separator: "=", AllowNoValue: false}
 		if err := kv.Unmarshal(prop); err != nil {
 			return err
 		}
@@ -154,7 +154,7 @@ func (obj *LogLimit) Unmarshal(s string) error {
 			}
 
 		case "rate":
-			v := types.PVEStringKV{Separator: "/", AllowNoValue: false}
+			v := types.PVEKeyValue{Separator: "/", AllowNoValue: false}
 			v.Unmarshal(kv.Value())
 
 			rateMessage, err := strconv.Atoi(v.Key())
