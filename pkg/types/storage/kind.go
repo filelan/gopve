@@ -24,6 +24,14 @@ const (
 	KindZFSOverISCSI
 )
 
+func (obj Kind) String() string {
+	if v, err := obj.Marshal(); err == nil {
+		return v
+	}
+
+	return ""
+}
+
 func (obj Kind) Marshal() (string, error) {
 	switch obj {
 	case KindDir:

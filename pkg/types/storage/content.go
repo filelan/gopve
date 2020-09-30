@@ -32,6 +32,14 @@ const (
 	ContentSnippet
 )
 
+func (obj Content) String() string {
+	if v, err := obj.Marshal(); err == nil {
+		return v
+	}
+
+	return ""
+}
+
 func (obj Content) Marshal() (string, error) {
 	content := types.PVEList{Separator: ","}
 

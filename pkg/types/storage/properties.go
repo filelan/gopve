@@ -10,5 +10,5 @@ type Properties struct {
 
 	Nodes []string
 
-	ExtraProperties map[string]interface{}
+	ExtraProperties ExtraProperties
 }

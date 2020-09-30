@@ -22,7 +22,7 @@ type getResponseJSON struct {
 
 	Nodes types.PVEList `json:"nodes"`
 
-	ExtraProperties ExtraProperties `json:"-"`
+	ExtraProperties storage.ExtraProperties `json:"-"`
 }
 
 func (res *getResponseJSON) UnmarshalJSON(b []byte) error {

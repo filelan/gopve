@@ -14,6 +14,8 @@ type Storage interface {
 	Nodes() ([]string, error)
 }
 
+type ExtraProperties map[string]interface{}
+
 type AllowShare int
 
 const (

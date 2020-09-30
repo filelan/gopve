@@ -49,7 +49,10 @@ func (obj *PVEDictionary) Unmarshal(s string) error {
 	}
 
 	for _, elem := range list.List() {
-		kv := PVEKeyValue{Separator: obj.KeyValueSeparator, AllowNoValue: obj.AllowNoValue}
+		kv := PVEKeyValue{
+			Separator:    obj.KeyValueSeparator,
+			AllowNoValue: obj.AllowNoValue,
+		}
 		if err := (&kv).Unmarshal(elem); err != nil {
 			return err
 		}

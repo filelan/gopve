@@ -9,7 +9,10 @@ import (
 	types "github.com/xabinapal/gopve/pkg/types/storage"
 )
 
-func helperCreateStorage(kind types.Kind, props storage.ExtraProperties) (types.Storage, error) {
+func helperCreateStorage(
+	kind types.Kind,
+	props types.ExtraProperties,
+) (types.Storage, error) {
 	return storage.NewDynamicStorage(
 		nil,
 		"test_storage",
@@ -20,8 +23,11 @@ func helperCreateStorage(kind types.Kind, props storage.ExtraProperties) (types.
 	)
 }
 
-func helperFilterOptionalProperties(props storage.ExtraProperties, requiredProps []string) storage.ExtraProperties {
-	finalProps := make(storage.ExtraProperties)
+func helperFilterOptionalProperties(
+	props types.ExtraProperties,
+	requiredProps []string,
+) types.ExtraProperties {
+	finalProps := make(types.ExtraProperties)
 	for _, v := range requiredProps {
 		finalProps[v] = props[v]
 	}
@@ -29,12 +35,17 @@ func helperFilterOptionalProperties(props storage.ExtraProperties, requiredProps
 	return finalProps
 }
 
-func helperTestRequiredProperties(t *testing.T, kind types.Kind, props storage.ExtraProperties, requiredProps []string) func(t *testing.T) {
+func helperTestRequiredProperties(
+	t *testing.T,
+	kind types.Kind,
+	props types.ExtraProperties,
+	requiredProps []string,
+) func(t *testing.T) {
 	t.Helper()
 
 	return func(t *testing.T) {
 		for _, prop := range requiredProps {
-			finalProps := make(storage.ExtraProperties, len(props))
+			finalProps := make(types.ExtraProperties, len(props))
 			for k, v := range props {
 				finalProps[k] = v
 			}
@@ -55,58 +66,25 @@ func TestStorageNew(t *testing.T) {
 }
 
 func TestStorageNewDir(t *testing.T) {
-	kind := types.KindDir
-
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"path":          "test_path",
 		"mkdir":         1,
 		"is_mountpoint": 1,
 	}
 
-	requiredProps := []string{"path"}
+	obj, err := helperCreateStorage(types.KindDir, props)
+	require.NoError(t, err)
+	require.Implements(t, (*types.StorageDir)(nil), obj)
 
-	t.Run("Create", func(t *testing.T) {
-		obj, err := helperCreateStorage(kind, props)
-		require.NoError(t, err)
+	concreteStorage := obj.(types.StorageDir)
 
-		require.Implements(t, (*types.StorageDir)(nil), obj)
-
-		concreteStorage, ok := obj.(types.StorageDir)
-		require.Equal(t, true, ok)
-
-		assert.Equal(t, "test_path", concreteStorage.LocalPath())
-		assert.Equal(t, true, concreteStorage.LocalPathCreate())
-		assert.Equal(t, true, concreteStorage.LocalPathIsManaged())
-	})
-
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
-
-	t.Run("DefaultProperties", func(t *testing.T) {
-		finalProps := helperFilterOptionalProperties(props, requiredProps)
-
-		obj, err := helperCreateStorage(kind, finalProps)
-		require.NoError(t, err)
-
-		concreteStorage, ok := obj.(types.StorageDir)
-		require.Equal(t, true, ok)
-
-		assert.Equal(
-			t,
-			types.DefaultStorageDirLocalPathCreate,
-			concreteStorage.LocalPathCreate(),
-		)
-		assert.Equal(
-			t,
-			types.DefaultStorageDirLocalIsManaged,
-			concreteStorage.LocalPathIsManaged(),
-		)
-	})
+	assert.Equal(t, "test_path", concreteStorage.LocalPath())
+	assert.Equal(t, true, concreteStorage.LocalPathCreate())
+	assert.Equal(t, true, concreteStorage.LocalPathIsManaged())
 }
 
 func TestStorageNewLVM(t *testing.T) {
-	kind := types.KindLVM
-
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"base":                  "test_base",
 		"vgname":                "test_vg",
 		"saferemove":            1,
@@ -114,143 +92,61 @@ func TestStorageNewLVM(t *testing.T) {
 		"tagged_only":           1,
 	}
 
-	requiredProps := []string{"vgname"}
+	obj, err := helperCreateStorage(types.KindLVM, props)
+	require.NoError(t, err)
+	require.Implements(t, (*types.StorageLVM)(nil), obj)
 
-	t.Run("Create", func(t *testing.T) {
-		obj, err := helperCreateStorage(kind, props)
-		require.NoError(t, err)
-		require.Implements(t, (*types.StorageLVM)(nil), obj)
+	concreteStorage := obj.(types.StorageLVM)
 
-		concreteStorage, ok := obj.(types.StorageLVM)
-		require.Equal(t, true, ok)
-
-		assert.Equal(t, "test_base", concreteStorage.BaseStorage())
-		assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
-		assert.Equal(t, true, concreteStorage.SafeRemove())
-		assert.Equal(t, 1024, concreteStorage.SafeRemoveThroughput())
-		assert.Equal(t, true, concreteStorage.TaggedOnly())
-	})
-
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
-
-	t.Run("DefaultProperties", func(t *testing.T) {
-		finalProps := helperFilterOptionalProperties(props, requiredProps)
-
-		obj, err := helperCreateStorage(kind, finalProps)
-		require.NoError(t, err)
-		require.Implements(t, (*types.StorageLVM)(nil), obj)
-
-		concreteStorage, ok := obj.(types.StorageLVM)
-		require.Equal(t, true, ok)
-
-		assert.Equal(
-			t,
-			types.DefaultStorageLVMBaseStorage,
-			concreteStorage.BaseStorage(),
-		)
-		assert.Equal(
-			t,
-			types.DefaultStorageLVMSafeRemove,
-			concreteStorage.SafeRemove(),
-		)
-		assert.Equal(
-			t,
-			types.DefaultStorageLVMSafeRemoveThroughput,
-			concreteStorage.SafeRemoveThroughput(),
-		)
-		assert.Equal(
-			t,
-			types.DefaultStorageLVMTaggedOnly,
-			concreteStorage.TaggedOnly(),
-		)
-	})
+	assert.Equal(t, "test_base", concreteStorage.BaseStorage())
+	assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
+	assert.Equal(t, true, concreteStorage.SafeRemove())
+	assert.Equal(t, 1024, concreteStorage.SafeRemoveThroughput())
+	assert.Equal(t, true, concreteStorage.TaggedOnly())
 }
 
 func TestStorageNewLVMThin(t *testing.T) {
-	kind := types.KindLVMThin
-
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"thinpool": "test_pool",
 		"vgname":   "test_vg",
 	}
 
-	requiredProps := []string{"thinpool", "vgname"}
+	obj, err := helperCreateStorage(types.KindLVMThin, props)
+	require.NoError(t, err)
+	require.Implements(t, (*types.StorageLVMThin)(nil), obj)
 
-	t.Run("Create", func(t *testing.T) {
-		obj, err := helperCreateStorage(kind, props)
-		require.NoError(t, err)
-		require.Implements(t, (*types.StorageLVMThin)(nil), obj)
+	concreteStorage, ok := obj.(types.StorageLVMThin)
+	require.Equal(t, true, ok)
 
-		concreteStorage, ok := obj.(types.StorageLVMThin)
-		require.Equal(t, true, ok)
-
-		assert.Equal(t, "test_pool", concreteStorage.ThinPool())
-		assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
-	})
-
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	assert.Equal(t, "test_pool", concreteStorage.ThinPool())
+	assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
 }
 
 func TestStorageNewZFS(t *testing.T) {
-	kind := types.KindZFS
-
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"pool":       "test_pool",
 		"blocksize":  "1024",
 		"sparse":     1,
 		"mountpoint": "test_mountpoint",
 	}
 
-	requiredProps := []string{"pool"}
+	obj, err := helperCreateStorage(types.KindZFS, props)
+	require.NoError(t, err)
+	require.Implements(t, (*types.StorageZFS)(nil), obj)
 
-	t.Run("Create", func(t *testing.T) {
-		obj, err := helperCreateStorage(kind, props)
-		require.NoError(t, err)
-		require.Implements(t, (*types.StorageZFS)(nil), obj)
+	concreteStorage := obj.(types.StorageZFS)
 
-		concreteStorage, ok := obj.(types.StorageZFS)
-		require.Equal(t, true, ok)
+	assert.Equal(t, "test_pool", concreteStorage.PoolName())
+	assert.Equal(t, "1024", concreteStorage.BlockSize())
+	assert.Equal(t, true, concreteStorage.UseSparse())
+	assert.Equal(t, "test_mountpoint", concreteStorage.LocalPath())
 
-		assert.Equal(t, "test_pool", concreteStorage.PoolName())
-		assert.Equal(t, "1024", concreteStorage.BlockSize())
-		assert.Equal(t, true, concreteStorage.UseSparse())
-		assert.Equal(t, "test_mountpoint", concreteStorage.LocalPath())
-	})
-
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
-
-	t.Run("DefaultProperties", func(t *testing.T) {
-		finalProps := helperFilterOptionalProperties(props, requiredProps)
-
-		obj, err := helperCreateStorage(kind, finalProps)
-		require.NoError(t, err)
-		require.Implements(t, (*types.StorageZFS)(nil), obj)
-
-		concreteStorage, ok := obj.(types.StorageZFS)
-		require.Equal(t, true, ok)
-
-		assert.Equal(
-			t,
-			types.DefaultStorageZFSBlockSize,
-			concreteStorage.BlockSize(),
-		)
-		assert.Equal(
-			t,
-			types.DefaultStorageZFSUseSparse,
-			concreteStorage.UseSparse(),
-		)
-		assert.Equal(
-			t,
-			types.DefaultStorageZFSMountPoint,
-			concreteStorage.LocalPath(),
-		)
-	})
 }
 
 func TestStorageNewNFS(t *testing.T) {
 	kind := types.KindNFS
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"server":  "test_server",
 		"options": "vers=4.2",
 		"export":  "/test_export",
@@ -275,7 +171,10 @@ func TestStorageNewNFS(t *testing.T) {
 		assert.Equal(t, true, concreteStorage.LocalPathCreate())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)
@@ -304,7 +203,7 @@ func TestStorageNewNFS(t *testing.T) {
 func TestStorageNewCIFS(t *testing.T) {
 	kind := types.KindCIFS
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"server":     "test_server",
 		"smbversion": "2.1",
 		"domain":     "test_domain",
@@ -335,7 +234,10 @@ func TestStorageNewCIFS(t *testing.T) {
 		assert.Equal(t, true, concreteStorage.LocalPathCreate())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)
@@ -382,7 +284,7 @@ func TestStorageNewCIFS(t *testing.T) {
 func TestStorageNewGlusterFS(t *testing.T) {
 	kind := types.KindGlusterFS
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"server":    "test_server",
 		"server2":   "test_backup",
 		"transport": "unix",
@@ -401,11 +303,18 @@ func TestStorageNewGlusterFS(t *testing.T) {
 
 		assert.Equal(t, "test_server", concreteStorage.MainServer())
 		assert.Equal(t, "test_backup", concreteStorage.BackupServer())
-		assert.Equal(t, types.GlusterFSTransportUNIX, concreteStorage.Transport())
+		assert.Equal(
+			t,
+			types.GlusterFSTransportUNIX,
+			concreteStorage.Transport(),
+		)
 		assert.Equal(t, "test_volume", concreteStorage.Volume())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)
@@ -434,7 +343,7 @@ func TestStorageNewGlusterFS(t *testing.T) {
 func TestStorageNewISCSIKernel(t *testing.T) {
 	kind := types.KindISCSIKernel
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"portal": "test_portal",
 		"target": "test_target",
 	}
@@ -453,13 +362,16 @@ func TestStorageNewISCSIKernel(t *testing.T) {
 		assert.Equal(t, "test_target", concreteStorage.Target())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 }
 
 func TestStorageNewISCSIUser(t *testing.T) {
 	kind := types.KindISCSIUser
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"portal": "test_portal",
 		"target": "test_target",
 	}
@@ -478,13 +390,16 @@ func TestStorageNewISCSIUser(t *testing.T) {
 		assert.Equal(t, "test_target", concreteStorage.Target())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 }
 
 func TestStorageNewCephFS(t *testing.T) {
 	kind := types.KindCephFS
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"monhost":  "test_host_1 test_host_2 test_host_3",
 		"username": "test_username",
 		"fuse":     1,
@@ -502,14 +417,21 @@ func TestStorageNewCephFS(t *testing.T) {
 		concreteStorage, ok := obj.(types.StorageCephFS)
 		require.Equal(t, true, ok)
 
-		assert.ElementsMatch(t, []string{"test_host_1", "test_host_2", "test_host_3"}, concreteStorage.MonitorHosts())
+		assert.ElementsMatch(
+			t,
+			[]string{"test_host_1", "test_host_2", "test_host_3"},
+			concreteStorage.MonitorHosts(),
+		)
 		assert.Equal(t, "test_username", concreteStorage.Username())
 		assert.Equal(t, true, concreteStorage.UseFUSE())
 		assert.Equal(t, "/test_subdir", concreteStorage.ServerPath())
 		assert.Equal(t, "/test_path", concreteStorage.LocalPath())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)
@@ -550,7 +472,7 @@ func TestStorageNewCephFS(t *testing.T) {
 func TestStorageNewRBD(t *testing.T) {
 	kind := types.KindRBD
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"monhost":  "test_host_1 test_host_2 test_host_3",
 		"username": "test_username",
 		"krbd":     1,
@@ -567,13 +489,20 @@ func TestStorageNewRBD(t *testing.T) {
 		concreteStorage, ok := obj.(types.StorageRBD)
 		require.Equal(t, true, ok)
 
-		assert.ElementsMatch(t, []string{"test_host_1", "test_host_2", "test_host_3"}, concreteStorage.MonitorHosts())
+		assert.ElementsMatch(
+			t,
+			[]string{"test_host_1", "test_host_2", "test_host_3"},
+			concreteStorage.MonitorHosts(),
+		)
 		assert.Equal(t, "test_username", concreteStorage.Username())
 		assert.Equal(t, true, concreteStorage.UseKRBD())
 		assert.Equal(t, "test_pool", concreteStorage.PoolName())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)
@@ -614,7 +543,7 @@ func TestStorageNewRBD(t *testing.T) {
 func TestStorageNewDRBD(t *testing.T) {
 	kind := types.KindDRBD
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"redundancy": 16,
 	}
 
@@ -631,7 +560,10 @@ func TestStorageNewDRBD(t *testing.T) {
 		assert.Equal(t, uint(16), concreteStorage.Redundancy())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)
@@ -654,7 +586,7 @@ func TestStorageNewDRBD(t *testing.T) {
 func TestStorageNewZFSOverISCSI(t *testing.T) {
 	kind := types.KindZFSOverISCSI
 
-	props := storage.ExtraProperties{
+	props := types.ExtraProperties{
 		"portal":        "test_portal",
 		"target":        "test_target",
 		"pool":          "test_pool",
@@ -667,7 +599,13 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 		"lio_tpg":       "test_lio_tpg",
 	}
 
-	requiredProps := []string{"portal", "target", "pool", "blocksize", "iscsiprovider"}
+	requiredProps := []string{
+		"portal",
+		"target",
+		"pool",
+		"blocksize",
+		"iscsiprovider",
+	}
 
 	t.Run("Create", func(t *testing.T) {
 		obj, err := helperCreateStorage(kind, props)
@@ -689,7 +627,10 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 		assert.Equal(t, "test_lio_tpg", concreteStorage.LIOTargetPortalGroup())
 	})
 
-	t.Run("RequiredProperties", helperTestRequiredProperties(t, kind, props, requiredProps))
+	t.Run(
+		"RequiredProperties",
+		helperTestRequiredProperties(t, kind, props, requiredProps),
+	)
 
 	t.Run("DefaultProperties", func(t *testing.T) {
 		finalProps := helperFilterOptionalProperties(props, requiredProps)

@@ -1,5 +1,7 @@
 package storage
 
+import "github.com/xabinapal/gopve/internal/types"
+
 type StorageLVM interface {
 	Storage
 
@@ -17,6 +19,50 @@ type StorageLVM interface {
 
 	// Only use logical volumes tagged with 'pve-vm-ID'.
 	TaggedOnly() bool
+}
+
+type StorageLVMProperties struct {
+	BaseStorage          string
+	VolumeGroup          string
+	SafeRemove           bool
+	SafeRemoveThroughput int
+	TaggedOnly           bool
+}
+
+func (obj *StorageLVMProperties) Unmarshal(props ExtraProperties) error {
+	if v, ok := props["base"].(string); ok {
+		obj.BaseStorage = v
+	} else {
+		obj.BaseStorage = DefaultStorageLVMBaseStorage
+	}
+
+	if v, ok := props["vgname"].(string); ok {
+		obj.VolumeGroup = v
+	} else {
+		err := ErrMissingProperty
+		err.AddKey("name", "vgname")
+		return err
+	}
+
+	if v, ok := props["saferemove"].(int); ok {
+		obj.SafeRemove = types.NewPVEBoolFromInt(v).Bool()
+	} else {
+		obj.SafeRemove = DefaultStorageLVMSafeRemove
+	}
+
+	if v, ok := props["saferemove_throughput"].(int); ok {
+		obj.SafeRemoveThroughput = v
+	} else {
+		obj.SafeRemoveThroughput = DefaultStorageLVMSafeRemoveThroughput
+	}
+
+	if v, ok := props["tagged_only"].(int); ok {
+		obj.TaggedOnly = types.NewPVEBoolFromInt(v).Bool()
+	} else {
+		obj.SafeRemove = DefaultStorageLVMTaggedOnly
+	}
+
+	return nil
 }
 
 const (
