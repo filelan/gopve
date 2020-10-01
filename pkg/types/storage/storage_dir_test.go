@@ -19,11 +19,14 @@ func TestStorageDir(t *testing.T) {
 
 	defaultProps := []string{"mkdir", "is_mountpoint"}
 
-	t.Run(
-		"Unmarshal", func(t *testing.T) {
-			var storageProps storage.StorageDirProperties
+	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+		obj, err := storage.NewStorageDirProperties(props)
+		return obj, err
+	}
 
-			err := (&storageProps).Unmarshal(props)
+	t.Run(
+		"Create", func(t *testing.T) {
+			storageProps, err := storage.NewStorageDirProperties(props)
 			require.NoError(t, err)
 
 			assert.Equal(t, "test_path", storageProps.LocalPath)
@@ -32,16 +35,12 @@ func TestStorageDir(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", func(t *testing.T) {
-			var storageProps storage.StorageDirProperties
+		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
 
-			helperTestRequiredProperties(t, props, requiredProps, (&storageProps).Unmarshal)
-		})
+	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
+		require.IsType(t, (*storage.StorageDirProperties)(nil), obj)
 
-	t.Run("DefaultProperties", func(t *testing.T) {
-		var storageProps storage.StorageDirProperties
-
-		helperTestOptionalProperties(t, props, defaultProps, (&storageProps).Unmarshal)
+		storageProps := obj.(*storage.StorageDirProperties)
 
 		assert.Equal(
 			t,
@@ -54,5 +53,6 @@ func TestStorageDir(t *testing.T) {
 			storage.DefaultStorageDirLocalIsManaged,
 			storageProps.LocalPathIsManaged,
 		)
-	})
+	},
+	))
 }

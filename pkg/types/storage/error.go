@@ -7,3 +7,5 @@ const (
 )
 
 var ErrMissingProperty = errors.NewKeyedClientError("500 - missing property!", nil)
+
+var ErrInvalidProperty = errors.NewKeyedClientError("500 - invalid property value!", nil)

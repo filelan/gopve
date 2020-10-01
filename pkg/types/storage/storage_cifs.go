@@ -3,6 +3,8 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/xabinapal/gopve/internal/types"
 )
 
 type StorageCIFS interface {
@@ -18,6 +20,84 @@ type StorageCIFS interface {
 	ServerShare() string
 	LocalPath() string
 	LocalPathCreate() bool
+}
+
+type StorageCIFSProperties struct {
+	Server     string
+	SMBVersion SMBVersion
+
+	Domain   string
+	Username string
+	Password string
+
+	ServerShare     string
+	LocalPath       string
+	LocalPathCreate bool
+}
+
+func NewStorageCIFSProperties(props ExtraProperties) (*StorageCIFSProperties, error) {
+	obj := new(StorageCIFSProperties)
+
+	if v, ok := props["server"].(string); ok {
+		obj.Server = v
+	} else {
+		err := ErrMissingProperty
+		err.AddKey("name", "server")
+		return nil, err
+	}
+
+	if v, ok := props["smbversion"].(string); ok {
+		if err := (&obj.SMBVersion).Unmarshal(v); err != nil {
+			err := ErrInvalidProperty
+			err.AddKey("name", "smbversion")
+			err.AddKey("value", v)
+			return nil, err
+		}
+	} else {
+		obj.SMBVersion = DefaultStorageCIFSSMBVersion
+	}
+
+	if v, ok := props["domain"].(string); ok {
+		obj.Domain = v
+	} else {
+		obj.Domain = DefaultStorageCIFSDomain
+	}
+
+	if v, ok := props["username"].(string); ok {
+		obj.Username = v
+	} else {
+		obj.Username = DefaultStorageCIFSUsername
+	}
+
+	if v, ok := props["password"].(string); ok {
+		obj.Password = v
+	} else {
+		obj.Password = DefaultStorageCIFSPassword
+	}
+
+	if v, ok := props["share"].(string); ok {
+		obj.ServerShare = v
+	} else {
+		err := ErrMissingProperty
+		err.AddKey("name", "share")
+		return nil, err
+	}
+
+	if v, ok := props["path"].(string); ok {
+		obj.LocalPath = v
+	} else {
+		err := ErrMissingProperty
+		err.AddKey("name", "path")
+		return nil, err
+	}
+
+	if v, ok := props["mkdir"].(int); ok {
+		obj.LocalPathCreate = types.NewPVEBoolFromInt(v).Bool()
+	} else {
+		obj.LocalPathCreate = DefaultStorageCIFSLocalPathCreate
+	}
+
+	return obj, nil
 }
 
 const (

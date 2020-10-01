@@ -8,27 +8,26 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
-func TestStorageLVMThin(t *testing.T) {
-
+func TestStorageISCSIUser(t *testing.T) {
 	props := map[string]interface{}{
-		"vgname":   "test_vg",
-		"thinpool": "test_pool",
+		"portal": "test_portal",
+		"target": "test_target",
 	}
 
-	requiredProps := []string{"vgname", "thinpool"}
+	requiredProps := []string{"portal", "target"}
 
 	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
-		obj, err := storage.NewStorageLVMThinProperties(props)
+		obj, err := storage.NewStorageISCSIUserProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			storageProps, err := storage.NewStorageLVMThinProperties(props)
+			storageProps, err := storage.NewStorageISCSIUserProperties(props)
 			require.NoError(t, err)
 
-			assert.Equal(t, "test_vg", storageProps.VolumeGroup)
-			assert.Equal(t, "test_pool", storageProps.ThinPool)
+			assert.Equal(t, "test_portal", storageProps.Portal)
+			assert.Equal(t, "test_target", storageProps.Target)
 		})
 
 	t.Run(

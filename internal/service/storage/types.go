@@ -1,9 +1,6 @@
 package storage
 
 import (
-	"fmt"
-
-	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
@@ -120,6 +117,7 @@ func (obj *Storage) Nodes() ([]string, error) {
 
 type StorageDir struct {
 	Storage
+	props *storage.StorageDirProperties
 
 	localPath          string
 	localPathCreate    bool
@@ -130,449 +128,257 @@ func NewStorageDir(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageDir, error) {
-	var storageProps storage.StorageDirProperties
-	if err := (&storageProps).Unmarshal(props); err != nil {
+	if storageProps, err := storage.NewStorageDirProperties(props); err == nil {
+		return &StorageDir{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
+	} else {
 		return nil, err
 	}
-
-	return &StorageDir{
-		Storage: obj,
-
-		localPath:          storageProps.LocalPath,
-		localPathCreate:    storageProps.LocalPathCreate,
-		localPathIsManaged: storageProps.LocalPathIsManaged,
-	}, nil
 }
 
 func (obj *StorageDir) LocalPath() string {
-	return obj.localPath
+	return obj.props.LocalPath
 }
 
 func (obj *StorageDir) LocalPathCreate() bool {
-	return obj.localPathCreate
+	return obj.props.LocalPathCreate
 }
 
 func (obj *StorageDir) LocalPathIsManaged() bool {
-	return obj.localPathIsManaged
+	return obj.props.LocalPathIsManaged
 }
 
 type StorageLVM struct {
 	Storage
-
-	baseStorage string
-	volumeGroup string
-
-	safeRemove           bool
-	safeRemoveThroughput int
-
-	taggedOnly bool
+	props *storage.StorageLVMProperties
 }
 
 func NewStorageLVM(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageLVM, error) {
-	var storageProps storage.StorageLVMProperties
-	if err := (&storageProps).Unmarshal(props); err != nil {
+	if storageProps, err := storage.NewStorageLVMProperties(props); err == nil {
+		return &StorageLVM{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
+	} else {
 		return nil, err
 	}
-
-	return &StorageLVM{
-		Storage: obj,
-
-		baseStorage: storageProps.BaseStorage,
-		volumeGroup: storageProps.VolumeGroup,
-
-		safeRemove:           storageProps.SafeRemove,
-		safeRemoveThroughput: storageProps.SafeRemoveThroughput,
-
-		taggedOnly: storageProps.TaggedOnly,
-	}, nil
 }
 
 func (obj *StorageLVM) BaseStorage() string {
-	return obj.baseStorage
+	return obj.props.BaseStorage
 }
 
 func (obj *StorageLVM) VolumeGroup() string {
-	return obj.volumeGroup
+	return obj.props.VolumeGroup
 }
 
 func (obj *StorageLVM) SafeRemove() bool {
-	return obj.safeRemove
+	return obj.props.SafeRemove
 }
 
 func (obj *StorageLVM) SafeRemoveThroughput() int {
-	return obj.safeRemoveThroughput
+	return obj.props.SafeRemoveThroughput
 }
 
 func (obj *StorageLVM) TaggedOnly() bool {
-	return obj.taggedOnly
+	return obj.props.TaggedOnly
 }
 
 type StorageLVMThin struct {
 	Storage
-
-	volumeGroup string
-	thinPool    string
+	props *storage.StorageLVMThinProperties
 }
 
 func NewStorageLVMThin(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageLVMThin, error) {
-	var storageProps storage.StorageLVMThinProperties
-	if err := (&storageProps).Unmarshal(props); err != nil {
+	if storageProps, err := storage.NewStorageLVMThinProperties(props); err == nil {
+		return &StorageLVMThin{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
+	} else {
 		return nil, err
 	}
-
-	return &StorageLVMThin{
-		Storage: obj,
-
-		volumeGroup: storageProps.VolumeGroup,
-		thinPool:    storageProps.ThinPool,
-	}, nil
 }
 
 func (obj *StorageLVMThin) VolumeGroup() string {
-	return obj.volumeGroup
+	return obj.props.VolumeGroup
 }
 
 func (obj *StorageLVMThin) ThinPool() string {
-	return obj.thinPool
+	return obj.props.ThinPool
 }
 
 type StorageZFS struct {
 	Storage
-
-	poolName string
-
-	blockSize string
-	useSparse bool
-
-	localPath string
+	props *storage.StorageZFSProperties
 }
 
 func NewStorageZFS(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageZFS, error) {
-	var storageProps storage.StorageZFSProperties
-	if err := (&storageProps).Unmarshal(props); err != nil {
+	if storageProps, err := storage.NewStorageZFSProperties(props); err == nil {
+		return &StorageZFS{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
+	} else {
 		return nil, err
 	}
-
-	return &StorageZFS{
-		Storage: obj,
-
-		poolName: storageProps.PoolName,
-
-		blockSize: storageProps.BlockSize,
-		useSparse: storageProps.UseSparse,
-
-		localPath: storageProps.LocalPath,
-	}, nil
 }
 
 func (obj *StorageZFS) PoolName() string {
-	return obj.poolName
+	return obj.props.PoolName
 }
 
 func (obj *StorageZFS) BlockSize() string {
-	return obj.blockSize
+	return obj.props.BlockSize
 }
 
 func (obj *StorageZFS) UseSparse() bool {
-	return obj.useSparse
+	return obj.props.UseSparse
 }
 
 func (obj *StorageZFS) LocalPath() string {
-	return obj.localPath
+	return obj.props.LocalPath
 }
 
 type StorageNFS struct {
 	Storage
-
-	server     string
-	nfsVersion storage.NFSVersion
-
-	serverPath      string
-	localPath       string
-	localPathCreate bool
+	props *storage.StorageNFSProperties
 }
 
 func NewStorageNFS(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageNFS, error) {
-	server, ok := props["server"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "server")
-		return nil, err
-	}
-
-	nfsVersion := storage.DefaultStorageNFSVersion
-	if v, ok := props["options"].(string); ok {
-		nfsOptions := types.PVEDictionary{
-			ListSeparator:     ",",
-			KeyValueSeparator: "=",
-			AllowNoValue:      true,
-		}
-		if err := (&nfsOptions).Unmarshal(v); err != nil {
-			return nil, fmt.Errorf("invalid options value")
-		}
-
-		for _, option := range nfsOptions.List() {
-			if option.Key() == "vers" {
-				if err := (&nfsVersion).Unmarshal(option.Value()); err != nil {
-					return nil, fmt.Errorf("invalid option value")
-				}
-
-				break
-			}
-		}
-	}
-
-	serverPath, ok := props["export"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "export")
-		return nil, err
-	}
-
-	localPath, ok := props["path"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "path")
-		return nil, err
-	}
-
-	var localPathCreate types.PVEBool
-	if v, ok := props["mkdir"].(int); ok {
-		localPathCreate = types.NewPVEBoolFromInt(v)
+	if storageProps, err := storage.NewStorageNFSProperties(props); err == nil {
+		return &StorageNFS{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		localPathCreate = types.PVEBool(storage.DefaultStorageNFSLocalPathCreate)
+		return nil, err
 	}
-
-	return &StorageNFS{
-		Storage: obj,
-
-		server:     server,
-		nfsVersion: nfsVersion,
-
-		serverPath:      serverPath,
-		localPath:       localPath,
-		localPathCreate: localPathCreate.Bool(),
-	}, nil
 }
 
 func (obj *StorageNFS) Server() string {
-	return obj.server
+	return obj.props.Server
 }
 
 func (obj *StorageNFS) NFSVersion() storage.NFSVersion {
-	return obj.nfsVersion
+	return obj.props.NFSVersion
 }
 
 func (obj *StorageNFS) ServerPath() string {
-	return obj.serverPath
+	return obj.props.ServerPath
 }
 
 func (obj *StorageNFS) LocalPath() string {
-	return obj.localPath
+	return obj.props.LocalPath
 }
 
 func (obj *StorageNFS) LocalPathCreate() bool {
-	return obj.localPathCreate
+	return obj.props.LocalPathCreate
 }
 
 type StorageCIFS struct {
 	Storage
-
-	server     string
-	smbVersion storage.SMBVersion
-
-	domain   string
-	username string
-	password string
-
-	serverShare     string
-	localPath       string
-	localPathCreate bool
+	props *storage.StorageCIFSProperties
 }
 
 func NewStorageCIFS(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageCIFS, error) {
-	server, ok := props["server"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "server")
-		return nil, err
-	}
-
-	var version storage.SMBVersion
-	if v, ok := props["smbversion"].(string); ok {
-		(&version).Unmarshal(v)
+	if storageProps, err := storage.NewStorageCIFSProperties(props); err == nil {
+		return &StorageCIFS{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		version = storage.DefaultStorageCIFSSMBVersion
-	}
-
-	domain, ok := props["domain"].(string)
-	if !ok {
-		domain = storage.DefaultStorageCIFSDomain
-	}
-
-	username, ok := props["username"].(string)
-	if !ok {
-		username = storage.DefaultStorageCIFSUsername
-	}
-
-	password, ok := props["password"].(string)
-	if !ok {
-		password = storage.DefaultStorageCIFSPassword
-	}
-
-	serverShare, ok := props["share"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "share")
 		return nil, err
 	}
-
-	localPath, ok := props["path"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "path")
-		return nil, err
-	}
-
-	var localPathCreate types.PVEBool
-	if v, ok := props["mkdir"].(int); ok {
-		localPathCreate = types.NewPVEBoolFromInt(v)
-	} else {
-		localPathCreate = types.PVEBool(storage.DefaultStorageCIFSLocalPathCreate)
-	}
-
-	return &StorageCIFS{
-		Storage: obj,
-
-		server:     server,
-		smbVersion: version,
-
-		domain:   domain,
-		username: username,
-		password: password,
-
-		serverShare:     serverShare,
-		localPath:       localPath,
-		localPathCreate: localPathCreate.Bool(),
-	}, nil
 }
 
 func (obj *StorageCIFS) Server() string {
-	return obj.server
+	return obj.props.Server
 }
 
 func (obj *StorageCIFS) SMBVersion() storage.SMBVersion {
-	return obj.smbVersion
+	return obj.props.SMBVersion
 }
 
 func (obj *StorageCIFS) Domain() string {
-	return obj.domain
+	return obj.props.Domain
 }
 
 func (obj *StorageCIFS) Username() string {
-	return obj.username
+	return obj.props.Username
 }
 
 func (obj *StorageCIFS) Password() string {
-	return obj.password
+	return obj.props.Password
 }
 
 func (obj *StorageCIFS) ServerShare() string {
-	return obj.serverShare
+	return obj.props.ServerShare
 }
 
 func (obj *StorageCIFS) LocalPath() string {
-	return obj.localPath
+	return obj.props.LocalPath
 }
 
 func (obj *StorageCIFS) LocalPathCreate() bool {
-	return obj.localPathCreate
+	return obj.props.LocalPathCreate
 }
 
 type StorageGlusterFS struct {
 	Storage
-
-	mainServer   string
-	backupServer string
-	transport    storage.GlusterFSTransport
-
-	volume string
+	props *storage.StorageGlusterFSProperties
 }
 
 func NewStorageGlusterFS(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageGlusterFS, error) {
-	mainServer, ok := props["server"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "server")
-		return nil, err
-	}
-
-	backupServer, ok := props["server2"].(string)
-	if !ok {
-		backupServer = storage.DefaultStorageGlusterFSBackupServer
-	}
-
-	var transport storage.GlusterFSTransport
-	if v, ok := props["transport"].(string); ok {
-		(&transport).Unmarshal(v)
+	if storageProps, err := storage.NewStorageGlusterFSProperties(props); err == nil {
+		return &StorageGlusterFS{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		transport = storage.DefaultStorageGlusterFSTransport
-	}
-
-	volume, ok := props["volume"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "volume")
 		return nil, err
 	}
-
-	return &StorageGlusterFS{
-		Storage: obj,
-
-		mainServer:   mainServer,
-		backupServer: backupServer,
-		transport:    transport,
-
-		volume: volume,
-	}, nil
 }
 
 func (obj *StorageGlusterFS) MainServer() string {
-	return obj.mainServer
+	return obj.props.MainServer
 }
 
 func (obj *StorageGlusterFS) BackupServer() string {
-	return obj.backupServer
+	return obj.props.BackupServer
 }
 
 func (obj *StorageGlusterFS) Transport() storage.GlusterFSTransport {
-	return obj.transport
+	return obj.props.Transport
 }
 
 func (obj *StorageGlusterFS) Volume() string {
-	return obj.volume
+	return obj.props.Volume
 }
 
 type StorageISCSIKernel struct {
 	Storage
+	props *storage.StorageISCSIKernelProperties
 
 	portal string
 	target string
@@ -582,234 +388,128 @@ func NewStorageISCSIKernel(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageISCSIKernel, error) {
-	portal, ok := props["portal"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "portal")
+	if storageProps, err := storage.NewStorageISCSIKernelProperties(props); err == nil {
+		return &StorageISCSIKernel{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
+	} else {
 		return nil, err
 	}
-
-	target, ok := props["target"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "target")
-		return nil, err
-	}
-
-	return &StorageISCSIKernel{
-		Storage: obj,
-
-		portal: portal,
-		target: target,
-	}, nil
 }
 
 func (obj *StorageISCSIKernel) Portal() string {
-	return obj.portal
+	return obj.props.Portal
 }
 
 func (obj *StorageISCSIKernel) Target() string {
-	return obj.target
+	return obj.props.Target
 }
 
 type StorageISCSIUser struct {
 	Storage
-
-	portal string
-	target string
+	props *storage.StorageISCSIUserProperties
 }
 
 func NewStorageISCSIUser(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageISCSIUser, error) {
-	portal, ok := props["portal"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "portal")
+	if storageProps, err := storage.NewStorageISCSIUserProperties(props); err == nil {
+		return &StorageISCSIUser{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
+	} else {
 		return nil, err
 	}
-
-	target, ok := props["target"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "target")
-		return nil, err
-	}
-
-	return &StorageISCSIUser{
-		Storage: obj,
-
-		portal: portal,
-		target: target,
-	}, nil
 }
 
 func (obj *StorageISCSIUser) Portal() string {
-	return obj.portal
+	return obj.props.Portal
 }
 
 func (obj *StorageISCSIUser) Target() string {
-	return obj.target
+	return obj.props.Target
 }
 
 type StorageCephFS struct {
 	Storage
-
-	monitorHosts []string
-	username     string
-
-	useFUSE bool
-
-	serverPath string
-	localPath  string
+	props *storage.StorageCephFSProperties
 }
 
 func NewStorageCephFS(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageCephFS, error) {
-	var monitorHosts types.PVEList
-	hosts, ok := props["monhost"].(string)
-	if ok {
-		monitorHosts = types.PVEList{Separator: " "}
-		if err := (&monitorHosts).Unmarshal(hosts); err != nil {
-			return nil, fmt.Errorf("invalid monhost value")
-		}
+	if storageProps, err := storage.NewStorageCephFSProperties(props); err == nil {
+		return &StorageCephFS{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		monitorHosts = types.NewPVEList(" ", storage.DefaultStorageCephFSMonitorHosts)
-	}
-
-	username, ok := props["username"].(string)
-	if !ok {
-		username = storage.DefaultStorageCephFSUsername
-	}
-
-	var useFUSE types.PVEBool
-	if v, ok := props["fuse"].(int); ok {
-		useFUSE = types.NewPVEBoolFromInt(v)
-	} else {
-		useFUSE = types.PVEBool(storage.DefaultStorageCephFSUseFUSE)
-	}
-
-	serverPath, ok := props["subdir"].(string)
-	if !ok {
-		serverPath = storage.DefaultStorageCephFSServerPath
-	}
-
-	localPath, ok := props["path"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "path")
 		return nil, err
 	}
-
-	return &StorageCephFS{
-		Storage: obj,
-
-		monitorHosts: monitorHosts.List(),
-		username:     username,
-
-		useFUSE: useFUSE.Bool(),
-
-		serverPath: serverPath,
-		localPath:  localPath,
-	}, nil
 }
 
 func (obj *StorageCephFS) MonitorHosts() []string {
-	return obj.monitorHosts
+	return obj.props.MonitorHosts
 }
 
 func (obj *StorageCephFS) Username() string {
-	return obj.username
+	return obj.props.Username
 }
 
 func (obj *StorageCephFS) UseFUSE() bool {
-	return obj.useFUSE
+	return obj.props.UseFUSE
 }
 
 func (obj *StorageCephFS) ServerPath() string {
-	return obj.serverPath
+	return obj.props.ServerPath
 }
 
 func (obj *StorageCephFS) LocalPath() string {
-	return obj.localPath
+	return obj.props.LocalPath
 }
 
 type StorageRBD struct {
 	Storage
-
-	monitorHosts []string
-	username     string
-
-	useKRBD bool
-
-	poolName string
+	props *storage.StorageRBDProperties
 }
 
 func NewStorageRBD(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageRBD, error) {
-	var monitorHosts types.PVEList
-	hosts, ok := props["monhost"].(string)
-	if ok {
-		monitorHosts = types.PVEList{Separator: " "}
-		if err := (&monitorHosts).Unmarshal(hosts); err != nil {
-			return nil, fmt.Errorf("invalid monhost value")
-		}
+	if storageProps, err := storage.NewStorageRBDProperties(props); err == nil {
+		return &StorageRBD{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		monitorHosts = types.NewPVEList(" ", storage.DefaultStorageRBDMonitorHosts)
+		return nil, err
 	}
-
-	username, ok := props["username"].(string)
-	if !ok {
-		username = storage.DefaultStorageRBDUsername
-	}
-
-	var useKRBD types.PVEBool
-	if v, ok := props["krbd"].(int); ok {
-		useKRBD = types.NewPVEBoolFromInt(v)
-	} else {
-		useKRBD = types.PVEBool(storage.DefaultStorageRBDUseKRBD)
-	}
-
-	poolName, ok := props["pool"].(string)
-	if !ok {
-		poolName = storage.DefaultStorageRBDPoolName
-	}
-
-	return &StorageRBD{
-		Storage: obj,
-
-		monitorHosts: monitorHosts.List(),
-		username:     username,
-
-		useKRBD: useKRBD.Bool(),
-
-		poolName: poolName,
-	}, nil
 }
 
 func (obj *StorageRBD) MonitorHosts() []string {
-	return obj.monitorHosts
+	return obj.props.MonitorHosts
 }
 
 func (obj *StorageRBD) Username() string {
-	return obj.username
+	return obj.props.Username
 }
 
 func (obj *StorageRBD) UseKRBD() bool {
-	return obj.useKRBD
+	return obj.props.UseKRBD
 }
 
 func (obj *StorageRBD) PoolName() string {
-	return obj.poolName
+	return obj.props.PoolName
 }
 
 type StorageDRBD struct {
 	Storage
+	props *storage.StorageDRBDProperties
 
 	redundancy uint
 }
@@ -818,170 +518,75 @@ func NewStorageDRBD(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageDRBD, error) {
-	var redundancy uint
-	if v, ok := props["redundancy"].(int); ok {
-		redundancy = uint(v)
+	if storageProps, err := storage.NewStorageDRBDProperties(props); err == nil {
+		return &StorageDRBD{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		redundancy = storage.DefaultStorageDRBDRedundancy
+		return nil, err
 	}
-
-	return &StorageDRBD{
-		Storage: obj,
-
-		redundancy: redundancy,
-	}, nil
 }
 
 func (obj *StorageDRBD) Redundancy() uint {
-	return obj.redundancy
+	return obj.props.Redundancy
 }
 
 type StorageZFSOverISCSI struct {
 	Storage
-
-	portal string
-	target string
-
-	poolName string
-
-	blockSize  string
-	useSparse  bool
-	writeCache bool
-
-	iSCSIProvider storage.ISCSIProvider
-
-	comstarHostGroup     string
-	comstarTargetGroup   string
-	lioTargetPortalGroup string
+	props *storage.StorageZFSOverISCSIProperties
 }
 
 func NewStorageZFSOverISCSI(
 	obj Storage,
 	props storage.ExtraProperties,
 ) (*StorageZFSOverISCSI, error) {
-	portal, ok := props["portal"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "portal")
-		return nil, err
-	}
-
-	target, ok := props["target"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "target")
-		return nil, err
-	}
-
-	poolName, ok := props["pool"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "pool")
-		return nil, err
-	}
-
-	blockSize, ok := props["blocksize"].(string)
-	if !ok {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "blocksize")
-		return nil, err
-	}
-
-	var useSparse types.PVEBool
-	if v, ok := props["sparse"].(int); ok {
-		useSparse = types.NewPVEBoolFromInt(v)
+	if storageProps, err := storage.NewStorageZFSOverISCSIProperties(props); err == nil {
+		return &StorageZFSOverISCSI{
+			Storage: obj,
+			props:   storageProps,
+		}, nil
 	} else {
-		useSparse = types.PVEBool(storage.DefaultStorageZFSOverISCSIUseSparse)
-	}
-
-	var writeCache types.PVEBool
-	if v, ok := props["nowritecache"].(int); ok {
-		writeCache = !types.NewPVEBoolFromInt(v)
-	} else {
-		writeCache = types.PVEBool(storage.DefaultStorageZFSOverISCSIWriteCache)
-	}
-
-	var iSCSIProvider storage.ISCSIProvider
-
-	if v, ok := props["iscsiprovider"].(string); ok {
-		(&iSCSIProvider).Unmarshal(v)
-	} else {
-		err := storage.ErrMissingProperty
-		err.AddKey("name", "iscsiprovider")
 		return nil, err
 	}
-
-	comstarHostGroup, ok := props["comstar_hg"].(string)
-	if !ok {
-		comstarHostGroup = storage.DefaultStorageZFSOverISCSIComstarHostGroup
-	}
-
-	comstarTargetGroup, ok := props["comstar_tg"].(string)
-	if !ok {
-		comstarTargetGroup = storage.DefaultStorageZFSOverISCSIComstarTargetGroup
-	}
-
-	lioTargetPortalGroup, ok := props["lio_tpg"].(string)
-	if !ok {
-		lioTargetPortalGroup = storage.DefaultStorageZFSOverISCSILIOTargetPortalGroup
-	}
-
-	return &StorageZFSOverISCSI{
-		Storage: obj,
-
-		portal: portal,
-		target: target,
-
-		poolName: poolName,
-
-		blockSize:  blockSize,
-		useSparse:  useSparse.Bool(),
-		writeCache: writeCache.Bool(),
-
-		iSCSIProvider: iSCSIProvider,
-
-		comstarHostGroup:     comstarHostGroup,
-		comstarTargetGroup:   comstarTargetGroup,
-		lioTargetPortalGroup: lioTargetPortalGroup,
-	}, nil
 }
 
 func (obj *StorageZFSOverISCSI) Portal() string {
-	return obj.portal
+	return obj.props.Portal
 }
 
 func (obj *StorageZFSOverISCSI) Target() string {
-	return obj.target
+	return obj.props.Target
 }
 
 func (obj *StorageZFSOverISCSI) PoolName() string {
-	return obj.poolName
+	return obj.props.PoolName
 }
 
 func (obj *StorageZFSOverISCSI) BlockSize() string {
-	return obj.blockSize
+	return obj.props.BlockSize
 }
 
 func (obj *StorageZFSOverISCSI) UseSparse() bool {
-	return obj.useSparse
+	return obj.props.UseSparse
 }
 
 func (obj *StorageZFSOverISCSI) WriteCache() bool {
-	return obj.writeCache
+	return obj.props.WriteCache
 }
 
 func (obj *StorageZFSOverISCSI) ISCSIProvider() storage.ISCSIProvider {
-	return obj.iSCSIProvider
+	return obj.props.ISCSIProvider
 }
 
 func (obj *StorageZFSOverISCSI) ComstarHostGroup() string {
-	return obj.comstarHostGroup
+	return obj.props.ComstarHostGroup
 }
 
 func (obj *StorageZFSOverISCSI) ComstarTargetGroup() string {
-	return obj.comstarTargetGroup
+	return obj.props.ComstarTargetGroup
 }
 
 func (obj *StorageZFSOverISCSI) LIOTargetPortalGroup() string {
-	return obj.lioTargetPortalGroup
+	return obj.props.LIOTargetPortalGroup
 }

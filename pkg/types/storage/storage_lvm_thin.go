@@ -12,13 +12,15 @@ type StorageLVMThinProperties struct {
 	ThinPool    string
 }
 
-func (obj *StorageLVMThinProperties) Unmarshal(props ExtraProperties) error {
+func NewStorageLVMThinProperties(props ExtraProperties) (*StorageLVMThinProperties, error) {
+	obj := new(StorageLVMThinProperties)
+
 	if v, ok := props["vgname"].(string); ok {
 		obj.VolumeGroup = v
 	} else {
 		err := ErrMissingProperty
 		err.AddKey("name", "vgname")
-		return err
+		return nil, err
 	}
 
 	if v, ok := props["thinpool"].(string); ok {
@@ -26,10 +28,10 @@ func (obj *StorageLVMThinProperties) Unmarshal(props ExtraProperties) error {
 	} else {
 		err := ErrMissingProperty
 		err.AddKey("name", "thinpool")
-		return err
+		return nil, err
 	}
 
-	return nil
+	return obj, nil
 }
 
 const (

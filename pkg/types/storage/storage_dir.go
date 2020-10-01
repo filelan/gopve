@@ -21,13 +21,15 @@ type StorageDirProperties struct {
 	LocalPathIsManaged bool
 }
 
-func (obj *StorageDirProperties) Unmarshal(props ExtraProperties) error {
+func NewStorageDirProperties(props ExtraProperties) (*StorageDirProperties, error) {
+	obj := new(StorageDirProperties)
+
 	if v, ok := props["path"].(string); ok {
 		obj.LocalPath = v
 	} else {
 		err := ErrMissingProperty
 		err.AddKey("name", "path")
-		return err
+		return nil, err
 	}
 
 	if v, ok := props["mkdir"].(int); ok {
@@ -42,7 +44,7 @@ func (obj *StorageDirProperties) Unmarshal(props ExtraProperties) error {
 		obj.LocalPathIsManaged = DefaultStorageDirLocalIsManaged
 	}
 
-	return nil
+	return obj, nil
 }
 
 const (

@@ -29,7 +29,9 @@ type StorageLVMProperties struct {
 	TaggedOnly           bool
 }
 
-func (obj *StorageLVMProperties) Unmarshal(props ExtraProperties) error {
+func NewStorageLVMProperties(props ExtraProperties) (*StorageLVMProperties, error) {
+	obj := new(StorageLVMProperties)
+
 	if v, ok := props["base"].(string); ok {
 		obj.BaseStorage = v
 	} else {
@@ -41,7 +43,7 @@ func (obj *StorageLVMProperties) Unmarshal(props ExtraProperties) error {
 	} else {
 		err := ErrMissingProperty
 		err.AddKey("name", "vgname")
-		return err
+		return nil, err
 	}
 
 	if v, ok := props["saferemove"].(int); ok {
@@ -62,7 +64,7 @@ func (obj *StorageLVMProperties) Unmarshal(props ExtraProperties) error {
 		obj.SafeRemove = DefaultStorageLVMTaggedOnly
 	}
 
-	return nil
+	return obj, nil
 }
 
 const (

@@ -20,11 +20,14 @@ func TestStorageZFS(t *testing.T) {
 
 	defaultProps := []string{"blocksize", "sparse", "mountpoint"}
 
-	t.Run(
-		"Unmarshal", func(t *testing.T) {
-			var storageProps storage.StorageZFSProperties
+	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+		obj, err := storage.NewStorageZFSProperties(props)
+		return obj, err
+	}
 
-			err := (&storageProps).Unmarshal(props)
+	t.Run(
+		"Create", func(t *testing.T) {
+			storageProps, err := storage.NewStorageZFSProperties(props)
 			require.NoError(t, err)
 
 			assert.Equal(t, "test_pool", storageProps.PoolName)
@@ -34,16 +37,12 @@ func TestStorageZFS(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", func(t *testing.T) {
-			var storageProps storage.StorageZFSProperties
+		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
 
-			helperTestRequiredProperties(t, props, requiredProps, (&storageProps).Unmarshal)
-		})
+	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
+		require.IsType(t, (*storage.StorageZFSProperties)(nil), obj)
 
-	t.Run("DefaultProperties", func(t *testing.T) {
-		var storageProps storage.StorageZFSProperties
-
-		helperTestOptionalProperties(t, props, defaultProps, (&storageProps).Unmarshal)
+		storageProps := obj.(*storage.StorageZFSProperties)
 
 		assert.Equal(
 			t,
@@ -60,5 +59,6 @@ func TestStorageZFS(t *testing.T) {
 			storage.DefaultStorageZFSMountPoint,
 			storageProps.LocalPath,
 		)
-	})
+	},
+	))
 }

@@ -15,6 +15,53 @@ type StorageGlusterFS interface {
 	Volume() string
 }
 
+type StorageGlusterFSProperties struct {
+	MainServer   string
+	BackupServer string
+	Transport    GlusterFSTransport
+
+	Volume string
+}
+
+func NewStorageGlusterFSProperties(props ExtraProperties) (*StorageGlusterFSProperties, error) {
+	obj := new(StorageGlusterFSProperties)
+
+	if v, ok := props["server"].(string); ok {
+		obj.MainServer = v
+	} else {
+		err := ErrMissingProperty
+		err.AddKey("name", "server")
+		return nil, err
+	}
+
+	if v, ok := props["server2"].(string); ok {
+		obj.BackupServer = v
+	} else {
+		obj.BackupServer = DefaultStorageGlusterFSBackupServer
+	}
+
+	if v, ok := props["transport"].(string); ok {
+		if err := (&obj.Transport).Unmarshal(v); err != nil {
+			err := ErrInvalidProperty
+			err.AddKey("name", "transport")
+			err.AddKey("value", v)
+			return nil, err
+		}
+	} else {
+		obj.Transport = DefaultStorageGlusterFSTransport
+	}
+
+	if v, ok := props["volume"].(string); ok {
+		obj.Volume = v
+	} else {
+		err := ErrMissingProperty
+		err.AddKey("name", "volume")
+		return nil, err
+	}
+
+	return obj, nil
+}
+
 const (
 	StorageGlusterFSContents    = ContentQEMUData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
 	StorageGlusterFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK

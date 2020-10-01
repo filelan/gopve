@@ -20,13 +20,15 @@ type StorageZFSProperties struct {
 	LocalPath string
 }
 
-func (obj *StorageZFSProperties) Unmarshal(props ExtraProperties) error {
+func NewStorageZFSProperties(props ExtraProperties) (*StorageZFSProperties, error) {
+	obj := new(StorageZFSProperties)
+
 	if v, ok := props["pool"].(string); ok {
 		obj.PoolName = v
 	} else {
 		err := ErrMissingProperty
 		err.AddKey("name", "pool")
-		return err
+		return nil, err
 	}
 
 	if v, ok := props["blocksize"].(string); ok {
@@ -47,7 +49,7 @@ func (obj *StorageZFSProperties) Unmarshal(props ExtraProperties) error {
 		obj.LocalPath = DefaultStorageZFSMountPoint
 	}
 
-	return nil
+	return obj, nil
 }
 
 const (

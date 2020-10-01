@@ -21,11 +21,14 @@ func TestStorageLVM(t *testing.T) {
 
 	defaultProps := []string{"base", "saferemove", "saferemove_throughput", "tagged_only"}
 
-	t.Run(
-		"Unmarshal", func(t *testing.T) {
-			var storageProps storage.StorageLVMProperties
+	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+		obj, err := storage.NewStorageLVMProperties(props)
+		return obj, err
+	}
 
-			err := (&storageProps).Unmarshal(props)
+	t.Run(
+		"Create", func(t *testing.T) {
+			storageProps, err := storage.NewStorageLVMProperties(props)
 			require.NoError(t, err)
 
 			assert.Equal(t, "test_base", storageProps.BaseStorage)
@@ -36,16 +39,12 @@ func TestStorageLVM(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", func(t *testing.T) {
-			var storageProps storage.StorageLVMProperties
+		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
 
-			helperTestRequiredProperties(t, props, requiredProps, (&storageProps).Unmarshal)
-		})
+	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
+		require.IsType(t, (*storage.StorageLVMProperties)(nil), obj)
 
-	t.Run("DefaultProperties", func(t *testing.T) {
-		var storageProps storage.StorageLVMProperties
-
-		helperTestOptionalProperties(t, props, defaultProps, (&storageProps).Unmarshal)
+		storageProps := obj.(*storage.StorageLVMProperties)
 
 		assert.Equal(
 			t,
@@ -67,5 +66,6 @@ func TestStorageLVM(t *testing.T) {
 			storage.DefaultStorageLVMTaggedOnly,
 			storageProps.TaggedOnly,
 		)
-	})
+	},
+	))
 }
