@@ -5,19 +5,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageLVMThin(t *testing.T) {
-
-	props := map[string]interface{}{
+func TestStorageLVMThinProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"vgname":   "test_vg",
 		"thinpool": "test_pool",
-	}
+	})
 
 	requiredProps := []string{"vgname", "thinpool"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageLVMThinProperties(props)
 		return obj, err
 	}
@@ -32,5 +33,7 @@ func TestStorageLVMThin(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 }

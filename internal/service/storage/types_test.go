@@ -6,77 +6,39 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/internal/service/storage"
-	types "github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/pkg/types"
+	storage_types "github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
 func helperCreateStorage(
-	kind types.Kind,
-	props types.ExtraProperties,
-) (types.Storage, error) {
+	kind storage_types.Kind,
+	props types.Properties,
+) (storage_types.Storage, error) {
 	return storage.NewDynamicStorage(
 		nil,
 		"test_storage",
 		kind,
-		types.Properties{
-			ExtraProperties: props,
-		},
+		&storage_types.Properties{},
+		props,
 	)
-}
-
-func helperFilterOptionalProperties(
-	props types.ExtraProperties,
-	requiredProps []string,
-) types.ExtraProperties {
-	finalProps := make(types.ExtraProperties)
-	for _, v := range requiredProps {
-		finalProps[v] = props[v]
-	}
-
-	return finalProps
-}
-
-func helperTestRequiredProperties(
-	t *testing.T,
-	kind types.Kind,
-	props types.ExtraProperties,
-	requiredProps []string,
-) func(t *testing.T) {
-	t.Helper()
-
-	return func(t *testing.T) {
-		for _, prop := range requiredProps {
-			finalProps := make(types.ExtraProperties, len(props))
-			for k, v := range props {
-				finalProps[k] = v
-			}
-
-			delete(finalProps, prop)
-
-			_, err := helperCreateStorage(kind, finalProps)
-
-			expectedError := types.ErrMissingProperty
-			expectedError.AddKey("name", prop)
-
-			assert.EqualError(t, err, expectedError.Error())
-		}
-	}
 }
 
 func TestStorageNew(t *testing.T) {
 }
 
 func TestStorageDir(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"path":          "test_path",
 		"mkdir":         1,
 		"is_mountpoint": 1,
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindDir, props)
+	obj, err := helperCreateStorage(storage_types.KindDir, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageDir)(nil), obj)
+	require.Implements(t, (*storage_types.StorageDir)(nil), obj)
 
-	concreteStorage := obj.(types.StorageDir)
+	concreteStorage := obj.(storage_types.StorageDir)
 
 	assert.Equal(t, "test_path", concreteStorage.LocalPath())
 	assert.Equal(t, true, concreteStorage.LocalPathCreate())
@@ -84,19 +46,19 @@ func TestStorageDir(t *testing.T) {
 }
 
 func TestStorageLVM(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"base":                  "test_base",
 		"vgname":                "test_vg",
 		"saferemove":            1,
 		"saferemove_throughput": 1024,
 		"tagged_only":           1,
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindLVM, props)
+	obj, err := helperCreateStorage(storage_types.KindLVM, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageLVM)(nil), obj)
+	require.Implements(t, (*storage_types.StorageLVM)(nil), obj)
 
-	concreteStorage := obj.(types.StorageLVM)
+	concreteStorage := obj.(storage_types.StorageLVM)
 
 	assert.Equal(t, "test_base", concreteStorage.BaseStorage())
 	assert.Equal(t, "test_vg", concreteStorage.VolumeGroup())
@@ -106,16 +68,16 @@ func TestStorageLVM(t *testing.T) {
 }
 
 func TestStorageLVMThin(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"thinpool": "test_pool",
 		"vgname":   "test_vg",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindLVMThin, props)
+	obj, err := helperCreateStorage(storage_types.KindLVMThin, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageLVMThin)(nil), obj)
+	require.Implements(t, (*storage_types.StorageLVMThin)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageLVMThin)
+	concreteStorage, ok := obj.(storage_types.StorageLVMThin)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, "test_pool", concreteStorage.ThinPool())
@@ -123,50 +85,49 @@ func TestStorageLVMThin(t *testing.T) {
 }
 
 func TestStorageZFS(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"pool":       "test_pool",
 		"blocksize":  "1024",
 		"sparse":     1,
 		"mountpoint": "test_mountpoint",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindZFS, props)
+	obj, err := helperCreateStorage(storage_types.KindZFS, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageZFS)(nil), obj)
+	require.Implements(t, (*storage_types.StorageZFS)(nil), obj)
 
-	concreteStorage := obj.(types.StorageZFS)
+	concreteStorage := obj.(storage_types.StorageZFS)
 
 	assert.Equal(t, "test_pool", concreteStorage.PoolName())
 	assert.Equal(t, "1024", concreteStorage.BlockSize())
 	assert.Equal(t, true, concreteStorage.UseSparse())
 	assert.Equal(t, "test_mountpoint", concreteStorage.LocalPath())
-
 }
 
 func TestStorageNFS(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"server":  "test_server",
 		"options": "vers=4.2",
 		"export":  "/test_export",
 		"path":    "/test_path",
 		"mkdir":   1,
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindNFS, props)
+	obj, err := helperCreateStorage(storage_types.KindNFS, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageNFS)(nil), obj)
+	require.Implements(t, (*storage_types.StorageNFS)(nil), obj)
 
-	concreteStorage := obj.(types.StorageNFS)
+	concreteStorage := obj.(storage_types.StorageNFS)
 
 	assert.Equal(t, "test_server", concreteStorage.Server())
-	assert.Equal(t, types.NFSVersion42, concreteStorage.NFSVersion())
+	assert.Equal(t, storage_types.NFSVersion42, concreteStorage.NFSVersion())
 	assert.Equal(t, "/test_export", concreteStorage.ServerPath())
 	assert.Equal(t, "/test_path", concreteStorage.LocalPath())
 	assert.Equal(t, true, concreteStorage.LocalPathCreate())
 }
 
 func TestStorageNewCIFS(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"server":     "test_server",
 		"smbversion": "2.1",
 		"domain":     "test_domain",
@@ -175,62 +136,61 @@ func TestStorageNewCIFS(t *testing.T) {
 		"share":      "test_share",
 		"path":       "/test_path",
 		"mkdir":      1,
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindCIFS, props)
+	obj, err := helperCreateStorage(storage_types.KindCIFS, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageCIFS)(nil), obj)
+	require.Implements(t, (*storage_types.StorageCIFS)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageCIFS)
+	concreteStorage, ok := obj.(storage_types.StorageCIFS)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, "test_server", concreteStorage.Server())
-	assert.Equal(t, types.SMBVersion21, concreteStorage.SMBVersion())
+	assert.Equal(t, storage_types.SMBVersion21, concreteStorage.SMBVersion())
 	assert.Equal(t, "test_domain", concreteStorage.Domain())
 	assert.Equal(t, "test_username", concreteStorage.Username())
 	assert.Equal(t, "test_password", concreteStorage.Password())
 	assert.Equal(t, "test_share", concreteStorage.ServerShare())
 	assert.Equal(t, "/test_path", concreteStorage.LocalPath())
 	assert.Equal(t, true, concreteStorage.LocalPathCreate())
-
 }
 
 func TestStorageNewGlusterFS(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"server":    "test_server",
 		"server2":   "test_backup",
 		"transport": "unix",
 		"volume":    "test_volume",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindGlusterFS, props)
+	obj, err := helperCreateStorage(storage_types.KindGlusterFS, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageGlusterFS)(nil), obj)
+	require.Implements(t, (*storage_types.StorageGlusterFS)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageGlusterFS)
+	concreteStorage, ok := obj.(storage_types.StorageGlusterFS)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, "test_server", concreteStorage.MainServer())
 	assert.Equal(t, "test_backup", concreteStorage.BackupServer())
 	assert.Equal(
 		t,
-		types.GlusterFSTransportUNIX,
+		storage_types.GlusterFSTransportUNIX,
 		concreteStorage.Transport(),
 	)
 	assert.Equal(t, "test_volume", concreteStorage.Volume())
 }
 
 func TestStorageNewISCSIKernel(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"portal": "test_portal",
 		"target": "test_target",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindISCSIKernel, props)
+	obj, err := helperCreateStorage(storage_types.KindISCSIKernel, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageISCSIKernel)(nil), obj)
+	require.Implements(t, (*storage_types.StorageISCSIKernel)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageISCSIKernel)
+	concreteStorage, ok := obj.(storage_types.StorageISCSIKernel)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, "test_portal", concreteStorage.Portal())
@@ -238,37 +198,36 @@ func TestStorageNewISCSIKernel(t *testing.T) {
 }
 
 func TestStorageNewISCSIUser(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"portal": "test_portal",
 		"target": "test_target",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindISCSIUser, props)
+	obj, err := helperCreateStorage(storage_types.KindISCSIUser, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageISCSIUser)(nil), obj)
+	require.Implements(t, (*storage_types.StorageISCSIUser)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageISCSIUser)
+	concreteStorage, ok := obj.(storage_types.StorageISCSIUser)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, "test_portal", concreteStorage.Portal())
 	assert.Equal(t, "test_target", concreteStorage.Target())
-
 }
 
 func TestStorageNewCephFS(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"monhost":  "test_host_1 test_host_2 test_host_3",
 		"username": "test_username",
 		"fuse":     1,
 		"subdir":   "/test_subdir",
 		"path":     "/test_path",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindCephFS, props)
+	obj, err := helperCreateStorage(storage_types.KindCephFS, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageCephFS)(nil), obj)
+	require.Implements(t, (*storage_types.StorageCephFS)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageCephFS)
+	concreteStorage, ok := obj.(storage_types.StorageCephFS)
 	require.Equal(t, true, ok)
 
 	assert.ElementsMatch(
@@ -283,18 +242,18 @@ func TestStorageNewCephFS(t *testing.T) {
 }
 
 func TestStorageNewRBD(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"monhost":  "test_host_1 test_host_2 test_host_3",
 		"username": "test_username",
 		"krbd":     1,
 		"pool":     "test_pool",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindRBD, props)
+	obj, err := helperCreateStorage(storage_types.KindRBD, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageRBD)(nil), obj)
+	require.Implements(t, (*storage_types.StorageRBD)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageRBD)
+	concreteStorage, ok := obj.(storage_types.StorageRBD)
 	require.Equal(t, true, ok)
 
 	assert.ElementsMatch(
@@ -305,26 +264,25 @@ func TestStorageNewRBD(t *testing.T) {
 	assert.Equal(t, "test_username", concreteStorage.Username())
 	assert.Equal(t, true, concreteStorage.UseKRBD())
 	assert.Equal(t, "test_pool", concreteStorage.PoolName())
-
 }
 
 func TestStorageNewDRBD(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"redundancy": 16,
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindDRBD, props)
+	obj, err := helperCreateStorage(storage_types.KindDRBD, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageDRBD)(nil), obj)
+	require.Implements(t, (*storage_types.StorageDRBD)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageDRBD)
+	concreteStorage, ok := obj.(storage_types.StorageDRBD)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, uint(16), concreteStorage.Redundancy())
 }
 
 func TestStorageNewZFSOverISCSI(t *testing.T) {
-	props := types.ExtraProperties{
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"portal":        "test_portal",
 		"target":        "test_target",
 		"pool":          "test_pool",
@@ -335,13 +293,13 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 		"comstar_hg":    "test_comstar_hg",
 		"comstar_tg":    "test_comstar_tg",
 		"lio_tpg":       "test_lio_tpg",
-	}
+	})
 
-	obj, err := helperCreateStorage(types.KindZFSOverISCSI, props)
+	obj, err := helperCreateStorage(storage_types.KindZFSOverISCSI, props)
 	require.NoError(t, err)
-	require.Implements(t, (*types.StorageZFSOverISCSI)(nil), obj)
+	require.Implements(t, (*storage_types.StorageZFSOverISCSI)(nil), obj)
 
-	concreteStorage, ok := obj.(types.StorageZFSOverISCSI)
+	concreteStorage, ok := obj.(storage_types.StorageZFSOverISCSI)
 	require.Equal(t, true, ok)
 
 	assert.Equal(t, "test_portal", concreteStorage.Portal())
@@ -350,7 +308,11 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 	assert.Equal(t, "1024", concreteStorage.BlockSize())
 	assert.Equal(t, true, concreteStorage.UseSparse())
 	assert.Equal(t, false, concreteStorage.WriteCache())
-	assert.Equal(t, types.ISCSIProviderIET, concreteStorage.ISCSIProvider())
+	assert.Equal(
+		t,
+		storage_types.ISCSIProviderIET,
+		concreteStorage.ISCSIProvider(),
+	)
 	assert.Equal(t, "test_comstar_hg", concreteStorage.ComstarHostGroup())
 	assert.Equal(t, "test_comstar_tg", concreteStorage.ComstarTargetGroup())
 	assert.Equal(t, "test_lio_tpg", concreteStorage.LIOTargetPortalGroup())

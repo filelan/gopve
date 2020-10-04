@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/xabinapal/gopve/internal/types"
+import (
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
 
 type StorageZFS interface {
 	Storage
@@ -20,13 +24,15 @@ type StorageZFSProperties struct {
 	LocalPath string
 }
 
-func NewStorageZFSProperties(props ExtraProperties) (*StorageZFSProperties, error) {
+func NewStorageZFSProperties(
+	props types.Properties,
+) (*StorageZFSProperties, error) {
 	obj := new(StorageZFSProperties)
 
 	if v, ok := props["pool"].(string); ok {
 		obj.PoolName = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "pool")
 		return nil, err
 	}
@@ -37,8 +43,8 @@ func NewStorageZFSProperties(props ExtraProperties) (*StorageZFSProperties, erro
 		obj.BlockSize = DefaultStorageZFSBlockSize
 	}
 
-	if v, ok := props["sparse"].(int); ok {
-		obj.UseSparse = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["sparse"].(float64); ok {
+		obj.UseSparse = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.UseSparse = DefaultStorageZFSUseSparse
 	}

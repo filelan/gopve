@@ -5,20 +5,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageRBD(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageRBDProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"monhost":  "test_host_1 test_host_2 test_host_3",
 		"username": "test_username",
 		"krbd":     1,
 		"pool":     "test_pool",
-	}
+	})
 
 	defaultProps := []string{"monhost", "username", "krbd", "pool"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageRBDProperties(props)
 		return obj, err
 	}
@@ -38,34 +40,42 @@ func TestStorageRBD(t *testing.T) {
 			assert.Equal(t, "test_pool", storageProps.PoolName)
 		})
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageRBDProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageRBDProperties)
-
-		assert.ElementsMatch(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageRBDMonitorHosts,
-			storageProps.MonitorHosts,
-		)
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageRBDProperties)(nil), obj)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageRBDUsername,
-			storageProps.Username,
-		)
+				storageProps := obj.(*storage.StorageRBDProperties)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageRBDUseKRBD,
-			storageProps.UseKRBD,
-		)
+				assert.ElementsMatch(
+					t,
+					storage.DefaultStorageRBDMonitorHosts,
+					storageProps.MonitorHosts,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageRBDPoolName,
-			storageProps.PoolName,
-		)
-	},
-	))
+				assert.Equal(
+					t,
+					storage.DefaultStorageRBDUsername,
+					storageProps.Username,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageRBDUseKRBD,
+					storageProps.UseKRBD,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageRBDPoolName,
+					storageProps.PoolName,
+				)
+			},
+		),
+	)
 }

@@ -5,11 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageZFSOverISCSI(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageZFSOverISCSIProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"portal":        "test_portal",
 		"target":        "test_target",
 		"pool":          "test_pool",
@@ -20,13 +22,25 @@ func TestStorageZFSOverISCSI(t *testing.T) {
 		"comstar_hg":    "test_comstar_hg",
 		"comstar_tg":    "test_comstar_tg",
 		"lio_tpg":       "test_lio_tpg",
+	})
+
+	requiredProps := []string{
+		"portal",
+		"target",
+		"pool",
+		"blocksize",
+		"iscsiprovider",
 	}
 
-	requiredProps := []string{"portal", "target", "pool", "blocksize", "iscsiprovider"}
+	defaultProps := []string{
+		"sparse",
+		"nowritecache",
+		"comstar_hg",
+		"comstar_tg",
+		"lio_tpg",
+	}
 
-	defaultProps := []string{"sparse", "nowritecache", "comstar_hg", "comstar_tg", "lio_tpg"}
-
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageZFSOverISCSIProperties(props)
 		return obj, err
 	}
@@ -42,49 +56,67 @@ func TestStorageZFSOverISCSI(t *testing.T) {
 			assert.Equal(t, "1024", storageProps.BlockSize)
 			assert.Equal(t, true, storageProps.UseSparse)
 			assert.Equal(t, false, storageProps.WriteCache)
-			assert.Equal(t, storage.ISCSIProviderIET, storageProps.ISCSIProvider)
+			assert.Equal(
+				t,
+				storage.ISCSIProviderIET,
+				storageProps.ISCSIProvider,
+			)
 			assert.Equal(t, "test_comstar_hg", storageProps.ComstarHostGroup)
 			assert.Equal(t, "test_comstar_tg", storageProps.ComstarTargetGroup)
 			assert.Equal(t, "test_lio_tpg", storageProps.LIOTargetPortalGroup)
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageZFSOverISCSIProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageZFSOverISCSIProperties)
-
-		assert.ElementsMatch(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageZFSOverISCSIUseSparse,
-			storageProps.UseSparse,
-		)
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(
+					t,
+					(*storage.StorageZFSOverISCSIProperties)(nil),
+					obj,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSOverISCSIWriteCache,
-			storageProps.WriteCache,
-		)
+				storageProps := obj.(*storage.StorageZFSOverISCSIProperties)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSOverISCSIComstarHostGroup,
-			storageProps.ComstarHostGroup,
-		)
+				assert.ElementsMatch(
+					t,
+					storage.DefaultStorageZFSOverISCSIUseSparse,
+					storageProps.UseSparse,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSOverISCSIComstarTargetGroup,
-			storageProps.ComstarTargetGroup,
-		)
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSOverISCSIWriteCache,
+					storageProps.WriteCache,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSOverISCSILIOTargetPortalGroup,
-			storageProps.LIOTargetPortalGroup,
-		)
-	},
-	))
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSOverISCSIComstarHostGroup,
+					storageProps.ComstarHostGroup,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSOverISCSIComstarTargetGroup,
+					storageProps.ComstarTargetGroup,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSOverISCSILIOTargetPortalGroup,
+					storageProps.LIOTargetPortalGroup,
+				)
+			},
+		),
+	)
 }

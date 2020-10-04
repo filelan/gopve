@@ -5,15 +5,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageDRBD(t *testing.T) {
-	props := map[string]interface{}{"redundancy": 16}
+func TestStorageDRBDProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{"redundancy": 16})
 
 	defaultProps := []string{"redundancy"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageDRBDProperties(props)
 		return obj, err
 	}
@@ -26,16 +28,24 @@ func TestStorageDRBD(t *testing.T) {
 			assert.Equal(t, uint(16), storageProps.Redundancy)
 		})
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageDRBDProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageDRBDProperties)
-
-		assert.Equal(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageDRBDRedundancy,
-			storageProps.Redundancy,
-		)
-	},
-	))
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageDRBDProperties)(nil), obj)
+
+				storageProps := obj.(*storage.StorageDRBDProperties)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageDRBDRedundancy,
+					storageProps.Redundancy,
+				)
+			},
+		),
+	)
 }

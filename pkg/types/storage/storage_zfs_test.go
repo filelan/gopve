@@ -5,22 +5,24 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageZFS(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageZFSProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"pool":       "test_pool",
 		"blocksize":  "1024",
 		"sparse":     1,
 		"mountpoint": "test_mountpoint",
-	}
+	})
 
 	requiredProps := []string{"pool"}
 
 	defaultProps := []string{"blocksize", "sparse", "mountpoint"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageZFSProperties(props)
 		return obj, err
 	}
@@ -37,28 +39,38 @@ func TestStorageZFS(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageZFSProperties)(nil), obj)
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
+			t,
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageZFSProperties)(nil), obj)
 
-		storageProps := obj.(*storage.StorageZFSProperties)
+				storageProps := obj.(*storage.StorageZFSProperties)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSBlockSize,
-			storageProps.BlockSize,
-		)
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSUseSparse,
-			storageProps.UseSparse,
-		)
-		assert.Equal(
-			t,
-			storage.DefaultStorageZFSMountPoint,
-			storageProps.LocalPath,
-		)
-	},
-	))
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSBlockSize,
+					storageProps.BlockSize,
+				)
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSUseSparse,
+					storageProps.UseSparse,
+				)
+				assert.Equal(
+					t,
+					storage.DefaultStorageZFSMountPoint,
+					storageProps.LocalPath,
+				)
+			},
+		),
+	)
 }

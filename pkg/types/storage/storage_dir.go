@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/xabinapal/gopve/internal/types"
+import (
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
 
 type StorageDir interface {
 	Storage
@@ -21,25 +25,27 @@ type StorageDirProperties struct {
 	LocalPathIsManaged bool
 }
 
-func NewStorageDirProperties(props ExtraProperties) (*StorageDirProperties, error) {
+func NewStorageDirProperties(
+	props types.Properties,
+) (*StorageDirProperties, error) {
 	obj := new(StorageDirProperties)
 
 	if v, ok := props["path"].(string); ok {
 		obj.LocalPath = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "path")
 		return nil, err
 	}
 
-	if v, ok := props["mkdir"].(int); ok {
-		obj.LocalPathCreate = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["mkdir"].(float64); ok {
+		obj.LocalPathCreate = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.LocalPathCreate = DefaultStorageDirLocalPathCreate
 	}
 
-	if v, ok := props["is_mountpoint"].(int); ok {
-		obj.LocalPathIsManaged = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["is_mountpoint"].(float64); ok {
+		obj.LocalPathIsManaged = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.LocalPathIsManaged = DefaultStorageDirLocalIsManaged
 	}

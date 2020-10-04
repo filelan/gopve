@@ -5,11 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageCIFS(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageCIFSProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"server":     "test_server",
 		"smbversion": "2.1",
 		"domain":     "test_domain",
@@ -18,13 +20,19 @@ func TestStorageCIFS(t *testing.T) {
 		"share":      "test_share",
 		"path":       "/test_path",
 		"mkdir":      1,
-	}
+	})
 
 	requiredProps := []string{"server", "share", "path"}
 
-	defaultProps := []string{"smbversion", "domain", "username", "password", "mkdir"}
+	defaultProps := []string{
+		"smbversion",
+		"domain",
+		"username",
+		"password",
+		"mkdir",
+	}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageCIFSProperties(props)
 		return obj, err
 	}
@@ -45,48 +53,58 @@ func TestStorageCIFS(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageCIFSProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageCIFSProperties)
-
-		assert.Equal(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageCIFSSMBVersion,
-			storageProps.SMBVersion,
-		)
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageCIFSProperties)(nil), obj)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCIFSDomain,
-			storageProps.Domain,
-		)
+				storageProps := obj.(*storage.StorageCIFSProperties)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCIFSUsername,
-			storageProps.Username,
-		)
+				assert.Equal(
+					t,
+					storage.DefaultStorageCIFSSMBVersion,
+					storageProps.SMBVersion,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCIFSPassword,
-			storageProps.Password,
-		)
+				assert.Equal(
+					t,
+					storage.DefaultStorageCIFSDomain,
+					storageProps.Domain,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCIFSLocalPathCreate,
-			storageProps.LocalPathCreate,
-		)
-	},
-	))
+				assert.Equal(
+					t,
+					storage.DefaultStorageCIFSUsername,
+					storageProps.Username,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageCIFSPassword,
+					storageProps.Password,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageCIFSLocalPathCreate,
+					storageProps.LocalPathCreate,
+				)
+			},
+		),
+	)
 }
 
 func TestSMBVersion(t *testing.T) {
-	var SMBVersionCases = map[string](struct {
+	SMBVersionCases := map[string](struct {
 		Object storage.SMBVersion
 		Value  string
 	}){

@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/xabinapal/gopve/internal/types"
+import (
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
 
 type StorageRBD interface {
 	Storage
@@ -23,13 +27,15 @@ type StorageRBDProperties struct {
 	PoolName string
 }
 
-func NewStorageRBDProperties(props ExtraProperties) (*StorageRBDProperties, error) {
+func NewStorageRBDProperties(
+	props types.Properties,
+) (*StorageRBDProperties, error) {
 	obj := new(StorageRBDProperties)
 
 	if v, ok := props["monhost"].(string); ok {
-		monitorHosts := types.PVEList{Separator: " "}
+		monitorHosts := internal_types.PVEList{Separator: " "}
 		if err := (&monitorHosts).Unmarshal(v); err != nil {
-			err := ErrInvalidProperty
+			err := errors.ErrInvalidProperty
 			err.AddKey("name", "monhost")
 			err.AddKey("value", v)
 			return nil, err
@@ -46,8 +52,8 @@ func NewStorageRBDProperties(props ExtraProperties) (*StorageRBDProperties, erro
 		obj.Username = DefaultStorageRBDUsername
 	}
 
-	if v, ok := props["krbd"].(int); ok {
-		obj.UseKRBD = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["krbd"].(float64); ok {
+		obj.UseKRBD = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.UseKRBD = DefaultStorageRBDUseKRBD
 	}

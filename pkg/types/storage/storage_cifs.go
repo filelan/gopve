@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/xabinapal/gopve/internal/types"
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageCIFS interface {
@@ -35,20 +37,22 @@ type StorageCIFSProperties struct {
 	LocalPathCreate bool
 }
 
-func NewStorageCIFSProperties(props ExtraProperties) (*StorageCIFSProperties, error) {
+func NewStorageCIFSProperties(
+	props types.Properties,
+) (*StorageCIFSProperties, error) {
 	obj := new(StorageCIFSProperties)
 
 	if v, ok := props["server"].(string); ok {
 		obj.Server = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "server")
 		return nil, err
 	}
 
 	if v, ok := props["smbversion"].(string); ok {
 		if err := (&obj.SMBVersion).Unmarshal(v); err != nil {
-			err := ErrInvalidProperty
+			err := errors.ErrInvalidProperty
 			err.AddKey("name", "smbversion")
 			err.AddKey("value", v)
 			return nil, err
@@ -78,7 +82,7 @@ func NewStorageCIFSProperties(props ExtraProperties) (*StorageCIFSProperties, er
 	if v, ok := props["share"].(string); ok {
 		obj.ServerShare = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "share")
 		return nil, err
 	}
@@ -86,13 +90,13 @@ func NewStorageCIFSProperties(props ExtraProperties) (*StorageCIFSProperties, er
 	if v, ok := props["path"].(string); ok {
 		obj.LocalPath = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "path")
 		return nil, err
 	}
 
-	if v, ok := props["mkdir"].(int); ok {
-		obj.LocalPathCreate = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["mkdir"].(float64); ok {
+		obj.LocalPathCreate = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.LocalPathCreate = DefaultStorageCIFSLocalPathCreate
 	}

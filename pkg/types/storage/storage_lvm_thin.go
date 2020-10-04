@@ -1,5 +1,10 @@
 package storage
 
+import (
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
+
 type StorageLVMThin interface {
 	Storage
 
@@ -12,13 +17,15 @@ type StorageLVMThinProperties struct {
 	ThinPool    string
 }
 
-func NewStorageLVMThinProperties(props ExtraProperties) (*StorageLVMThinProperties, error) {
+func NewStorageLVMThinProperties(
+	props types.Properties,
+) (*StorageLVMThinProperties, error) {
 	obj := new(StorageLVMThinProperties)
 
 	if v, ok := props["vgname"].(string); ok {
 		obj.VolumeGroup = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "vgname")
 		return nil, err
 	}
@@ -26,7 +33,7 @@ func NewStorageLVMThinProperties(props ExtraProperties) (*StorageLVMThinProperti
 	if v, ok := props["thinpool"].(string); ok {
 		obj.ThinPool = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "thinpool")
 		return nil, err
 	}

@@ -5,23 +5,25 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageNFS(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageNFSProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"server":  "test_server",
 		"options": "vers=4.2",
 		"export":  "/test_export",
 		"path":    "/test_path",
 		"mkdir":   1,
-	}
+	})
 
 	requiredProps := []string{"server", "export", "path"}
 
 	defaultProps := []string{"options", "mkdir"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageNFSProperties(props)
 		return obj, err
 	}
@@ -39,30 +41,40 @@ func TestStorageNFS(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageNFSProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageNFSProperties)
-
-		assert.Equal(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageNFSVersion,
-			storageProps.NFSVersion,
-		)
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageNFSProperties)(nil), obj)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageNFSLocalPathCreate,
-			storageProps.LocalPathCreate,
-		)
-	},
-	))
+				storageProps := obj.(*storage.StorageNFSProperties)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageNFSVersion,
+					storageProps.NFSVersion,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageNFSLocalPathCreate,
+					storageProps.LocalPathCreate,
+				)
+			},
+		),
+	)
 }
 
 func TestNFSVersion(t *testing.T) {
-	var NFSVersionCases = map[string](struct {
+	NFSVersionCases := map[string](struct {
 		Object storage.NFSVersion
 		Value  string
 	}){

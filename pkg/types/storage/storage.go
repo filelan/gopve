@@ -2,19 +2,32 @@ package storage
 
 type Storage interface {
 	Name() string
-	Kind() (Kind, error)
-	Content() (Content, error)
+	Kind() Kind
 
-	Shared() (bool, error)
-	Disabled() (bool, error)
+	Content() Content
+	Shared() bool
+	Disabled() bool
 
-	ImageFormat() (ImageFormat, error)
-	MaxBackupsPerVM() (uint, error)
+	ImageFormat() ImageFormat
+	MaxBackupsPerVM() uint
 
-	Nodes() ([]string, error)
+	Nodes() []string
+
+	Digest() string
 }
 
-type ExtraProperties map[string]interface{}
+type Properties struct {
+	Content  Content
+	Shared   bool
+	Disabled bool
+
+	ImageFormat     ImageFormat
+	MaxBackupsPerVM uint
+
+	Nodes []string
+
+	Digest string
+}
 
 type AllowShare int
 

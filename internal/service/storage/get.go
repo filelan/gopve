@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/xabinapal/gopve/internal/types"
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
@@ -13,16 +14,18 @@ type getResponseJSON struct {
 	Name string       `json:"storage"`
 	Type storage.Kind `json:"type"`
 
-	Content  storage.Content `json:"content"`
-	Shared   types.PVEBool   `json:"shared"`
-	Disabled types.PVEBool   `json:"disable"`
+	Content  storage.Content        `json:"content"`
+	Shared   internal_types.PVEBool `json:"shared"`
+	Disabled internal_types.PVEBool `json:"disable"`
 
 	ImageFormat     storage.ImageFormat `json:"format"`
 	MaxBackupsPerVM uint                `json:"maxfiles"`
 
-	Nodes types.PVEList `json:"nodes"`
+	Nodes internal_types.PVEList `json:"nodes"`
 
-	ExtraProperties storage.ExtraProperties `json:"-"`
+	Digest string `json:"digest"`
+
+	ExtraProperties types.Properties `json:"-"`
 }
 
 func (res *getResponseJSON) UnmarshalJSON(b []byte) error {
@@ -39,14 +42,20 @@ func (res *getResponseJSON) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	delete(x.ExtraProperties, "storage")
-	delete(x.ExtraProperties, "type")
-	delete(x.ExtraProperties, "content")
-	delete(x.ExtraProperties, "shared")
-	delete(x.ExtraProperties, "disable")
-	delete(x.ExtraProperties, "format")
-	delete(x.ExtraProperties, "maxfiles")
-	delete(x.ExtraProperties, "nodes")
+	props := []string{
+		"storage",
+		"type",
+		"content",
+		"shared",
+		"disable",
+		"format",
+		"maxfiles",
+		"nodes",
+		"digest",
+	}
+	for _, prop := range props {
+		delete(x.ExtraProperties, prop)
+	}
 
 	*res = getResponseJSON(x)
 
@@ -56,7 +65,7 @@ func (res *getResponseJSON) UnmarshalJSON(b []byte) error {
 func (res getResponseJSON) Map(
 	svc *Service,
 ) (storage.Storage, error) {
-	return NewDynamicStorage(svc, res.Name, res.Type, storage.Properties{
+	props := &storage.Properties{
 		Content:  res.Content,
 		Shared:   res.Shared.Bool(),
 		Disabled: res.Disabled.Bool(),
@@ -66,8 +75,16 @@ func (res getResponseJSON) Map(
 
 		Nodes: res.Nodes.List(),
 
-		ExtraProperties: res.ExtraProperties,
-	})
+		Digest: res.Digest,
+	}
+
+	return NewDynamicStorage(
+		svc,
+		res.Name,
+		res.Type,
+		props,
+		res.ExtraProperties,
+	)
 }
 
 func (svc *Service) List() ([]storage.Storage, error) {

@@ -1,45 +1,32 @@
 package storage
 
 import (
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
 )
 
 type Storage struct {
 	svc *Service
 
-	name    string
-	kind    storage.Kind
-	content storage.Content
+	name string
+	kind storage.Kind
 
-	shared   bool
-	disabled bool
-
-	imageFormat     storage.ImageFormat
-	maxBackupsPerVM uint
-
-	nodes []string
+	props *storage.Properties
 }
 
 func NewStorage(
 	svc *Service,
 	name string,
 	kind storage.Kind,
-	props storage.Properties,
+	props *storage.Properties,
 ) *Storage {
 	return &Storage{
 		svc: svc,
 
-		name:    name,
-		kind:    kind,
-		content: props.Content,
+		name: name,
+		kind: kind,
 
-		shared:   props.Shared,
-		disabled: props.Disabled,
-
-		imageFormat:     props.ImageFormat,
-		maxBackupsPerVM: props.MaxBackupsPerVM,
-
-		nodes: props.Nodes,
+		props: props,
 	}
 }
 
@@ -47,37 +34,38 @@ func NewDynamicStorage(
 	svc *Service,
 	name string,
 	kind storage.Kind,
-	props storage.Properties,
+	props *storage.Properties,
+	extraProps types.Properties,
 ) (storage.Storage, error) {
 	obj := NewStorage(svc, name, kind, props)
 
 	switch kind {
 	case storage.KindDir:
-		return NewStorageDir(*obj, props.ExtraProperties)
+		return NewStorageDir(*obj, extraProps)
 	case storage.KindLVM:
-		return NewStorageLVM(*obj, props.ExtraProperties)
+		return NewStorageLVM(*obj, extraProps)
 	case storage.KindLVMThin:
-		return NewStorageLVMThin(*obj, props.ExtraProperties)
+		return NewStorageLVMThin(*obj, extraProps)
 	case storage.KindZFS:
-		return NewStorageZFS(*obj, props.ExtraProperties)
+		return NewStorageZFS(*obj, extraProps)
 	case storage.KindNFS:
-		return NewStorageNFS(*obj, props.ExtraProperties)
+		return NewStorageNFS(*obj, extraProps)
 	case storage.KindCIFS:
-		return NewStorageCIFS(*obj, props.ExtraProperties)
+		return NewStorageCIFS(*obj, extraProps)
 	case storage.KindGlusterFS:
-		return NewStorageGlusterFS(*obj, props.ExtraProperties)
+		return NewStorageGlusterFS(*obj, extraProps)
 	case storage.KindISCSIKernel:
-		return NewStorageISCSIKernel(*obj, props.ExtraProperties)
+		return NewStorageISCSIKernel(*obj, extraProps)
 	case storage.KindISCSIUser:
-		return NewStorageISCSIUser(*obj, props.ExtraProperties)
+		return NewStorageISCSIUser(*obj, extraProps)
 	case storage.KindCephFS:
-		return NewStorageCephFS(*obj, props.ExtraProperties)
+		return NewStorageCephFS(*obj, extraProps)
 	case storage.KindRBD:
-		return NewStorageRBD(*obj, props.ExtraProperties)
+		return NewStorageRBD(*obj, extraProps)
 	case storage.KindDRBD:
-		return NewStorageDRBD(*obj, props.ExtraProperties)
+		return NewStorageDRBD(*obj, extraProps)
 	case storage.KindZFSOverISCSI:
-		return NewStorageZFSOverISCSI(*obj, props.ExtraProperties)
+		return NewStorageZFSOverISCSI(*obj, extraProps)
 	default:
 		return nil, storage.ErrInvalidKind
 	}
@@ -87,32 +75,36 @@ func (obj *Storage) Name() string {
 	return obj.name
 }
 
-func (obj *Storage) Kind() (storage.Kind, error) {
-	return obj.kind, nil
+func (obj *Storage) Kind() storage.Kind {
+	return obj.kind
 }
 
-func (obj *Storage) Content() (storage.Content, error) {
-	return obj.content, nil
+func (obj *Storage) Content() storage.Content {
+	return obj.props.Content
 }
 
-func (obj *Storage) Shared() (bool, error) {
-	return obj.shared, nil
+func (obj *Storage) Shared() bool {
+	return obj.props.Shared
 }
 
-func (obj *Storage) Disabled() (bool, error) {
-	return obj.disabled, nil
+func (obj *Storage) Disabled() bool {
+	return obj.props.Disabled
 }
 
-func (obj *Storage) ImageFormat() (storage.ImageFormat, error) {
-	return obj.imageFormat, nil
+func (obj *Storage) ImageFormat() storage.ImageFormat {
+	return obj.props.ImageFormat
 }
 
-func (obj *Storage) MaxBackupsPerVM() (uint, error) {
-	return obj.maxBackupsPerVM, nil
+func (obj *Storage) MaxBackupsPerVM() uint {
+	return obj.props.MaxBackupsPerVM
 }
 
-func (obj *Storage) Nodes() ([]string, error) {
-	return obj.nodes, nil
+func (obj *Storage) Nodes() []string {
+	return obj.props.Nodes
+}
+
+func (obj *Storage) Digest() string {
+	return obj.props.Digest
 }
 
 type StorageDir struct {
@@ -126,7 +118,7 @@ type StorageDir struct {
 
 func NewStorageDir(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageDir, error) {
 	if storageProps, err := storage.NewStorageDirProperties(props); err == nil {
 		return &StorageDir{
@@ -157,7 +149,7 @@ type StorageLVM struct {
 
 func NewStorageLVM(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageLVM, error) {
 	if storageProps, err := storage.NewStorageLVMProperties(props); err == nil {
 		return &StorageLVM{
@@ -196,7 +188,7 @@ type StorageLVMThin struct {
 
 func NewStorageLVMThin(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageLVMThin, error) {
 	if storageProps, err := storage.NewStorageLVMThinProperties(props); err == nil {
 		return &StorageLVMThin{
@@ -223,7 +215,7 @@ type StorageZFS struct {
 
 func NewStorageZFS(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageZFS, error) {
 	if storageProps, err := storage.NewStorageZFSProperties(props); err == nil {
 		return &StorageZFS{
@@ -258,7 +250,7 @@ type StorageNFS struct {
 
 func NewStorageNFS(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageNFS, error) {
 	if storageProps, err := storage.NewStorageNFSProperties(props); err == nil {
 		return &StorageNFS{
@@ -297,7 +289,7 @@ type StorageCIFS struct {
 
 func NewStorageCIFS(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageCIFS, error) {
 	if storageProps, err := storage.NewStorageCIFSProperties(props); err == nil {
 		return &StorageCIFS{
@@ -348,7 +340,7 @@ type StorageGlusterFS struct {
 
 func NewStorageGlusterFS(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageGlusterFS, error) {
 	if storageProps, err := storage.NewStorageGlusterFSProperties(props); err == nil {
 		return &StorageGlusterFS{
@@ -386,7 +378,7 @@ type StorageISCSIKernel struct {
 
 func NewStorageISCSIKernel(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageISCSIKernel, error) {
 	if storageProps, err := storage.NewStorageISCSIKernelProperties(props); err == nil {
 		return &StorageISCSIKernel{
@@ -413,7 +405,7 @@ type StorageISCSIUser struct {
 
 func NewStorageISCSIUser(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageISCSIUser, error) {
 	if storageProps, err := storage.NewStorageISCSIUserProperties(props); err == nil {
 		return &StorageISCSIUser{
@@ -440,7 +432,7 @@ type StorageCephFS struct {
 
 func NewStorageCephFS(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageCephFS, error) {
 	if storageProps, err := storage.NewStorageCephFSProperties(props); err == nil {
 		return &StorageCephFS{
@@ -479,7 +471,7 @@ type StorageRBD struct {
 
 func NewStorageRBD(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageRBD, error) {
 	if storageProps, err := storage.NewStorageRBDProperties(props); err == nil {
 		return &StorageRBD{
@@ -516,7 +508,7 @@ type StorageDRBD struct {
 
 func NewStorageDRBD(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageDRBD, error) {
 	if storageProps, err := storage.NewStorageDRBDProperties(props); err == nil {
 		return &StorageDRBD{
@@ -539,7 +531,7 @@ type StorageZFSOverISCSI struct {
 
 func NewStorageZFSOverISCSI(
 	obj Storage,
-	props storage.ExtraProperties,
+	props types.Properties,
 ) (*StorageZFSOverISCSI, error) {
 	if storageProps, err := storage.NewStorageZFSOverISCSIProperties(props); err == nil {
 		return &StorageZFSOverISCSI{

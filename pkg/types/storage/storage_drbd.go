@@ -1,5 +1,7 @@
 package storage
 
+import "github.com/xabinapal/gopve/pkg/types"
+
 type StorageDRBD interface {
 	Storage
 
@@ -10,10 +12,12 @@ type StorageDRBDProperties struct {
 	Redundancy uint
 }
 
-func NewStorageDRBDProperties(props ExtraProperties) (*StorageDRBDProperties, error) {
+func NewStorageDRBDProperties(
+	props types.Properties,
+) (*StorageDRBDProperties, error) {
 	obj := new(StorageDRBDProperties)
 
-	if v, ok := props["redundancy"].(int); ok {
+	if v, ok := props["redundancy"].(float64); ok {
 		obj.Redundancy = uint(v)
 	} else {
 		obj.Redundancy = DefaultStorageDRBDRedundancy

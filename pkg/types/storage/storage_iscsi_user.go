@@ -1,5 +1,10 @@
 package storage
 
+import (
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
+
 type StorageISCSIUser interface {
 	Storage
 
@@ -15,13 +20,15 @@ type StorageISCSIUserProperties struct {
 	Target string
 }
 
-func NewStorageISCSIUserProperties(props ExtraProperties) (*StorageISCSIUserProperties, error) {
+func NewStorageISCSIUserProperties(
+	props types.Properties,
+) (*StorageISCSIUserProperties, error) {
 	obj := new(StorageISCSIUserProperties)
 
 	if v, ok := props["portal"].(string); ok {
 		obj.Portal = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "portal")
 		return nil, err
 	}
@@ -29,7 +36,7 @@ func NewStorageISCSIUserProperties(props ExtraProperties) (*StorageISCSIUserProp
 	if v, ok := props["target"].(string); ok {
 		obj.Target = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "target")
 		return nil, err
 	}

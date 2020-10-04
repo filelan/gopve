@@ -5,23 +5,25 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageCephFS(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageCephFSProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"monhost":  "test_host_1 test_host_2 test_host_3",
 		"username": "test_username",
 		"fuse":     1,
 		"subdir":   "/test_subdir",
 		"path":     "/test_path",
-	}
+	})
 
 	requiredProps := []string{"path"}
 
 	defaultProps := []string{"monhost", "username", "fuse", "subdir"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageCephFSProperties(props)
 		return obj, err
 	}
@@ -43,36 +45,46 @@ func TestStorageCephFS(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageCephFSProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageCephFSProperties)
-
-		assert.ElementsMatch(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageCephFSMonitorHosts,
-			storageProps.MonitorHosts,
-		)
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageCephFSProperties)(nil), obj)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCephFSUsername,
-			storageProps.Username,
-		)
+				storageProps := obj.(*storage.StorageCephFSProperties)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCephFSUseFUSE,
-			storageProps.UseFUSE,
-		)
+				assert.ElementsMatch(
+					t,
+					storage.DefaultStorageCephFSMonitorHosts,
+					storageProps.MonitorHosts,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageCephFSServerPath,
-			storageProps.ServerPath,
-		)
-	},
-	))
+				assert.Equal(
+					t,
+					storage.DefaultStorageCephFSUsername,
+					storageProps.Username,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageCephFSUseFUSE,
+					storageProps.UseFUSE,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageCephFSServerPath,
+					storageProps.ServerPath,
+				)
+			},
+		),
+	)
 }

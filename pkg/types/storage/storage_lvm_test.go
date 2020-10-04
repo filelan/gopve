@@ -5,23 +5,30 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageLVM(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageLVMProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"base":                  "test_base",
 		"vgname":                "test_vg",
 		"saferemove":            1,
 		"saferemove_throughput": 1024,
 		"tagged_only":           1,
-	}
+	})
 
 	requiredProps := []string{"vgname"}
 
-	defaultProps := []string{"base", "saferemove", "saferemove_throughput", "tagged_only"}
+	defaultProps := []string{
+		"base",
+		"saferemove",
+		"saferemove_throughput",
+		"tagged_only",
+	}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageLVMProperties(props)
 		return obj, err
 	}
@@ -39,33 +46,43 @@ func TestStorageLVM(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageLVMProperties)(nil), obj)
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
+			t,
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*storage.StorageLVMProperties)(nil), obj)
 
-		storageProps := obj.(*storage.StorageLVMProperties)
+				storageProps := obj.(*storage.StorageLVMProperties)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageLVMBaseStorage,
-			storageProps.BaseStorage,
-		)
-		assert.Equal(
-			t,
-			storage.DefaultStorageLVMSafeRemove,
-			storageProps.SafeRemove,
-		)
-		assert.Equal(
-			t,
-			storage.DefaultStorageLVMSafeRemoveThroughput,
-			storageProps.SafeRemoveThroughput,
-		)
-		assert.Equal(
-			t,
-			storage.DefaultStorageLVMTaggedOnly,
-			storageProps.TaggedOnly,
-		)
-	},
-	))
+				assert.Equal(
+					t,
+					storage.DefaultStorageLVMBaseStorage,
+					storageProps.BaseStorage,
+				)
+				assert.Equal(
+					t,
+					storage.DefaultStorageLVMSafeRemove,
+					storageProps.SafeRemove,
+				)
+				assert.Equal(
+					t,
+					storage.DefaultStorageLVMSafeRemoveThroughput,
+					storageProps.SafeRemoveThroughput,
+				)
+				assert.Equal(
+					t,
+					storage.DefaultStorageLVMTaggedOnly,
+					storageProps.TaggedOnly,
+				)
+			},
+		),
+	)
 }

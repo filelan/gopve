@@ -5,22 +5,24 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/storage"
+	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageGlusterFS(t *testing.T) {
-	props := map[string]interface{}{
+func TestStorageGlusterFSProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
 		"server":    "test_server",
 		"server2":   "test_backup",
 		"transport": "unix",
 		"volume":    "test_volume",
-	}
+	})
 
 	requiredProps := []string{"server", "volume"}
 
 	defaultProps := []string{"server2", "transport"}
 
-	factoryFunc := func(props storage.ExtraProperties) (interface{}, error) {
+	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := storage.NewStorageGlusterFSProperties(props)
 		return obj, err
 	}
@@ -41,30 +43,44 @@ func TestStorageGlusterFS(t *testing.T) {
 		})
 
 	t.Run(
-		"RequiredProperties", helperTestRequiredProperties(t, props, requiredProps, factoryFunc))
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
 
-	t.Run("DefaultProperties", helperTestOptionalProperties(t, props, defaultProps, factoryFunc, func(obj interface{}) {
-		require.IsType(t, (*storage.StorageGlusterFSProperties)(nil), obj)
-
-		storageProps := obj.(*storage.StorageGlusterFSProperties)
-
-		assert.Equal(
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
 			t,
-			storage.DefaultStorageGlusterFSBackupServer,
-			storageProps.BackupServer,
-		)
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(
+					t,
+					(*storage.StorageGlusterFSProperties)(nil),
+					obj,
+				)
 
-		assert.Equal(
-			t,
-			storage.DefaultStorageGlusterFSTransport,
-			storageProps.Transport,
-		)
-	},
-	))
+				storageProps := obj.(*storage.StorageGlusterFSProperties)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageGlusterFSBackupServer,
+					storageProps.BackupServer,
+				)
+
+				assert.Equal(
+					t,
+					storage.DefaultStorageGlusterFSTransport,
+					storageProps.Transport,
+				)
+			},
+		),
+	)
 }
 
 func TestGlusterFSTransport(t *testing.T) {
-	var GlusterFSTransportCases = map[string](struct {
+	GlusterFSTransportCases := map[string](struct {
 		Object storage.GlusterFSTransport
 		Value  string
 	}){
@@ -83,7 +99,6 @@ func TestGlusterFSTransport(t *testing.T) {
 	}
 
 	t.Run("Marshal", func(t *testing.T) {
-
 		for n, tt := range GlusterFSTransportCases {
 			tt := tt
 			t.Run(n, func(t *testing.T) {

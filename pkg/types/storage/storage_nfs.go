@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/xabinapal/gopve/internal/types"
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageNFS interface {
@@ -27,26 +29,28 @@ type StorageNFSProperties struct {
 	LocalPathCreate bool
 }
 
-func NewStorageNFSProperties(props ExtraProperties) (*StorageNFSProperties, error) {
+func NewStorageNFSProperties(
+	props types.Properties,
+) (*StorageNFSProperties, error) {
 	obj := new(StorageNFSProperties)
 
 	if v, ok := props["server"].(string); ok {
 		obj.Server = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "server")
 		return nil, err
 	}
 
 	if v, ok := props["options"].(string); ok {
-		nfsOptions := types.PVEDictionary{
+		nfsOptions := internal_types.PVEDictionary{
 			ListSeparator:     ",",
 			KeyValueSeparator: "=",
 			AllowNoValue:      true,
 		}
 
 		if err := (&nfsOptions).Unmarshal(v); err != nil {
-			err := ErrInvalidProperty
+			err := errors.ErrInvalidProperty
 			err.AddKey("name", "options")
 			err.AddKey("value", v)
 			return nil, err
@@ -58,7 +62,7 @@ func NewStorageNFSProperties(props ExtraProperties) (*StorageNFSProperties, erro
 				if err := (&nfsVersion).Unmarshal(option.Value()); err == nil {
 					obj.NFSVersion = nfsVersion
 				} else {
-					err := ErrInvalidProperty
+					err := errors.ErrInvalidProperty
 					err.AddKey("name", "options")
 					err.AddKey("value", v)
 					return nil, err
@@ -74,7 +78,7 @@ func NewStorageNFSProperties(props ExtraProperties) (*StorageNFSProperties, erro
 	if v, ok := props["export"].(string); ok {
 		obj.ServerPath = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "export")
 		return nil, err
 	}
@@ -82,13 +86,13 @@ func NewStorageNFSProperties(props ExtraProperties) (*StorageNFSProperties, erro
 	if v, ok := props["path"].(string); ok {
 		obj.LocalPath = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "path")
 		return nil, err
 	}
 
-	if v, ok := props["mkdir"].(int); ok {
-		obj.LocalPathCreate = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["mkdir"].(float64); ok {
+		obj.LocalPathCreate = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.LocalPathCreate = DefaultStorageNFSLocalPathCreate
 	}

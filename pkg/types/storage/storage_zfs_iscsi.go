@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/xabinapal/gopve/internal/types"
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageZFSOverISCSI interface {
@@ -43,13 +45,15 @@ type StorageZFSOverISCSIProperties struct {
 	LIOTargetPortalGroup string
 }
 
-func NewStorageZFSOverISCSIProperties(props ExtraProperties) (*StorageZFSOverISCSIProperties, error) {
+func NewStorageZFSOverISCSIProperties(
+	props types.Properties,
+) (*StorageZFSOverISCSIProperties, error) {
 	obj := new(StorageZFSOverISCSIProperties)
 
 	if v, ok := props["portal"].(string); ok {
 		obj.Portal = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "portal")
 		return nil, err
 	}
@@ -57,7 +61,7 @@ func NewStorageZFSOverISCSIProperties(props ExtraProperties) (*StorageZFSOverISC
 	if v, ok := props["target"].(string); ok {
 		obj.Target = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "target")
 		return nil, err
 	}
@@ -65,7 +69,7 @@ func NewStorageZFSOverISCSIProperties(props ExtraProperties) (*StorageZFSOverISC
 	if v, ok := props["pool"].(string); ok {
 		obj.PoolName = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "pool")
 		return nil, err
 	}
@@ -73,32 +77,32 @@ func NewStorageZFSOverISCSIProperties(props ExtraProperties) (*StorageZFSOverISC
 	if v, ok := props["blocksize"].(string); ok {
 		obj.BlockSize = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "blocksize")
 		return nil, err
 	}
 
-	if v, ok := props["sparse"].(int); ok {
-		obj.UseSparse = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["sparse"].(float64); ok {
+		obj.UseSparse = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.UseSparse = DefaultStorageZFSOverISCSIUseSparse
 	}
 
-	if v, ok := props["nowritecache"].(int); ok {
-		obj.WriteCache = !types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["nowritecache"].(float64); ok {
+		obj.WriteCache = !internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.WriteCache = DefaultStorageZFSOverISCSIWriteCache
 	}
 
 	if v, ok := props["iscsiprovider"].(string); ok {
 		if err := (&obj.ISCSIProvider).Unmarshal(v); err != nil {
-			err := ErrInvalidProperty
+			err := errors.ErrInvalidProperty
 			err.AddKey("name", "iscsiprovider")
 			err.AddKey("value", v)
 			return nil, err
 		}
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "iscsiprovider")
 		return nil, err
 	}
@@ -128,8 +132,8 @@ const (
 	StorageZFSOverISCSIKernelContents    = ContentQEMUData
 	StorageZFSOverISCSIKernelImageFormat = ImageFormatRaw
 	StorageZFSOverISCSIKernelShared      = AllowShareForced
-	StorageZFSOverISCSIKernelSnapshots   = AllowSnapshotNever
-	StorageZFSOverISCSIKernelClones      = AllowCloneNever
+	StorageZFSOverISCSIKernelSnapshots   = AllowSnapshotAll
+	StorageZFSOverISCSIKernelClones      = AllowCloneAll
 )
 
 const (

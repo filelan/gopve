@@ -3,6 +3,9 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageGlusterFS interface {
@@ -23,13 +26,15 @@ type StorageGlusterFSProperties struct {
 	Volume string
 }
 
-func NewStorageGlusterFSProperties(props ExtraProperties) (*StorageGlusterFSProperties, error) {
+func NewStorageGlusterFSProperties(
+	props types.Properties,
+) (*StorageGlusterFSProperties, error) {
 	obj := new(StorageGlusterFSProperties)
 
 	if v, ok := props["server"].(string); ok {
 		obj.MainServer = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "server")
 		return nil, err
 	}
@@ -42,7 +47,7 @@ func NewStorageGlusterFSProperties(props ExtraProperties) (*StorageGlusterFSProp
 
 	if v, ok := props["transport"].(string); ok {
 		if err := (&obj.Transport).Unmarshal(v); err != nil {
-			err := ErrInvalidProperty
+			err := errors.ErrInvalidProperty
 			err.AddKey("name", "transport")
 			err.AddKey("value", v)
 			return nil, err
@@ -54,7 +59,7 @@ func NewStorageGlusterFSProperties(props ExtraProperties) (*StorageGlusterFSProp
 	if v, ok := props["volume"].(string); ok {
 		obj.Volume = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "volume")
 		return nil, err
 	}

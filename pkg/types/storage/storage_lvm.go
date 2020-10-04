@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/xabinapal/gopve/internal/types"
+import (
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
 
 type StorageLVM interface {
 	Storage
@@ -29,7 +33,9 @@ type StorageLVMProperties struct {
 	TaggedOnly           bool
 }
 
-func NewStorageLVMProperties(props ExtraProperties) (*StorageLVMProperties, error) {
+func NewStorageLVMProperties(
+	props types.Properties,
+) (*StorageLVMProperties, error) {
 	obj := new(StorageLVMProperties)
 
 	if v, ok := props["base"].(string); ok {
@@ -41,25 +47,32 @@ func NewStorageLVMProperties(props ExtraProperties) (*StorageLVMProperties, erro
 	if v, ok := props["vgname"].(string); ok {
 		obj.VolumeGroup = v
 	} else {
-		err := ErrMissingProperty
+		err := errors.ErrMissingProperty
 		err.AddKey("name", "vgname")
 		return nil, err
 	}
 
-	if v, ok := props["saferemove"].(int); ok {
-		obj.SafeRemove = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["saferemove"].(float64); ok {
+		obj.SafeRemove = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.SafeRemove = DefaultStorageLVMSafeRemove
 	}
 
-	if v, ok := props["saferemove_throughput"].(int); ok {
-		obj.SafeRemoveThroughput = v
+	if v, ok := props["saferemove_throughput"].(float64); ok {
+		if v == float64(int(v)) {
+			obj.SafeRemoveThroughput = int(v)
+		} else {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", "saferemove_throughput")
+			err.AddKey("value", v)
+			return nil, err
+		}
 	} else {
 		obj.SafeRemoveThroughput = DefaultStorageLVMSafeRemoveThroughput
 	}
 
-	if v, ok := props["tagged_only"].(int); ok {
-		obj.TaggedOnly = types.NewPVEBoolFromInt(v).Bool()
+	if v, ok := props["tagged_only"].(float64); ok {
+		obj.TaggedOnly = internal_types.NewPVEBoolFromFloat64(v).Bool()
 	} else {
 		obj.SafeRemove = DefaultStorageLVMTaggedOnly
 	}
