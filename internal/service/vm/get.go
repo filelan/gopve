@@ -153,36 +153,29 @@ func (svc *Service) Get(vmid uint) (vm.VirtualMachine, error) {
 
 	for _, virtualMachine := range vms {
 		if virtualMachine.VMID() == vmid {
+			var res getResponseJSON
+
 			switch virtualMachine.Kind() {
 			case vm.KindQEMU:
-				var res getResponseJSON
 				if err := svc.client.Request(http.MethodGet, fmt.Sprintf("nodes/%s/qemu/%d/config", virtualMachine.Node(), virtualMachine.VMID()), nil, &res); err != nil {
 					return nil, err
 				}
 
-				return res.Map(
-					svc,
-					virtualMachine.VMID(),
-					vm.KindQEMU,
-					virtualMachine.Node(),
-				)
-
 			case vm.KindLXC:
-				var res getResponseJSON
 				if err := svc.client.Request(http.MethodGet, fmt.Sprintf("nodes/%s/lxc/%d/config", virtualMachine.Node(), virtualMachine.VMID()), nil, &res); err != nil {
 					return nil, err
 				}
 
-				return res.Map(
-					svc,
-					virtualMachine.VMID(),
-					vm.KindLXC,
-					virtualMachine.Node(),
-				)
-
 			default:
 				panic("This should never happen")
 			}
+
+			return res.Map(
+				svc,
+				virtualMachine.VMID(),
+				virtualMachine.Kind(),
+				virtualMachine.Node(),
+			)
 		}
 	}
 

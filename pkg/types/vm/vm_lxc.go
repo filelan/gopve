@@ -5,7 +5,6 @@ import (
 
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type LXCVirtualMachine interface {
@@ -104,7 +103,7 @@ type LXCCPUProperties struct {
 
 const (
 	mkLXCCPUPropertyCores = "cores"
-	mkLXCCPUPropertLimit  = "cpulimit"
+	mkLXCCPUPropertyLimit = "cpulimit"
 	mkLXCCPUPropertyUnits = "cpuunits"
 
 	DefaultLXCCPUPropertyLimit uint = 0
@@ -114,45 +113,22 @@ const (
 func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
 	obj := new(LXCCPUProperties)
 
-	if v, ok := props[mkLXCCPUPropertyCores].(float64); ok {
-		if v != float64(int(v)) || v < 0 || v > 128 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkLXCCPUPropertyCores)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.Cores = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkLXCCPUPropertyCores)
+	if err := props.SetRequiredUint(mkLXCCPUPropertyCores, &obj.Cores, func(v uint) bool {
+		return v <= 128
+	}); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props[mkLXCCPUPropertLimit].(float64); ok {
-		if v != float64(int(v)) || v < 8 || v > 128 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkLXCCPUPropertLimit)
-			err.AddKey("value", v)
-			return nil, err
-		} else {
-			obj.Limit = uint(v)
-		}
-	} else {
-		obj.Limit = DefaultLXCCPUPropertyLimit
+	if err := props.SetUint(mkLXCCPUPropertyLimit, &obj.Limit, DefaultLXCCPUPropertyLimit, func(v uint) bool {
+		return v <= 128
+	}); err != nil {
+		return nil, err
 	}
 
-	if v, ok := props[mkLXCCPUPropertyUnits].(float64); ok {
-		if v != float64(int(v)) || v < 8 || v > 500000 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkLXCCPUPropertyUnits)
-			err.AddKey("value", v)
-			return nil, err
-		} else {
-			obj.Units = uint(v)
-		}
-	} else {
-		obj.Units = DefaultLXCCPUPropertyUnits
+	if err := props.SetUint(mkLXCCPUPropertyUnits, &obj.Units, DefaultLXCCPUPropertyUnits, func(v uint) bool {
+		return v >= 8 && v <= 500000
+	}); err != nil {
+		return nil, err
 	}
 
 	return obj, nil
@@ -193,7 +169,7 @@ type LXCMemoryProperties struct {
 
 const (
 	mkLXCMemoryPropertyMemory = "memory"
-	mkLXCMemoryPropertSwap    = "swap"
+	mkLXCMemoryPropertySwap   = "swap"
 )
 
 func NewLXCMemoryProperties(
@@ -201,33 +177,11 @@ func NewLXCMemoryProperties(
 ) (*LXCMemoryProperties, error) {
 	obj := new(LXCMemoryProperties)
 
-	if v, ok := props[mkQEMUMemoryPropertyMemory].(float64); ok {
-		if v != float64(int(v)) || v < 0 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUMemoryPropertyMemory)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.Memory = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkQEMUMemoryPropertyMemory)
+	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props[mkLXCMemoryPropertSwap].(float64); ok {
-		if v != float64(int(v)) || v < 0 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkLXCMemoryPropertSwap)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.Swap = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkLXCMemoryPropertSwap)
+	if err := props.SetRequiredUint(mkLXCMemoryPropertySwap, &obj.Swap, nil); err != nil {
 		return nil, err
 	}
 

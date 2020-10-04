@@ -2,9 +2,7 @@ package vm
 
 import (
 	"fmt"
-	"strconv"
 
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
@@ -39,7 +37,19 @@ func (obj QEMUCreateOptions) MapToValues() (request.Values, error) {
 type QEMUProperties struct {
 	CPU    QEMUCPUProperties
 	Memory QEMUMemoryProperties
+
+	Protected bool
+
+	StartAtBoot bool
 }
+
+const (
+	mkQEMUPropertyProtected   = "protection"
+	mkQEMUPropertyStartAtBoot = "onboot"
+
+	DefaultQEMUPropertyProtected   bool = false
+	DefaultQEMUPropertyStartAtBoot bool = false
+)
 
 func NewQEMUProperties(props types.Properties) (*QEMUProperties, error) {
 	obj := new(QEMUProperties)
@@ -54,6 +64,14 @@ func NewQEMUProperties(props types.Properties) (*QEMUProperties, error) {
 		return nil, err
 	} else {
 		obj.Memory = *v
+	}
+
+	if err := props.SetBool(mkQEMUPropertyProtected, &obj.Protected, DefaultQEMUPropertyProtected, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkQEMUPropertyStartAtBoot, &obj.Protected, DefaultQEMUPropertyStartAtBoot, nil); err != nil {
+		return nil, err
 	}
 
 	return obj, nil
@@ -101,7 +119,7 @@ const (
 	mkQEMUCPUPropertySockets = "sockets"
 	mkQEMUCPUPropertyCores   = "cores"
 	mkQEMUCPUPropertyVCPUs   = "vcpus"
-	mkQEMUCPUPropertLimit    = "cpulimit"
+	mkQEMUCPUPropertyLimit   = "cpulimit"
 	mkQEMUCPUPropertyUnits   = "cpuunits"
 
 	mkQEMUCPUPropertyNUMA            = "numa"
@@ -117,92 +135,42 @@ const (
 func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 	obj := new(QEMUCPUProperties)
 
-	if v, ok := props[mkQEMUCPUPropertySockets].(float64); ok {
-		if v != float64(int(v)) || v < 0 || v > 4 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUCPUPropertySockets)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.Sockets = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkQEMUCPUPropertySockets)
+	if err := props.SetRequiredUint(mkQEMUCPUPropertySockets, &obj.Sockets, func(v uint) bool {
+		return v <= 4
+	}); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props[mkQEMUCPUPropertyCores].(float64); ok {
-		if v != float64(int(v)) || v < 0 || v > 128 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUCPUPropertyCores)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.Cores = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkQEMUCPUPropertyCores)
+	if err := props.SetRequiredUint(mkQEMUCPUPropertyCores, &obj.Cores, func(v uint) bool {
+		return v <= 128
+	}); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props[mkQEMUCPUPropertyVCPUs].(float64); ok {
-		if v != float64(int(v)) || v < 0 || uint(v) > obj.Sockets*obj.Cores {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUCPUPropertyVCPUs)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.VCPUs = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkQEMUCPUPropertyVCPUs)
+	if err := props.SetRequiredUint(mkQEMUCPUPropertyVCPUs, &obj.VCPUs, func(v uint) bool {
+		return v <= obj.Sockets*obj.Cores
+	}); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props[mkQEMUCPUPropertLimit].(string); ok {
-		if v == "" {
-			obj.Limit = DefaultQEMUCPUPropertyLimit
-		} else {
-			limit, err := strconv.Atoi(v)
-			if err != nil || limit < 0 || limit > 128 {
-				err := errors.ErrInvalidProperty
-				err.AddKey("name", mkQEMUCPUPropertLimit)
-				err.AddKey("value", v)
-				return nil, err
-			} else {
-				obj.Limit = uint(limit)
-			}
-		}
-	} else {
-		obj.Limit = DefaultQEMUCPUPropertyLimit
+	if err := props.SetUintFromString(mkQEMUCPUPropertyLimit, &obj.Limit, DefaultQEMUCPUPropertyLimit, func(v uint) bool {
+		return v <= 128
+	}); err != nil {
+		return nil, err
 	}
 
-	if v, ok := props[mkQEMUCPUPropertyUnits].(float64); ok {
-		if v != float64(int(v)) || v < 8 || v > 500000 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUCPUPropertyUnits)
-			err.AddKey("value", v)
-			return nil, err
-		} else {
-			obj.Units = uint(v)
-		}
-	} else {
-		obj.Units = DefaultQEMUCPUPropertyUnits
+	if err := props.SetUint(mkQEMUCPUPropertyUnits, &obj.Units, DefaultQEMUCPUPropertyUnits, func(v uint) bool {
+		return v >= 8 && v <= 500000
+	}); err != nil {
+		return nil, err
 	}
 
-	if v, ok := props[mkQEMUCPUPropertyNUMA].(float64); ok {
-		obj.NUMA = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.NUMA = DefaultQEMUCPUPropertyNUMA
+	if err := props.SetBool(mkQEMUCPUPropertyNUMA, &obj.NUMA, DefaultQEMUCPUPropertyNUMA, nil); err != nil {
+		return nil, err
 	}
 
-	if v, ok := props[mkQEMUCPUPropertyFreezeAtStartup].(float64); ok {
-		obj.FreezeAtStartup = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.FreezeAtStartup = DefaultQEMUCPUPropertyFreezeAtStartup
+	if err := props.SetBool(mkQEMUCPUPropertyFreezeAtStartup, &obj.FreezeAtStartup, DefaultQEMUCPUPropertyFreezeAtStartup, nil); err != nil {
+		return nil, err
 	}
 
 	return obj, nil
@@ -277,18 +245,9 @@ func NewQEMUMemoryProperties(
 ) (*QEMUMemoryProperties, error) {
 	obj := new(QEMUMemoryProperties)
 
-	if v, ok := props[mkQEMUMemoryPropertyMemory].(float64); ok {
-		if v != float64(int(v)) || v < 0 || v > 4178944 {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUMemoryPropertyMemory)
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.Memory = uint(v)
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", mkQEMUMemoryPropertyMemory)
+	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, func(v uint) bool {
+		return v <= 4178944
+	}); err != nil {
 		return nil, err
 	}
 
