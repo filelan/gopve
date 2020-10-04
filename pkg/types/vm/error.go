@@ -3,6 +3,8 @@ package vm
 import "github.com/xabinapal/gopve/pkg/types/errors"
 
 const (
+	ErrInvalidKind = errors.ClientError("unsupported kind type")
+
 	ErrNotFound = errors.ClientError("404 - virtual machine not found!")
 
 	ErrNoSnapshot         = errors.ClientError("500 - snapshot not found!")

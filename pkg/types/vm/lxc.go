@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/xabinapal/gopve/pkg/request"
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type LXCVirtualMachine interface {
@@ -12,8 +14,8 @@ type LXCVirtualMachine interface {
 	CPU() (LXCCPUProperties, error)
 	Memory() (LXCMemoryProperties, error)
 
-	GetProperties() (LXCProperties, error)
-	SetProperties(props LXCProperties) error
+	GetLXCProperties() (LXCProperties, error)
+	SetLXCProperties(props LXCProperties) error
 }
 
 type LXCCreateOptions struct {
@@ -41,9 +43,6 @@ func (obj LXCCreateOptions) MapToValues() (request.Values, error) {
 }
 
 type LXCProperties struct {
-	Name        string
-	Description string
-
 	CPU    LXCCPUProperties
 	Memory LXCMemoryProperties
 
@@ -51,15 +50,26 @@ type LXCProperties struct {
 	RootFSSize    uint
 }
 
+func NewLXCProperties(props types.Properties) (*LXCProperties, error) {
+	obj := new(LXCProperties)
+
+	if v, err := NewLXCCPUProperties(props); err != nil {
+		return nil, err
+	} else {
+		obj.CPU = *v
+	}
+
+	if v, err := NewLXCMemoryProperties(props); err != nil {
+		return nil, err
+	} else {
+		obj.Memory = *v
+	}
+
+	return obj, nil
+}
+
 func (obj LXCProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
-
-	values.ConditionalAddString("hostname", obj.Name, obj.Name != "")
-	values.ConditionalAddString(
-		"description",
-		obj.Description,
-		obj.Description != "",
-	)
 
 	values.AddString(
 		"rootfs",
@@ -90,6 +100,62 @@ type LXCCPUProperties struct {
 
 	Limit uint
 	Units uint
+}
+
+const (
+	mkLXCCPUPropertyCores = "cores"
+	mkLXCCPUPropertLimit  = "cpulimit"
+	mkLXCCPUPropertyUnits = "cpuunits"
+
+	DefaultLXCCPUPropertyLimit uint = 0
+	DefaultLXCCPUPropertyUnits uint = 1024
+)
+
+func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
+	obj := new(LXCCPUProperties)
+
+	if v, ok := props[mkLXCCPUPropertyCores].(float64); ok {
+		if v != float64(int(v)) || v < 0 || v > 128 {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkLXCCPUPropertyCores)
+			err.AddKey("value", v)
+			return nil, err
+		}
+
+		obj.Cores = uint(v)
+	} else {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", mkLXCCPUPropertyCores)
+		return nil, err
+	}
+
+	if v, ok := props[mkLXCCPUPropertLimit].(float64); ok {
+		if v != float64(int(v)) || v < 8 || v > 128 {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkLXCCPUPropertLimit)
+			err.AddKey("value", v)
+			return nil, err
+		} else {
+			obj.Limit = uint(v)
+		}
+	} else {
+		obj.Limit = DefaultLXCCPUPropertyLimit
+	}
+
+	if v, ok := props[mkLXCCPUPropertyUnits].(float64); ok {
+		if v != float64(int(v)) || v < 8 || v > 500000 {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkLXCCPUPropertyUnits)
+			err.AddKey("value", v)
+			return nil, err
+		} else {
+			obj.Units = uint(v)
+		}
+	} else {
+		obj.Units = DefaultLXCCPUPropertyUnits
+	}
+
+	return obj, nil
 }
 
 func (obj LXCCPUProperties) MapToValues() (request.Values, error) {
@@ -123,6 +189,49 @@ func (obj LXCCPUProperties) MapToValues() (request.Values, error) {
 type LXCMemoryProperties struct {
 	Memory uint
 	Swap   uint
+}
+
+const (
+	mkLXCMemoryPropertyMemory = "memory"
+	mkLXCMemoryPropertSwap    = "swap"
+)
+
+func NewLXCMemoryProperties(
+	props types.Properties,
+) (*LXCMemoryProperties, error) {
+	obj := new(LXCMemoryProperties)
+
+	if v, ok := props[mkQEMUMemoryPropertyMemory].(float64); ok {
+		if v != float64(int(v)) || v < 0 {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkQEMUMemoryPropertyMemory)
+			err.AddKey("value", v)
+			return nil, err
+		}
+
+		obj.Memory = uint(v)
+	} else {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", mkQEMUMemoryPropertyMemory)
+		return nil, err
+	}
+
+	if v, ok := props[mkLXCMemoryPropertSwap].(float64); ok {
+		if v != float64(int(v)) || v < 0 {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkLXCMemoryPropertSwap)
+			err.AddKey("value", v)
+			return nil, err
+		}
+
+		obj.Swap = uint(v)
+	} else {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", mkLXCMemoryPropertSwap)
+		return nil, err
+	}
+
+	return obj, nil
 }
 
 func (obj LXCMemoryProperties) MapToValues() (request.Values, error) {

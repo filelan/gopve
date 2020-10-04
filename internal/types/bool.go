@@ -1,12 +1,21 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 )
 
 type PVEBool bool
 
 func NewPVEBoolFromInt(x int) PVEBool {
+	if x == 0 {
+		return PVEBool(false)
+	}
+
+	return PVEBool(true)
+}
+
+func NewPVEBoolFromFloat64(x float64) PVEBool {
 	if x == 0 {
 		return PVEBool(false)
 	}
@@ -27,17 +36,13 @@ func (obj PVEBool) Bool() bool {
 }
 
 func (obj *PVEBool) UnmarshalJSON(b []byte) error {
-	if len(b) == 1 {
-		var val PVEBool
-		if b[0] == byte('0') {
-			val = PVEBool(false)
-		} else {
-			val = PVEBool(true)
-		}
-
-		*obj = val
-		return nil
+	if bytes.Equal(b, []byte("1")) {
+		*obj = PVEBool(true)
+	} else if bytes.Equal(b, []byte("0")) || bytes.Equal(b, []byte("\"\"")) {
+		*obj = PVEBool(false)
+	} else {
+		return fmt.Errorf("unknown boolean value %s", string(b))
 	}
 
-	return fmt.Errorf("can't unmarshal")
+	return nil
 }

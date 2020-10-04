@@ -4,156 +4,132 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/xabinapal/gopve/internal/client"
-	"github.com/xabinapal/gopve/pkg/types/node"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
-type Service struct {
-	client client.Client
-	api    client.API
-}
-
-func NewService(cli client.Client, api client.API) *Service {
-	return &Service{
-		client: cli,
-		api:    api,
-	}
-}
-
 type VirtualMachine struct {
-	svc  *Service
-	full bool
+	svc *Service
 
+	vmid uint
 	kind vm.Kind
-
 	node string
 
-	vmid        uint
-	name        string
-	description string
-	isTemplate  bool
+	isTemplate bool
+
+	props *vm.Properties
 }
 
 func NewVirtualMachine(
 	svc *Service,
-	node string,
-	kind vm.Kind,
 	vmid uint,
+	kind vm.Kind,
+	node string,
+	isTemplate bool,
+	props *vm.Properties,
 ) *VirtualMachine {
 	return &VirtualMachine{
-		svc:  svc,
-		node: node,
-		kind: kind,
-		vmid: vmid,
+		svc:        svc,
+		vmid:       vmid,
+		kind:       kind,
+		node:       node,
+		isTemplate: isTemplate,
+		props:      props,
 	}
 }
 
-type QEMUVirtualMachine struct {
-	VirtualMachine
-
-	cpu    vm.QEMUCPUProperties
-	memory vm.QEMUMemoryProperties
-}
-
-func NewQEMU(svc *Service, node string, vmid uint) *QEMUVirtualMachine {
-	return &QEMUVirtualMachine{
-		VirtualMachine: VirtualMachine{
-			svc:  svc,
-			kind: vm.KindQEMU,
-			node: node,
-			vmid: vmid,
-		},
+func NewDynamicVirtualMachine(
+	svc *Service,
+	vmid uint,
+	kind vm.Kind,
+	node string,
+	isTemplate bool,
+	props *vm.Properties,
+	extraProps types.Properties,
+) (vm.VirtualMachine, error) {
+	obj := NewVirtualMachine(svc, vmid, kind, node, isTemplate, props)
+	switch kind {
+	case vm.KindQEMU:
+		return NewQEMU(*obj, extraProps)
+	case vm.KindLXC:
+		return NewLXC(*obj, extraProps)
+	default:
+		return nil, vm.ErrInvalidKind
 	}
 }
 
-func (obj *QEMUVirtualMachine) Load() error {
-	if obj.full {
+func (this *VirtualMachine) Load() error {
+	if this.props != nil {
 		return nil
 	}
 
-	vm, err := obj.svc.Get(obj.vmid)
+	obj, err := this.svc.Get(this.vmid)
 	if err != nil {
 		return err
 	}
 
-	switch x := vm.(type) {
-	case *QEMUVirtualMachine:
-		*obj = *x
-	default:
-		panic(fmt.Sprintf("This should never happen: %s", err.Error()))
-	}
-
-	return nil
-}
-
-type LXCVirtualMachine struct {
-	VirtualMachine
-
-	cpu    vm.LXCCPUProperties
-	memory vm.LXCMemoryProperties
-}
-
-func NewLXC(svc *Service, node string, vmid uint) *LXCVirtualMachine {
-	return &LXCVirtualMachine{
-		VirtualMachine: VirtualMachine{
-			svc:  svc,
-			kind: vm.KindLXC,
-			node: node,
-			vmid: vmid,
-		},
-	}
-}
-
-func (obj *LXCVirtualMachine) Load() error {
-	if obj.full {
-		return nil
-	}
-
-	vm, err := obj.svc.Get(obj.vmid)
+	props, err := obj.GetProperties()
 	if err != nil {
-		return err
+		panic("this should never happen")
 	}
 
-	switch x := vm.(type) {
-	case *LXCVirtualMachine:
-		*obj = *x
-	default:
-		panic(fmt.Sprintf("This should never happen: %s", err.Error()))
-	}
+	this.props = &props
 
 	return nil
 }
 
-func (vm *VirtualMachine) Kind() vm.Kind {
-	return vm.kind
+func (obj *VirtualMachine) VMID() uint {
+	return obj.vmid
 }
 
-func (vm *VirtualMachine) GetNode() (node.Node, error) {
-	return vm.svc.api.Node().Get(vm.node)
+func (obj *VirtualMachine) Kind() vm.Kind {
+	return obj.kind
 }
 
-func (vm *VirtualMachine) Node() string {
-	return vm.node
+func (obj *VirtualMachine) Node() string {
+	return obj.node
 }
 
-func (vm *VirtualMachine) VMID() uint {
-	return vm.vmid
+func (obj *VirtualMachine) IsTemplate() bool {
+	return obj.isTemplate
 }
 
-func (vm *VirtualMachine) Name() string {
-	return vm.name
+func (this *VirtualMachine) GetProperties() (vm.Properties, error) {
+	if err := this.Load(); err != nil {
+		return vm.Properties{}, err
+	}
+
+	return *this.props, nil
 }
 
-func (vm *VirtualMachine) Description() string {
-	return vm.description
+func (this *VirtualMachine) Name() (string, error) {
+	props, err := this.GetProperties()
+	if err != nil {
+		return "", err
+	}
+
+	return props.Name, nil
 }
 
-func (vm *VirtualMachine) IsTemplate() bool {
-	return vm.isTemplate
+func (this *VirtualMachine) Description() (string, error) {
+	props, err := this.GetProperties()
+	if err != nil {
+		return "", err
+	}
+
+	return props.Description, nil
 }
 
-func (obj *VirtualMachine) Status() (vm.Status, error) {
+func (this *VirtualMachine) Digest() (string, error) {
+	props, err := this.GetProperties()
+	if err != nil {
+		return "", err
+	}
+
+	return props.Digest, nil
+}
+
+func (obj *VirtualMachine) GetStatus() (vm.Status, error) {
 	var res struct {
 		Status vm.Status `json:"status"`
 	}
@@ -170,7 +146,7 @@ func (obj *VirtualMachine) Status() (vm.Status, error) {
 }
 
 func (obj *VirtualMachine) ConvertToTemplate() error {
-	return obj.svc.client.Request(
+	if err := obj.svc.client.Request(
 		http.MethodPost,
 		fmt.Sprintf(
 			"node/%s/%s/%d/template",
@@ -180,40 +156,81 @@ func (obj *VirtualMachine) ConvertToTemplate() error {
 		),
 		nil,
 		nil,
-	)
-}
-
-func (obj *QEMUVirtualMachine) CPU() (vm.QEMUCPUProperties, error) {
-	if err := obj.Load(); err != nil {
-		return vm.QEMUCPUProperties{}, err
+	); err != nil {
+		return err
 	}
 
-	return obj.cpu, nil
+	obj.isTemplate = true
+	return nil
 }
 
-func (obj *QEMUVirtualMachine) Memory() (vm.QEMUMemoryProperties, error) {
-	if err := obj.Load(); err != nil {
-		return vm.QEMUMemoryProperties{}, err
+type QEMUVirtualMachine struct {
+	VirtualMachine
+	props *vm.QEMUProperties
+}
+
+func NewQEMU(
+	obj VirtualMachine,
+	extraProps types.Properties,
+) (*QEMUVirtualMachine, error) {
+	qemuObj := &QEMUVirtualMachine{
+		VirtualMachine: obj,
 	}
 
-	return obj.memory, nil
+	if extraProps != nil {
+		props, err := vm.NewQEMUProperties(extraProps)
+		if err != nil {
+			return nil, err
+		}
+
+		qemuObj.props = props
+	}
+
+	return qemuObj, nil
 }
 
-func (obj *QEMUVirtualMachine) GetProperties() (vm.QEMUProperties, error) {
+func (this *QEMUVirtualMachine) Load() error {
+	if this.props != nil {
+		return nil
+	}
+
+	obj, err := this.svc.Get(this.vmid)
+	if err != nil {
+		return err
+	}
+
+	qemuObj, ok := obj.(*QEMUVirtualMachine)
+	if !ok {
+		return fmt.Errorf("invalid kind")
+	}
+
+	props, err := qemuObj.GetProperties()
+	if err != nil {
+		panic("this should never happen")
+	}
+
+	qemuProps, err := qemuObj.GetQEMUProperties()
+	if err != nil {
+		panic("this should never happen")
+	}
+
+	this.VirtualMachine.props = &props
+	this.props = &qemuProps
+
+	return nil
+}
+
+func (obj *QEMUVirtualMachine) GetQEMUProperties() (vm.QEMUProperties, error) {
 	if err := obj.Load(); err != nil {
 		return vm.QEMUProperties{}, err
 	}
 
-	return vm.QEMUProperties{
-		Name:        obj.name,
-		Description: obj.description,
-
-		CPU:    obj.cpu,
-		Memory: obj.memory,
-	}, nil
+	return *obj.props, nil
 }
 
-func (obj *QEMUVirtualMachine) SetProperties(props vm.QEMUProperties) error {
+func (obj *QEMUVirtualMachine) SetQEMUProperties(
+	props vm.QEMUProperties,
+) error {
 	form, err := props.MapToValues()
 	if err != nil {
 		return err
@@ -222,6 +239,106 @@ func (obj *QEMUVirtualMachine) SetProperties(props vm.QEMUProperties) error {
 	if err := obj.svc.client.Request(http.MethodPost, fmt.Sprintf("node/%s/qemu/%d/config", obj.node, obj.vmid), form, nil); err != nil {
 		return err
 	}
+
+	obj.props = &props
+
+	return nil
+}
+
+func (obj *QEMUVirtualMachine) CPU() (vm.QEMUCPUProperties, error) {
+	if err := obj.Load(); err != nil {
+		return vm.QEMUCPUProperties{}, err
+	}
+
+	return obj.props.CPU, nil
+}
+
+func (obj *QEMUVirtualMachine) Memory() (vm.QEMUMemoryProperties, error) {
+	if err := obj.Load(); err != nil {
+		return vm.QEMUMemoryProperties{}, err
+	}
+
+	return obj.props.Memory, nil
+}
+
+type LXCVirtualMachine struct {
+	VirtualMachine
+	props *vm.LXCProperties
+
+	cpu    vm.LXCCPUProperties
+	memory vm.LXCMemoryProperties
+}
+
+func NewLXC(
+	obj VirtualMachine,
+	extraProps types.Properties,
+) (*LXCVirtualMachine, error) {
+	lxcObj := &LXCVirtualMachine{
+		VirtualMachine: obj,
+	}
+
+	if extraProps != nil {
+		props, err := vm.NewLXCProperties(extraProps)
+		if err != nil {
+			return nil, err
+		}
+
+		lxcObj.props = props
+	}
+
+	return lxcObj, nil
+}
+
+func (this *LXCVirtualMachine) Load() error {
+	if this.props != nil {
+		return nil
+	}
+
+	obj, err := this.svc.Get(this.vmid)
+	if err != nil {
+		return err
+	}
+
+	lxcObj, ok := obj.(*LXCVirtualMachine)
+	if !ok {
+		return fmt.Errorf("invalid kind")
+	}
+
+	props, err := lxcObj.GetProperties()
+	if err != nil {
+		panic("this should never happen")
+	}
+
+	lxcProps, err := lxcObj.GetLXCProperties()
+	if err != nil {
+		panic("this should never happen")
+	}
+
+	this.VirtualMachine.props = &props
+	this.props = &lxcProps
+
+	return nil
+}
+
+func (obj *LXCVirtualMachine) GetLXCProperties() (vm.LXCProperties, error) {
+	if err := obj.Load(); err != nil {
+		return vm.LXCProperties{}, err
+	}
+
+	return *obj.props, nil
+}
+
+func (obj *LXCVirtualMachine) SetLXCProperties(props vm.LXCProperties) error {
+	form, err := props.MapToValues()
+	if err != nil {
+		return err
+	}
+
+	if err := obj.svc.client.Request(http.MethodPost, fmt.Sprintf("node/%s/lxcqemu/%d/config", obj.node, obj.vmid), form, nil); err != nil {
+		return err
+	}
+
+	obj.props = &props
 
 	return nil
 }
@@ -240,33 +357,6 @@ func (obj *LXCVirtualMachine) Memory() (vm.LXCMemoryProperties, error) {
 	}
 
 	return obj.memory, nil
-}
-
-func (obj *LXCVirtualMachine) GetProperties() (vm.LXCProperties, error) {
-	if err := obj.Load(); err != nil {
-		return vm.LXCProperties{}, err
-	}
-
-	return vm.LXCProperties{
-		Name:        obj.name,
-		Description: obj.description,
-
-		CPU:    obj.cpu,
-		Memory: obj.memory,
-	}, nil
-}
-
-func (obj *LXCVirtualMachine) SetProperties(props vm.LXCProperties) error {
-	form, err := props.MapToValues()
-	if err != nil {
-		return err
-	}
-
-	if err := obj.svc.client.Request(http.MethodPost, fmt.Sprintf("node/%s/lxc/%d/config", obj.node, obj.vmid), form, nil); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (virtualMachine *VirtualMachine) getHighAvailabilitySID() string {

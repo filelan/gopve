@@ -2,22 +2,23 @@ package vm
 
 import (
 	"github.com/xabinapal/gopve/pkg/types/firewall"
-	"github.com/xabinapal/gopve/pkg/types/node"
 	"github.com/xabinapal/gopve/pkg/types/task"
 )
 
 type VirtualMachine interface {
-	Kind() Kind
-
-	Node() string
-	GetNode() (node.Node, error)
-
 	VMID() uint
-	Name() string
-	Description() string
+	Kind() Kind
+	Node() string
 	IsTemplate() bool
 
-	Status() (Status, error)
+	GetProperties() (Properties, error)
+
+	Name() (string, error)
+	Description() (string, error)
+
+	Digest() (string, error)
+
+	GetStatus() (Status, error)
 
 	Clone(options CloneOptions) (task.Task, error)
 
@@ -53,4 +54,11 @@ type VirtualMachine interface {
 	EditFirewallRule(pos uint, rule firewall.Rule) error
 	MoveFirewallRule(pos uint, newpos uint) error
 	DeleteFirewallRule(pos uint, digest string) error
+}
+
+type Properties struct {
+	Name        string
+	Description string
+
+	Digest string
 }
