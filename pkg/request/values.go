@@ -5,16 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/xabinapal/gopve/internal/types"
+	internal_types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/pkg/types"
 )
-
-type Marshaler interface {
-	Marshal() (string, error)
-}
-
-type Unmarshaler interface {
-	Unmarshal(s string) error
-}
 
 type Values url.Values
 
@@ -31,14 +24,14 @@ func (v Values) AddUint(k string, u uint) {
 }
 
 func (v Values) AddBool(k string, b bool) {
-	v[k] = []string{types.PVEBool(b).String()}
+	v[k] = []string{internal_types.PVEBool(b).String()}
 }
 
 func (v Values) AddTime(k string, t time.Time) {
 	v[k] = []string{t.Format("2006-01-02 15:04:05")}
 }
 
-func (v Values) AddObject(k string, o Marshaler) error {
+func (v Values) AddObject(k string, o types.Marshaler) error {
 	val, err := o.Marshal()
 	if err != nil {
 		return err
@@ -79,7 +72,7 @@ func (v Values) ConditionalAddTime(k string, t time.Time, cond bool) {
 	}
 }
 
-func (v Values) ConditionalAddObject(k string, t Marshaler, cond bool) {
+func (v Values) ConditionalAddObject(k string, t types.Marshaler, cond bool) {
 	if cond {
 		v.AddObject(k, t)
 	}

@@ -3,7 +3,7 @@ package types
 import (
 	"strconv"
 
-	"github.com/xabinapal/gopve/internal/types"
+	types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
@@ -143,6 +143,47 @@ func (props Properties) SetRequiredBool(
 		}
 
 		*ptr = types.NewPVEBoolFromFloat64(v).Bool()
+	} else {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", key)
+		return err
+	}
+
+	return nil
+}
+
+func (props Properties) SetObject(
+	key string,
+	ptr Unmarshaler,
+	def Unmarshaler,
+	validate func(Unmarshaler) bool,
+) error {
+	if v, ok := props[key].(string); ok {
+		if err := ptr.Unmarshal(v); err != nil {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", key)
+			err.AddKey("value", v)
+			return err
+		}
+	} else {
+		ptr = def
+	}
+
+	return nil
+}
+
+func (props Properties) SetRequiredObject(
+	key string,
+	ptr Unmarshaler,
+	validate func(Unmarshaler) bool,
+) error {
+	if v, ok := props[key].(string); ok {
+		if err := ptr.Unmarshal(v); err != nil {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", key)
+			err.AddKey("value", v)
+			return err
+		}
 	} else {
 		err := errors.ErrMissingProperty
 		err.AddKey("name", key)
