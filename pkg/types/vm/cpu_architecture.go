@@ -2,38 +2,35 @@ package vm
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-type QEMUCPUArchitecture uint
+type QEMUCPUArchitecture string
 
 const (
-	QEMUCPUArchitectureHost QEMUCPUArchitecture = iota
-	QEMUCPUArchitectureX86_64
-	QEMUCPUArchitectureAArch64
+	QEMUCPUArchitectureHost    QEMUCPUArchitecture = ""
+	QEMUCPUArchitectureX86_64  QEMUCPUArchitecture = "x86_64"
+	QEMUCPUArchitectureAArch64 QEMUCPUArchitecture = "aarch64"
 )
 
-func (obj QEMUCPUArchitecture) Marshal() (string, error) {
+func (obj QEMUCPUArchitecture) IsValid() bool {
 	switch obj {
-	case QEMUCPUArchitectureX86_64:
-		return "x86_64", nil
-	case QEMUCPUArchitectureAArch64:
-		return "aarch64", nil
+	case QEMUCPUArchitectureHost, QEMUCPUArchitectureX86_64, QEMUCPUArchitectureAArch64:
+		return true
 	default:
-		return "", fmt.Errorf("unknown qemu cpu architecture")
+		return false
 	}
 }
 
-func (obj *QEMUCPUArchitecture) Unmarshal(s string) error {
-	switch s {
-	case "x86_64":
-		*obj = QEMUCPUArchitectureX86_64
-	case "aarch64":
-		*obj = QEMUCPUArchitectureAArch64
-	default:
-		return fmt.Errorf("can't unmarshal qemu cpu architecture %s", s)
-	}
+func (obj QEMUCPUArchitecture) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj QEMUCPUArchitecture) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *QEMUCPUArchitecture) Unmarshal(s string) error {
+	*obj = QEMUCPUArchitecture(s)
 	return nil
 }
 
@@ -46,45 +43,34 @@ func (obj *QEMUCPUArchitecture) UnmarshalJSON(b []byte) error {
 	return obj.Unmarshal(s)
 }
 
-type LXCCPUArchitecture uint
+type LXCCPUArchitecture string
 
 const (
-	LXCCPUArchitectureOther LXCCPUArchitecture = iota
-	LXCCPUArchitectureAMD64
-	LXCCPUArchitectureI386
-	LXCCPUArchitectureARM64
-	LXCCPUArchitectureARMHF
+	LXCCPUArchitectureAMD64 LXCCPUArchitecture = "amd64"
+	LXCCPUArchitectureI386  LXCCPUArchitecture = "i386"
+	LXCCPUArchitectureARM64 LXCCPUArchitecture = "arm64"
+	LXCCPUArchitectureARMHF LXCCPUArchitecture = "armhf"
 )
 
-func (obj LXCCPUArchitecture) Marshal() (string, error) {
+func (obj LXCCPUArchitecture) IsValid() bool {
 	switch obj {
-	case LXCCPUArchitectureAMD64:
-		return "amd64", nil
-	case LXCCPUArchitectureI386:
-		return "i386", nil
-	case LXCCPUArchitectureARM64:
-		return "arm64", nil
-	case LXCCPUArchitectureARMHF:
-		return "armhf", nil
+	case LXCCPUArchitectureAMD64, LXCCPUArchitectureI386, LXCCPUArchitectureARM64, LXCCPUArchitectureARMHF:
+		return true
 	default:
-		return "", fmt.Errorf("unknown lxc cpu architecture")
+		return false
 	}
 }
 
-func (obj *LXCCPUArchitecture) Unmarshal(s string) error {
-	switch s {
-	case "amd64":
-		*obj = LXCCPUArchitectureAMD64
-	case "i386":
-		*obj = LXCCPUArchitectureI386
-	case "arm64":
-		*obj = LXCCPUArchitectureARM64
-	case "armhf":
-		*obj = LXCCPUArchitectureARMHF
-	default:
-		return fmt.Errorf("can't unmarshal lxc cpu architecture %s", s)
-	}
+func (obj LXCCPUArchitecture) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj LXCCPUArchitecture) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *LXCCPUArchitecture) Unmarshal(s string) error {
+	*obj = LXCCPUArchitecture(s)
 	return nil
 }
 

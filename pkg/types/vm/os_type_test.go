@@ -3,14 +3,14 @@ package vm_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/test"
 )
 
 func TestQEMUOSType(t *testing.T) {
-	QEMUOSTypeCases := map[string](struct {
-		Object vm.QEMUOSType
+	test.HelperTestFixedValue(t, (*vm.QEMUOSType)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"Other": {
@@ -61,35 +61,12 @@ func TestQEMUOSType(t *testing.T) {
 			Object: vm.QEMUOSTypeSolaris,
 			Value:  "solaris",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range QEMUOSTypeCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedObject vm.QEMUOSType
-				err := (&receivedObject).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedObject)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range QEMUOSTypeCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }
 
 func TestLXCOSType(t *testing.T) {
-	LXCOSTypeCases := map[string](struct {
-		Object vm.LXCOSType
+	test.HelperTestFixedValue(t, (*vm.LXCOSType)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"Ummanaged": {
@@ -128,28 +105,5 @@ func TestLXCOSType(t *testing.T) {
 			Object: vm.LXCOSTypeGentoo,
 			Value:  "gentoo",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range LXCOSTypeCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedObject vm.LXCOSType
-				err := (&receivedObject).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedObject)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range LXCOSTypeCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }

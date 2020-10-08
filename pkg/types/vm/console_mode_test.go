@@ -3,14 +3,14 @@ package vm_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/test"
 )
 
 func TestQEMUConsoleMode(t *testing.T) {
-	QEMUConsoleModeCases := map[string](struct {
-		Object vm.QEMUConsoleMode
+	test.HelperTestFixedValue(t, (*vm.QEMUConsoleMode)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"Shell": {
@@ -25,28 +25,5 @@ func TestQEMUConsoleMode(t *testing.T) {
 			Object: vm.QEMUConsoleModeTTY,
 			Value:  "tty",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range QEMUConsoleModeCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedObject vm.QEMUConsoleMode
-				err := (&receivedObject).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedObject)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range QEMUConsoleModeCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }

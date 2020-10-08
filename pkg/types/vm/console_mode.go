@@ -2,43 +2,35 @@ package vm
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-type QEMUConsoleMode uint
+type QEMUConsoleMode string
 
 const (
-	QEMUConsoleModeUnknown QEMUConsoleMode = iota
-	QEMUConsoleModeShell
-	QEMUConsoleModeConsole
-	QEMUConsoleModeTTY
+	QEMUConsoleModeShell   QEMUConsoleMode = "shell"
+	QEMUConsoleModeConsole QEMUConsoleMode = "console"
+	QEMUConsoleModeTTY     QEMUConsoleMode = "tty"
 )
 
-func (obj QEMUConsoleMode) Marshal() (string, error) {
+func (obj QEMUConsoleMode) IsValid() bool {
 	switch obj {
-	case QEMUConsoleModeShell:
-		return "shell", nil
-	case QEMUConsoleModeConsole:
-		return "console", nil
-	case QEMUConsoleModeTTY:
-		return "tty", nil
+	case QEMUConsoleModeShell, QEMUConsoleModeConsole, QEMUConsoleModeTTY:
+		return true
 	default:
-		return "", fmt.Errorf("unknown qemu console mode")
+		return false
 	}
 }
 
-func (obj *QEMUConsoleMode) Unmarshal(s string) error {
-	switch s {
-	case "shell":
-		*obj = QEMUConsoleModeShell
-	case "console":
-		*obj = QEMUConsoleModeConsole
-	case "tty":
-		*obj = QEMUConsoleModeTTY
-	default:
-		return fmt.Errorf("can't unmarshal qemu console mode %s", s)
-	}
+func (obj QEMUConsoleMode) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj QEMUConsoleMode) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *QEMUConsoleMode) Unmarshal(s string) error {
+	*obj = QEMUConsoleMode(s)
 	return nil
 }
 

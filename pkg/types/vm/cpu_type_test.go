@@ -3,14 +3,14 @@ package vm_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/test"
 )
 
 func TestQEMUCPUKind(t *testing.T) {
-	QEMUCPUKindCases := map[string](struct {
-		Object vm.QEMUCPUKind
+	test.HelperTestFixedValue(t, (*vm.QEMUCPUKind)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"Host": {
@@ -214,39 +214,120 @@ func TestQEMUCPUKind(t *testing.T) {
 			Value:  "Opteron_G5",
 		},
 		"AMD EPYC": {
-			Object: vm.QEMUCPUKindEPYC,
+			Object: vm.QEMUCPUKindAMDEPYC,
 			Value:  "EPYC",
 		},
 		"AMD EPYC with IBPB": {
-			Object: vm.QEMUCPUKindEPYCIBPB,
+			Object: vm.QEMUCPUKindAMDEPYCIBPB,
 			Value:  "EPYC-IBPB",
 		},
 		"AMD EPYC-Rome": {
-			Object: vm.QEMUCPUKindEPYCRome,
+			Object: vm.QEMUCPUKindAMDEPYCRome,
 			Value:  "EPYC-Rome",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range QEMUCPUKindCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedObject vm.QEMUCPUKind
-				err := (&receivedObject).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedObject)
-			})
-		}
 	})
+}
 
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range QEMUCPUKindCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
+func TestQEMUCPUFlags(t *testing.T) {
+	test.HelperTestFixedValue(t, (*vm.QEMUCPUFlags)(nil), map[string](struct {
+		Object types.FixedValue
+		Value  string
+	}){
+		"EnableMDClear": {
+			Object: vm.QEMUCPUFlagsEnableMDClear,
+			Value:  "+md-clear",
+		},
+		"DisableMDClear": {
+			Object: vm.QEMUCPUFlagsDisableMDClear,
+			Value:  "-md-clear",
+		},
+		"EnablePCID": {
+			Object: vm.QEMUCPUFlagsEnablePCID,
+			Value:  "+pcid",
+		},
+		"DisablePCID": {
+			Object: vm.QEMUCPUFlagsDisablePCID,
+			Value:  "-pcid",
+		},
+		"EnableSpecCtrl": {
+			Object: vm.QEMUCPUFlagsEnableSpecCtrl,
+			Value:  "+spec-ctrl",
+		},
+		"DisableSpecCtrl": {
+			Object: vm.QEMUCPUFlagsDisableSpecCtrl,
+			Value:  "-spec-ctrl",
+		},
+		"EnableSSBD": {
+			Object: vm.QEMUCPUFlagsEnableSSBD,
+			Value:  "+ssbd",
+		},
+		"DisableSSBD": {
+			Object: vm.QEMUCPUFlagsDisableSSBD,
+			Value:  "-ssbd",
+		},
+		"EnableIBPB": {
+			Object: vm.QEMUCPUFlagsEnableIBPB,
+			Value:  "+ibpb",
+		},
+		"DisableIBPB": {
+			Object: vm.QEMUCPUFlagsDisableIBPB,
+			Value:  "-ibpb",
+		},
+		"EnableVirtSSBD": {
+			Object: vm.QEMUCPUFlagsEnableVirtSSBD,
+			Value:  "+virt-ssbd",
+		},
+		"DisableVirtSSBD": {
+			Object: vm.QEMUCPUFlagsDisableVirtSSBD,
+			Value:  "-virt-ssbd",
+		},
+		"EnableAMDSSBD": {
+			Object: vm.QEMUCPUFlagsEnableAMDSSBD,
+			Value:  "+amd-ssbd",
+		},
+		"DisableAMDSSBD": {
+			Object: vm.QEMUCPUFlagsDisableAMDSSBD,
+			Value:  "-amd-ssbd",
+		},
+		"EnableAMDNoSSB": {
+			Object: vm.QEMUCPUFlagsEnableAMDNoSSB,
+			Value:  "+amd-no-ssb",
+		},
+		"DisableAMDNoSSB": {
+			Object: vm.QEMUCPUFlagsDisableAMDNoSSB,
+			Value:  "-amd-no-ssb",
+		},
+		"EnablePDPE1GB": {
+			Object: vm.QEMUCPUFlagsEnablePDPE1GB,
+			Value:  "+pdpe1gb",
+		},
+		"DisablePDPE1GB": {
+			Object: vm.QEMUCPUFlagsDisablePDPE1GB,
+			Value:  "-pdpe1gb",
+		},
+		"EnableHVTLBFlush": {
+			Object: vm.QEMUCPUFlagsEnableHVTLBFlush,
+			Value:  "+hv-tlbflush",
+		},
+		"DisableHVTLBFlush": {
+			Object: vm.QEMUCPUFlagsDisableHVTLBFlush,
+			Value:  "-hv-tlbflush",
+		},
+		"EnableHVEVMCS": {
+			Object: vm.QEMUCPUFlagsEnableHVEVMCS,
+			Value:  "+hv-evmcs",
+		},
+		"DisableHVEVMCS": {
+			Object: vm.QEMUCPUFlagsDisableHVEVMCS,
+			Value:  "-hv-evmcs",
+		},
+		"EnableEnableAES": {
+			Object: vm.QEMUCPUFlagsEnableAES,
+			Value:  "+aes",
+		},
+		"DisableAES": {
+			Object: vm.QEMUCPUFlagsDisableAES,
+			Value:  "-aes",
+		},
 	})
 }

@@ -2,401 +2,352 @@ package vm
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-type QEMUCPUKind uint
+type QEMUCPUKind string
 
 const (
 	// KVM processor with all supported host features.
-	QEMUCPUKindHost QEMUCPUKind = iota
+	QEMUCPUKindHost QEMUCPUKind = "host"
 
 	// Enables all features supported by the accelerator in the current host.
-	QEMUCPUKindMax
-
-	// Common KVM processor (32 bit variant). Legacy model just for historical compatibility with ancient QEMU versions.
-	QEMUCPUKindKVM32
-
-	// Common KVM processor (64 bit variant). Legacy model just for historical compatibility with ancient QEMU versions.
-	QEMUCPUKindKVM64
+	QEMUCPUKindMax QEMUCPUKind = "max"
 
 	// QEMU Virtual CPU version 2.5+ (32 bit variant)
-	QEMUCPUKindQEMU32
+	QEMUCPUKindQEMU32 QEMUCPUKind = "qemu32"
 
 	// QEMU Virtual CPU version 2.5+ (64 bit variant)
-	QEMUCPUKindQEMU64
+	QEMUCPUKindQEMU64 QEMUCPUKind = "qemu64"
+
+	// Common KVM processor (32 bit variant). Legacy model just for historical compatibility with ancient QEMU versions.
+	QEMUCPUKindKVM32 QEMUCPUKind = "kvm32"
+
+	// Common KVM processor (64 bit variant). Legacy model just for historical compatibility with ancient QEMU versions.
+	QEMUCPUKindKVM64 QEMUCPUKind = "kvm64"
 
 	// Old Intel x86 model. Its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindIntel486
+	QEMUCPUKindIntel486 QEMUCPUKind = "486"
 
 	// Old Intel x86 model. Its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindIntelPentium
+	QEMUCPUKindIntelPentium QEMUCPUKind = "pentium"
 
 	// Old Intel x86 model. Its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindIntelPentium2
+	QEMUCPUKindIntelPentium2 QEMUCPUKind = "pentium2"
 
 	// Old Intel x86 model. Its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindIntelPentium3
+	QEMUCPUKindIntelPentium3 QEMUCPUKind = "pentium3"
 
 	// Intel CPU T2600 @ 2.16. Its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindIntelCoreDuo
+	QEMUCPUKindIntelCoreDuo QEMUCPUKind = "coreduo"
 
 	// Intel Core 2 Duo CPU T7700  @ 2.40GHz. Old Intel x86 model, its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindIntelCore2Duo
+	QEMUCPUKindIntelCore2Duo QEMUCPUKind = "core2duo"
 
 	// Intel Celeron_4x0 (Conroe/Merom Class Core 2, 2006)
-	QEMUCPUKindIntelConroe
+	QEMUCPUKindIntelConroe QEMUCPUKind = "Conroe"
 
 	// Intel Core 2 Duo P9xxx (Penryn Class Core 2, 2007)
-	QEMUCPUKindIntelPenryn
+	QEMUCPUKindIntelPenryn QEMUCPUKind = "Penryn"
 
 	// Intel Core i7 9xx (Nehalem Class Core i7, 2008)
-	QEMUCPUKindIntelNehalem
+	QEMUCPUKindIntelNehalem QEMUCPUKind = "Nehalem"
 
 	// Intel Core i7 9xx (Nehalem Class Core i7, 2008, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelNehalemIBRS
+	QEMUCPUKindIntelNehalemIBRS QEMUCPUKind = "Nehalem-IBRS"
 
 	// Westmere E56xx/L56xx/X56xx (Nehalem-C, 2010)
-	QEMUCPUKindIntelWestmere
+	QEMUCPUKindIntelWestmere QEMUCPUKind = "Westmere"
 
 	// Westmere E56xx/L56xx/X56xx (Nehalem-C, 2010, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelWestmereIBRS
+	QEMUCPUKindIntelWestmereIBRS QEMUCPUKind = "Westmere-IBRS"
 
 	// Intel Xeon E312xx (Sandy Bridge, 2011)
-	QEMUCPUKindIntelSandyBridge
+	QEMUCPUKindIntelSandyBridge QEMUCPUKind = "SandyBridge"
 
 	// Intel Xeon E312xx (Sandy Bridge, 2011, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelSandyBridgeIBRS
+	QEMUCPUKindIntelSandyBridgeIBRS QEMUCPUKind = "SandyBridge-IBRS"
 
 	// Intel Xeon E3-12xx v2 (Ivy Bridge, 2012)
-	QEMUCPUKindIntelIvyBridge
+	QEMUCPUKindIntelIvyBridge QEMUCPUKind = "IvyBridge"
 
 	// Intel Xeon E3-12xx v2 (Ivy Bridge, 2012, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelIvyBridgeIBRS
+	QEMUCPUKindIntelIvyBridgeIBRS QEMUCPUKind = "IvyBridge-IBRS"
 
 	// Intel Core Processor (Haswell, 2013)
-	QEMUCPUKindIntelHaswell
+	QEMUCPUKindIntelHaswell QEMUCPUKind = "Haswell"
 
 	// Intel Core Processor (Haswell, 2013, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelHaswellIBRS
+	QEMUCPUKindIntelHaswellIBRS QEMUCPUKind = "Haswell-IBRS"
 
 	// Intel Core Processor (Haswell, 2013, without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelHaswellNoTSX
+	QEMUCPUKindIntelHaswellNoTSX QEMUCPUKind = "Haswell-noTSX"
 
 	// Intel Core Processor (Haswell, 2013, with Indirect Branch Restricted Speculation update and without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelHaswellIBRSNoTSX
+	QEMUCPUKindIntelHaswellIBRSNoTSX QEMUCPUKind = "Haswell-noTSX-IBRS"
 
 	// Intel Core Processor (Broadwell, 2014)
-	QEMUCPUKindIntelBroadwell
+	QEMUCPUKindIntelBroadwell QEMUCPUKind = "Broadwell"
 
 	// Intel Core Processor (Broadwell, 2014, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelBroadwellIBRS
+	QEMUCPUKindIntelBroadwellIBRS QEMUCPUKind = "Broadwell-IBRS"
 
 	// Intel Core Processor (Broadwell, 2014, without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelBroadwellNoTSX
+	QEMUCPUKindIntelBroadwellNoTSX QEMUCPUKind = "Broadwell-noTSX"
 
 	// Intel Core Processor (Broadwell, 2014, with Indirect Branch Restricted Speculation update and without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelBroadwellIBRSNoTSX
+	QEMUCPUKindIntelBroadwellIBRSNoTSX QEMUCPUKind = "Broadwell-noTSX-IBRS"
 
 	// Intel Core Processor (Skylake, 2015)
-	QEMUCPUKindIntelSkyLakeClient
+	QEMUCPUKindIntelSkyLakeClient QEMUCPUKind = "Skylake-Client"
 
 	// Intel Core Processor (Skylake, 2015, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelSkyLakeClientIBRS
+	QEMUCPUKindIntelSkyLakeClientIBRS QEMUCPUKind = "Skylake-Client-IBRS"
 
 	// Intel Core Processor (Skylake, 2015, with Indirect Branch Restricted Speculation update and without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelSkyLakeClientIBRSNoTSX
+	QEMUCPUKindIntelSkyLakeClientIBRSNoTSX QEMUCPUKind = "Skylake-Client-noTSX-IBRS"
 
 	// Intel Xeon Processor (Skylake, 2016)
-	QEMUCPUKindIntelSkyLakeServer
+	QEMUCPUKindIntelSkyLakeServer QEMUCPUKind = "Skylake-Server"
 
 	// Intel Xeon Processor (Skylake, 2016, with Indirect Branch Restricted Speculation update)
-	QEMUCPUKindIntelSkyLakeServerIBRS
+	QEMUCPUKindIntelSkyLakeServerIBRS QEMUCPUKind = "Skylake-Server-IBRS"
 
 	// Intel Xeon Processor (Skylake, 2016, with Indirect Branch Restricted Speculation update and without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelSkyLakeServerIBRSNoTSX
+	QEMUCPUKindIntelSkyLakeServerIBRSNoTSX QEMUCPUKind = "Skylake-Server-noTSX-IBRS"
 
 	// Intel Xeon Processor (Cascade Lake, 2019, with “stepping” levels 6 or 7 only). The Cascade Lake Xeon processor with stepping 5 is vulnerable to MDS variants.
-	QEMUCPUKindIntelCascadeLakeServer
+	QEMUCPUKindIntelCascadeLakeServer QEMUCPUKind = "Cascadelake-Server"
 
 	// Intel Xeon Processor (Cascade Lake, 2019, with “stepping” levels 6 or 7 only, without Transactional Synchronization Extensions update). The Cascade Lake Xeon processor with stepping 5 is vulnerable to MDS variants.
-	QEMUCPUKindIntelCascadeLakeServerNoTSX
+	QEMUCPUKindIntelCascadeLakeServerNoTSX QEMUCPUKind = "Cascadelake-Server-noTSX"
 
 	// Intel Xeon Phi Processor (Knights Mill)
-	QEMUCPUKindIntelKnightsMill
+	QEMUCPUKindIntelKnightsMill QEMUCPUKind = "KnightsMill"
 
 	// Intel Core Processor (Icelake)
-	QEMUCPUKindIntelIceLakeClient
+	QEMUCPUKindIntelIceLakeClient QEMUCPUKind = "Icelake-Client"
 
 	// Intel Core Processor (Icelake, without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelIceLakeClientNoTSX
+	QEMUCPUKindIntelIceLakeClientNoTSX QEMUCPUKind = "Icelake-Client-noTSX"
 
 	// Intel Xeon Processor (Icelake)
-	QEMUCPUKindIntelIceLakeServer
+	QEMUCPUKindIntelIceLakeServer QEMUCPUKind = "Icelake-Server"
 
 	// Intel Xeon Processor (Icelake, without Transactional Synchronization Extensions update)
-	QEMUCPUKindIntelIceLakeServerNoTSX
+	QEMUCPUKindIntelIceLakeServerNoTSX QEMUCPUKind = "Icelake-Server-noTSX"
 
 	// Old AMD x86 model, its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindAMDAthlon
+	QEMUCPUKindAMDAthlon QEMUCPUKind = "athlon"
 
 	// AMD Phenom(tm) 9550 Quad-Core Processor. Its usage is discouraged, as it exposes a very limited featureset, which prevents guests having optimal performance.
-	QEMUCPUKindAMDPhenom
+	QEMUCPUKindAMDPhenom QEMUCPUKind = "phenom"
 
 	// AMD Opteron 240 (Gen 1 Class Opteron, 2004)
-	QEMUCPUKindAMDOpteronG1
+	QEMUCPUKindAMDOpteronG1 QEMUCPUKind = "Opteron_G1"
 
 	// AMD Opteron 22xx (Gen 2 Class Opteron, 2006)
-	QEMUCPUKindAMDOpteronG2
+	QEMUCPUKindAMDOpteronG2 QEMUCPUKind = "Opteron_G2"
 
 	// AMD Opteron 23xx (Gen 3 Class Opteron, 2009)
-	QEMUCPUKindAMDOpteronG3
+	QEMUCPUKindAMDOpteronG3 QEMUCPUKind = "Opteron_G3"
 
 	// AMD Opteron 62xx class CPU (2011)
-	QEMUCPUKindAMDOpteronG4
+	QEMUCPUKindAMDOpteronG4 QEMUCPUKind = "Opteron_G4"
 
 	// AMD Opteron 63xx class CPU (2012)
-	QEMUCPUKindAMDOpteronG5
+	QEMUCPUKindAMDOpteronG5 QEMUCPUKind = "Opteron_G5"
 
 	// AMD EPYC Processor (2017)
-	QEMUCPUKindEPYC
+	QEMUCPUKindAMDEPYC QEMUCPUKind = "EPYC"
 
 	// AMD EPYC Processor (2017, with Indirect Branch Prediction Barrier update)
-	QEMUCPUKindEPYCIBPB
+	QEMUCPUKindAMDEPYCIBPB QEMUCPUKind = "EPYC-IBPB"
 
 	// AMD EPYC-Rome Processor (2019)
-	QEMUCPUKindEPYCRome
+	QEMUCPUKindAMDEPYCRome QEMUCPUKind = "EPYC-Rome"
 )
 
-func (obj QEMUCPUKind) Marshal() (string, error) {
+func (obj QEMUCPUKind) IsValid() bool {
 	switch obj {
-	case QEMUCPUKindHost:
-		return "host", nil
-	case QEMUCPUKindMax:
-		return "max", nil
-	case QEMUCPUKindQEMU32:
-		return "qemu32", nil
-	case QEMUCPUKindQEMU64:
-		return "qemu64", nil
-	case QEMUCPUKindKVM32:
-		return "kvm32", nil
-	case QEMUCPUKindKVM64:
-		return "kvm64", nil
-	case QEMUCPUKindIntel486:
-		return "486", nil
-	case QEMUCPUKindIntelPentium:
-		return "pentium", nil
-	case QEMUCPUKindIntelPentium2:
-		return "pentium2", nil
-	case QEMUCPUKindIntelPentium3:
-		return "pentium3", nil
-	case QEMUCPUKindIntelCoreDuo:
-		return "coreduo", nil
-	case QEMUCPUKindIntelCore2Duo:
-		return "core2duo", nil
-	case QEMUCPUKindIntelConroe:
-		return "Conroe", nil
-	case QEMUCPUKindIntelPenryn:
-		return "Penryn", nil
-	case QEMUCPUKindIntelNehalem:
-		return "Nehalem", nil
-	case QEMUCPUKindIntelNehalemIBRS:
-		return "Nehalem-IBRS", nil
-	case QEMUCPUKindIntelWestmere:
-		return "Westmere", nil
-	case QEMUCPUKindIntelWestmereIBRS:
-		return "Westmere-IBRS", nil
-	case QEMUCPUKindIntelSandyBridge:
-		return "SandyBridge", nil
-	case QEMUCPUKindIntelSandyBridgeIBRS:
-		return "SandyBridge-IBRS", nil
-	case QEMUCPUKindIntelIvyBridge:
-		return "IvyBridge", nil
-	case QEMUCPUKindIntelIvyBridgeIBRS:
-		return "IvyBridge-IBRS", nil
-	case QEMUCPUKindIntelHaswell:
-		return "Haswell", nil
-	case QEMUCPUKindIntelHaswellIBRS:
-		return "Haswell-IBRS", nil
-	case QEMUCPUKindIntelHaswellNoTSX:
-		return "Haswell-noTSX", nil
-	case QEMUCPUKindIntelHaswellIBRSNoTSX:
-		return "Haswell-noTSX-IBRS", nil
-	case QEMUCPUKindIntelBroadwell:
-		return "Broadwell", nil
-	case QEMUCPUKindIntelBroadwellIBRS:
-		return "Broadwell-IBRS", nil
-	case QEMUCPUKindIntelBroadwellNoTSX:
-		return "Broadwell-noTSX", nil
-	case QEMUCPUKindIntelBroadwellIBRSNoTSX:
-		return "Broadwell-noTSX-IBRS", nil
-	case QEMUCPUKindIntelSkyLakeClient:
-		return "Skylake-Client", nil
-	case QEMUCPUKindIntelSkyLakeClientIBRS:
-		return "Skylake-Client-IBRS", nil
-	case QEMUCPUKindIntelSkyLakeClientIBRSNoTSX:
-		return "Skylake-Client-noTSX-IBRS", nil
-	case QEMUCPUKindIntelSkyLakeServer:
-		return "Skylake-Server", nil
-	case QEMUCPUKindIntelSkyLakeServerIBRS:
-		return "Skylake-Server-IBRS", nil
-	case QEMUCPUKindIntelSkyLakeServerIBRSNoTSX:
-		return "Skylake-Server-noTSX-IBRS", nil
-	case QEMUCPUKindIntelCascadeLakeServer:
-		return "Cascadelake-Server", nil
-	case QEMUCPUKindIntelCascadeLakeServerNoTSX:
-		return "Cascadelake-Server-noTSX", nil
-	case QEMUCPUKindIntelKnightsMill:
-		return "KnightsMill", nil
-	case QEMUCPUKindIntelIceLakeClient:
-		return "Icelake-Client", nil
-	case QEMUCPUKindIntelIceLakeClientNoTSX:
-		return "Icelake-Client-noTSX", nil
-	case QEMUCPUKindIntelIceLakeServer:
-		return "Icelake-Server", nil
-	case QEMUCPUKindIntelIceLakeServerNoTSX:
-		return "Icelake-Server-noTSX", nil
-	case QEMUCPUKindAMDAthlon:
-		return "athlon", nil
-	case QEMUCPUKindAMDPhenom:
-		return "phenom", nil
-	case QEMUCPUKindAMDOpteronG1:
-		return "Opteron_G1", nil
-	case QEMUCPUKindAMDOpteronG2:
-		return "Opteron_G2", nil
-	case QEMUCPUKindAMDOpteronG3:
-		return "Opteron_G3", nil
-	case QEMUCPUKindAMDOpteronG4:
-		return "Opteron_G4", nil
-	case QEMUCPUKindAMDOpteronG5:
-		return "Opteron_G5", nil
-	case QEMUCPUKindEPYC:
-		return "EPYC", nil
-	case QEMUCPUKindEPYCIBPB:
-		return "EPYC-IBPB", nil
-	case QEMUCPUKindEPYCRome:
-		return "EPYC-Rome", nil
+	case QEMUCPUKindHost,
+		QEMUCPUKindMax,
+		QEMUCPUKindQEMU32,
+		QEMUCPUKindQEMU64,
+		QEMUCPUKindKVM32,
+		QEMUCPUKindKVM64,
+		QEMUCPUKindIntel486,
+		QEMUCPUKindIntelPentium,
+		QEMUCPUKindIntelPentium2,
+		QEMUCPUKindIntelPentium3,
+		QEMUCPUKindIntelCoreDuo,
+		QEMUCPUKindIntelCore2Duo,
+		QEMUCPUKindIntelConroe,
+		QEMUCPUKindIntelPenryn,
+		QEMUCPUKindIntelNehalem,
+		QEMUCPUKindIntelNehalemIBRS,
+		QEMUCPUKindIntelWestmere,
+		QEMUCPUKindIntelWestmereIBRS,
+		QEMUCPUKindIntelSandyBridge,
+		QEMUCPUKindIntelSandyBridgeIBRS,
+		QEMUCPUKindIntelIvyBridge,
+		QEMUCPUKindIntelIvyBridgeIBRS,
+		QEMUCPUKindIntelHaswell,
+		QEMUCPUKindIntelHaswellIBRS,
+		QEMUCPUKindIntelHaswellNoTSX,
+		QEMUCPUKindIntelHaswellIBRSNoTSX,
+		QEMUCPUKindIntelBroadwell,
+		QEMUCPUKindIntelBroadwellIBRS,
+		QEMUCPUKindIntelBroadwellNoTSX,
+		QEMUCPUKindIntelBroadwellIBRSNoTSX,
+		QEMUCPUKindIntelSkyLakeClient,
+		QEMUCPUKindIntelSkyLakeClientIBRS,
+		QEMUCPUKindIntelSkyLakeClientIBRSNoTSX,
+		QEMUCPUKindIntelSkyLakeServer,
+		QEMUCPUKindIntelSkyLakeServerIBRS,
+		QEMUCPUKindIntelSkyLakeServerIBRSNoTSX,
+		QEMUCPUKindIntelCascadeLakeServer,
+		QEMUCPUKindIntelCascadeLakeServerNoTSX,
+		QEMUCPUKindIntelKnightsMill,
+		QEMUCPUKindIntelIceLakeClient,
+		QEMUCPUKindIntelIceLakeClientNoTSX,
+		QEMUCPUKindIntelIceLakeServer,
+		QEMUCPUKindIntelIceLakeServerNoTSX,
+		QEMUCPUKindAMDAthlon,
+		QEMUCPUKindAMDPhenom,
+		QEMUCPUKindAMDOpteronG1,
+		QEMUCPUKindAMDOpteronG2,
+		QEMUCPUKindAMDOpteronG3,
+		QEMUCPUKindAMDOpteronG4,
+		QEMUCPUKindAMDOpteronG5,
+		QEMUCPUKindAMDEPYC,
+		QEMUCPUKindAMDEPYCIBPB,
+		QEMUCPUKindAMDEPYCRome:
+		return true
 	default:
-		return "", fmt.Errorf("unknown qemu cpu type")
+		return false
 	}
 }
 
-func (obj *QEMUCPUKind) Unmarshal(s string) error {
-	switch s {
-	case "host":
-		*obj = QEMUCPUKindHost
-	case "max":
-		*obj = QEMUCPUKindMax
-	case "qemu32":
-		*obj = QEMUCPUKindQEMU32
-	case "qemu64":
-		*obj = QEMUCPUKindQEMU64
-	case "kvm32":
-		*obj = QEMUCPUKindKVM32
-	case "kvm64":
-		*obj = QEMUCPUKindKVM64
-	case "486":
-		*obj = QEMUCPUKindIntel486
-	case "pentium":
-		*obj = QEMUCPUKindIntelPentium
-	case "pentium2":
-		*obj = QEMUCPUKindIntelPentium2
-	case "pentium3":
-		*obj = QEMUCPUKindIntelPentium3
-	case "coreduo":
-		*obj = QEMUCPUKindIntelCoreDuo
-	case "core2duo":
-		*obj = QEMUCPUKindIntelCore2Duo
-	case "Conroe":
-		*obj = QEMUCPUKindIntelConroe
-	case "Penryn":
-		*obj = QEMUCPUKindIntelPenryn
-	case "Nehalem":
-		*obj = QEMUCPUKindIntelNehalem
-	case "Nehalem-IBRS":
-		*obj = QEMUCPUKindIntelNehalemIBRS
-	case "Westmere":
-		*obj = QEMUCPUKindIntelWestmere
-	case "Westmere-IBRS":
-		*obj = QEMUCPUKindIntelWestmereIBRS
-	case "SandyBridge":
-		*obj = QEMUCPUKindIntelSandyBridge
-	case "SandyBridge-IBRS":
-		*obj = QEMUCPUKindIntelSandyBridgeIBRS
-	case "IvyBridge":
-		*obj = QEMUCPUKindIntelIvyBridge
-	case "IvyBridge-IBRS":
-		*obj = QEMUCPUKindIntelIvyBridgeIBRS
-	case "Haswell":
-		*obj = QEMUCPUKindIntelHaswell
-	case "Haswell-IBRS":
-		*obj = QEMUCPUKindIntelHaswellIBRS
-	case "Haswell-noTSX":
-		*obj = QEMUCPUKindIntelHaswellNoTSX
-	case "Haswell-noTSX-IBRS":
-		*obj = QEMUCPUKindIntelHaswellIBRSNoTSX
-	case "Broadwell":
-		*obj = QEMUCPUKindIntelBroadwell
-	case "Broadwell-IBRS":
-		*obj = QEMUCPUKindIntelBroadwellIBRS
-	case "Broadwell-noTSX":
-		*obj = QEMUCPUKindIntelBroadwellNoTSX
-	case "Broadwell-noTSX-IBRS":
-		*obj = QEMUCPUKindIntelBroadwellIBRSNoTSX
-	case "Skylake-Client":
-		*obj = QEMUCPUKindIntelSkyLakeClient
-	case "Skylake-Client-IBRS":
-		*obj = QEMUCPUKindIntelSkyLakeClientIBRS
-	case "Skylake-Client-noTSX-IBRS":
-		*obj = QEMUCPUKindIntelSkyLakeClientIBRSNoTSX
-	case "Skylake-Server":
-		*obj = QEMUCPUKindIntelSkyLakeServer
-	case "Skylake-Server-IBRS":
-		*obj = QEMUCPUKindIntelSkyLakeServerIBRS
-	case "Skylake-Server-noTSX-IBRS":
-		*obj = QEMUCPUKindIntelSkyLakeServerIBRSNoTSX
-	case "Cascadelake-Server":
-		*obj = QEMUCPUKindIntelCascadeLakeServer
-	case "Cascadelake-Server-noTSX":
-		*obj = QEMUCPUKindIntelCascadeLakeServerNoTSX
-	case "KnightsMill":
-		*obj = QEMUCPUKindIntelKnightsMill
-	case "Icelake-Client":
-		*obj = QEMUCPUKindIntelIceLakeClient
-	case "Icelake-Client-noTSX":
-		*obj = QEMUCPUKindIntelIceLakeClientNoTSX
-	case "Icelake-Server":
-		*obj = QEMUCPUKindIntelIceLakeServer
-	case "Icelake-Server-noTSX":
-		*obj = QEMUCPUKindIntelIceLakeServerNoTSX
-	case "athlon":
-		*obj = QEMUCPUKindAMDAthlon
-	case "phenom":
-		*obj = QEMUCPUKindAMDPhenom
-	case "Opteron_G1":
-		*obj = QEMUCPUKindAMDOpteronG1
-	case "Opteron_G2":
-		*obj = QEMUCPUKindAMDOpteronG2
-	case "Opteron_G3":
-		*obj = QEMUCPUKindAMDOpteronG3
-	case "Opteron_G4":
-		*obj = QEMUCPUKindAMDOpteronG4
-	case "Opteron_G5":
-		*obj = QEMUCPUKindAMDOpteronG5
-	case "EPYC":
-		*obj = QEMUCPUKindEPYC
-	case "EPYC-IBPB":
-		*obj = QEMUCPUKindEPYCIBPB
-	case "EPYC-Rome":
-		*obj = QEMUCPUKindEPYCRome
-	default:
-		return fmt.Errorf("can't unmarshal qemu cpu type %s", s)
-	}
+func (obj QEMUCPUKind) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj QEMUCPUKind) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *QEMUCPUKind) Unmarshal(s string) error {
+	*obj = QEMUCPUKind(s)
 	return nil
 }
 
 func (obj *QEMUCPUKind) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	return obj.Unmarshal(s)
+}
+
+type QEMUCPUFlags string
+
+const (
+	// Required to let the guest OS know if MDS is mitigated correctly
+	QEMUCPUFlagsEnableMDClear  QEMUCPUFlags = "+md-clear"
+	QEMUCPUFlagsDisableMDClear QEMUCPUFlags = "-md-clear"
+
+	// Meltdown fix cost reduction on Westmere, SandyBride and IvyBridge Intel CPUs
+	QEMUCPUFlagsEnablePCID  QEMUCPUFlags = "+pcid"
+	QEMUCPUFlagsDisablePCID QEMUCPUFlags = "-pcid"
+
+	// Allows improved Spectre mitigation with Intel CPUs
+	QEMUCPUFlagsEnableSpecCtrl  QEMUCPUFlags = "+spec-ctrl"
+	QEMUCPUFlagsDisableSpecCtrl QEMUCPUFlags = "-spec-ctrl"
+
+	// Protection for "Speculative Store ByPass" for Intel models
+	QEMUCPUFlagsEnableSSBD  QEMUCPUFlags = "+ssbd"
+	QEMUCPUFlagsDisableSSBD QEMUCPUFlags = "-ssbd"
+
+	// Allows improved Spectre mitigation with AMD CPUs
+	QEMUCPUFlagsEnableIBPB  QEMUCPUFlags = "+ibpb"
+	QEMUCPUFlagsDisableIBPB QEMUCPUFlags = "-ibpb"
+
+	// Basis for "Speculative Store Bypass" protection for AMD models
+	QEMUCPUFlagsEnableVirtSSBD  QEMUCPUFlags = "+virt-ssbd"
+	QEMUCPUFlagsDisableVirtSSBD QEMUCPUFlags = "-virt-ssbd"
+
+	// Improves Spectre mitigation performance with AMD CPUs, best used with "virt-ssbd"
+	QEMUCPUFlagsEnableAMDSSBD  QEMUCPUFlags = "+amd-ssbd"
+	QEMUCPUFlagsDisableAMDSSBD QEMUCPUFlags = "-amd-ssbd"
+
+	// Notifies guest OS that host is not vulnerable for Spectre on AMD CPUs
+	QEMUCPUFlagsEnableAMDNoSSB  QEMUCPUFlags = "+amd-no-ssb"
+	QEMUCPUFlagsDisableAMDNoSSB QEMUCPUFlags = "-amd-no-ssb"
+
+	// Allow guest OS to use 1GB size pages, if host HW supports it
+	QEMUCPUFlagsEnablePDPE1GB  QEMUCPUFlags = "+pdpe1gb"
+	QEMUCPUFlagsDisablePDPE1GB QEMUCPUFlags = "-pdpe1gb"
+
+	//Improve performance in overcommited Windows guests. May lead to guest bluescreens on old CPUs.
+	QEMUCPUFlagsEnableHVTLBFlush  QEMUCPUFlags = "+hv-tlbflush"
+	QEMUCPUFlagsDisableHVTLBFlush QEMUCPUFlags = "-hv-tlbflush"
+
+	//Improve performance for nested virtualization. Only supported on Intel CPUs.
+	QEMUCPUFlagsEnableHVEVMCS  QEMUCPUFlags = "+hv-evmcs"
+	QEMUCPUFlagsDisableHVEVMCS QEMUCPUFlags = "-hv-evmcs"
+
+	// Activate AES instruction set for HW acceleration.
+	QEMUCPUFlagsEnableAES  QEMUCPUFlags = "+aes"
+	QEMUCPUFlagsDisableAES QEMUCPUFlags = "-aes"
+)
+
+func (obj QEMUCPUFlags) IsValid() bool {
+	switch obj {
+	case QEMUCPUFlagsEnableMDClear,
+		QEMUCPUFlagsDisableMDClear,
+		QEMUCPUFlagsEnablePCID,
+		QEMUCPUFlagsDisablePCID,
+		QEMUCPUFlagsEnableSpecCtrl,
+		QEMUCPUFlagsDisableSpecCtrl,
+		QEMUCPUFlagsEnableSSBD,
+		QEMUCPUFlagsDisableSSBD,
+		QEMUCPUFlagsEnableIBPB,
+		QEMUCPUFlagsDisableIBPB,
+		QEMUCPUFlagsEnableVirtSSBD,
+		QEMUCPUFlagsDisableVirtSSBD,
+		QEMUCPUFlagsEnableAMDSSBD,
+		QEMUCPUFlagsDisableAMDSSBD,
+		QEMUCPUFlagsEnableAMDNoSSB,
+		QEMUCPUFlagsDisableAMDNoSSB,
+		QEMUCPUFlagsEnablePDPE1GB,
+		QEMUCPUFlagsDisablePDPE1GB,
+		QEMUCPUFlagsEnableHVTLBFlush,
+		QEMUCPUFlagsDisableHVTLBFlush,
+		QEMUCPUFlagsEnableHVEVMCS,
+		QEMUCPUFlagsDisableHVEVMCS,
+		QEMUCPUFlagsEnableAES,
+		QEMUCPUFlagsDisableAES:
+		return true
+	default:
+		return false
+	}
+}
+
+func (obj QEMUCPUFlags) IsUnknown() bool {
+	return !obj.IsValid()
+}
+
+func (obj QEMUCPUFlags) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *QEMUCPUFlags) Unmarshal(s string) error {
+	*obj = QEMUCPUFlags(s)
+	return nil
+}
+
+func (obj *QEMUCPUFlags) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err

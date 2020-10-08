@@ -3,14 +3,14 @@ package vm_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/test"
 )
 
 func TestQEMUCPUArchitecture(t *testing.T) {
-	QEMUCPUArchitectureCases := map[string](struct {
-		Object vm.QEMUCPUArchitecture
+	test.HelperTestFixedValue(t, (*vm.QEMUCPUArchitecture)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"X86_64": {
@@ -21,35 +21,12 @@ func TestQEMUCPUArchitecture(t *testing.T) {
 			Object: vm.QEMUCPUArchitectureAArch64,
 			Value:  "aarch64",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range QEMUCPUArchitectureCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedObject vm.QEMUCPUArchitecture
-				err := (&receivedObject).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedObject)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range QEMUCPUArchitectureCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedObject, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedObject)
-			})
-		}
 	})
 }
 
 func TestLXCCPUArchitecture(t *testing.T) {
-	LXCCPUArchitectureCases := map[string](struct {
-		Object vm.LXCCPUArchitecture
+	test.HelperTestFixedValue(t, (*vm.LXCCPUArchitecture)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"AMD64": {
@@ -68,28 +45,5 @@ func TestLXCCPUArchitecture(t *testing.T) {
 			Object: vm.LXCCPUArchitectureARMHF,
 			Value:  "armhf",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range LXCCPUArchitectureCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedObject vm.LXCCPUArchitecture
-				err := (&receivedObject).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedObject)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range LXCCPUArchitectureCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }

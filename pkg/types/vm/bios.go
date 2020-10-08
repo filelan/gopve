@@ -2,37 +2,34 @@ package vm
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-type QEMUBIOS uint
+type QEMUBIOS string
 
 const (
-	QEMUBIOSSeaBIOS QEMUBIOS = iota
-	QEMUBIOSOVMF
+	QEMUBIOSSeaBIOS QEMUBIOS = "seabios"
+	QEMUBIOSOVMF    QEMUBIOS = "ovmf"
 )
 
-func (obj QEMUBIOS) Marshal() (string, error) {
+func (obj QEMUBIOS) IsValid() bool {
 	switch obj {
-	case QEMUBIOSSeaBIOS:
-		return "seabios", nil
-	case QEMUBIOSOVMF:
-		return "ovmf", nil
+	case QEMUBIOSSeaBIOS, QEMUBIOSOVMF:
+		return true
 	default:
-		return "", fmt.Errorf("unknown bios")
+		return false
 	}
 }
 
-func (obj *QEMUBIOS) Unmarshal(s string) error {
-	switch s {
-	case "seabios":
-		*obj = QEMUBIOSSeaBIOS
-	case "ovmf":
-		*obj = QEMUBIOSOVMF
-	default:
-		return fmt.Errorf("can't unmarshal bios %s", s)
-	}
+func (obj QEMUBIOS) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj QEMUBIOS) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *QEMUBIOS) Unmarshal(s string) error {
+	*obj = QEMUBIOS(s)
 	return nil
 }
 
