@@ -233,32 +233,42 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 		return nil, err
 	}
 
-	if err := props.SetRequiredUint(mkQEMUCPUPropertySockets, &obj.Sockets, func(v uint) bool {
-		return v <= 4
+	if err := props.SetRequiredUint(mkQEMUCPUPropertySockets, &obj.Sockets, &types.PropertyUintFunctions{
+		ValidateFunc: func(v uint) bool {
+			return v <= 4
+		},
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := props.SetRequiredUint(mkQEMUCPUPropertyCores, &obj.Cores, func(v uint) bool {
-		return v <= 128
+	if err := props.SetRequiredUint(mkQEMUCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
+		ValidateFunc: func(v uint) bool {
+			return v <= 128
+		},
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := props.SetRequiredUint(mkQEMUCPUPropertyVCPUs, &obj.VCPUs, func(v uint) bool {
-		return v <= obj.Sockets*obj.Cores
+	if err := props.SetRequiredUint(mkQEMUCPUPropertyVCPUs, &obj.VCPUs, &types.PropertyUintFunctions{
+		ValidateFunc: func(v uint) bool {
+			return v <= obj.Sockets*obj.Cores
+		},
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := props.SetUintFromString(mkQEMUCPUPropertyLimit, &obj.Limit, DefaultQEMUCPUPropertyLimit, func(v uint) bool {
-		return v <= 128
+	if err := props.SetUintFromString(mkQEMUCPUPropertyLimit, &obj.Limit, DefaultQEMUCPUPropertyLimit, &types.PropertyUintFunctions{
+		ValidateFunc: func(v uint) bool {
+			return v <= 128
+		},
 	}); err != nil {
 		return nil, err
 	}
 
-	if err := props.SetUint(mkQEMUCPUPropertyUnits, &obj.Units, DefaultQEMUCPUPropertyUnits, func(v uint) bool {
-		return v >= 8 && v <= 500000
+	if err := props.SetUint(mkQEMUCPUPropertyUnits, &obj.Units, DefaultQEMUCPUPropertyUnits, &types.PropertyUintFunctions{
+		ValidateFunc: func(v uint) bool {
+			return v >= 8 && v <= 500000
+		},
 	}); err != nil {
 		return nil, err
 	}
@@ -343,8 +353,10 @@ func NewQEMUMemoryProperties(
 ) (*QEMUMemoryProperties, error) {
 	obj := new(QEMUMemoryProperties)
 
-	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, func(v uint) bool {
-		return v <= 4178944
+	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, &types.PropertyUintFunctions{
+		ValidateFunc: func(v uint) bool {
+			return v <= 4178944
+		},
 	}); err != nil {
 		return nil, err
 	}

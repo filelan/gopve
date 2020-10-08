@@ -34,6 +34,12 @@ func (err KeyedClientError) Error() string {
 	return b.String()
 }
 
+func (err KeyedClientError) Is(target error) bool {
+	ts := target.Error()
+	es := err.Error()
+	return ts == es
+}
+
 func (err *KeyedClientError) AddKey(key string, value interface{}) {
 	if err.keys == nil {
 		err.keys = make(map[string]interface{})
