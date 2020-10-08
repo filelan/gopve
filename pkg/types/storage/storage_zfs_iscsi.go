@@ -2,11 +2,8 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageZFSOverISCSI interface {
@@ -23,10 +20,18 @@ type StorageZFSOverISCSI interface {
 
 	ISCSIProvider() ISCSIProvider
 
-	ComstarHostGroup() string
-	ComstarTargetGroup() string
+	COMSTARHostGroup() string
+	COMSTARTargetGroup() string
 	LIOTargetPortalGroup() string
 }
+
+const (
+	StorageZFSOverISCSIKernelContents    = ContentQEMUData
+	StorageZFSOverISCSIKernelImageFormat = ImageFormatRaw
+	StorageZFSOverISCSIKernelShared      = AllowShareForced
+	StorageZFSOverISCSIKernelSnapshots   = AllowSnapshotAll
+	StorageZFSOverISCSIKernelClones      = AllowCloneAll
+)
 
 type StorageZFSOverISCSIProperties struct {
 	Portal string
@@ -40,148 +45,112 @@ type StorageZFSOverISCSIProperties struct {
 
 	ISCSIProvider ISCSIProvider
 
-	ComstarHostGroup     string
-	ComstarTargetGroup   string
+	COMSTARHostGroup     string
+	COMSTARTargetGroup   string
 	LIOTargetPortalGroup string
 }
+
+const (
+	mkZFSOverISCSIPortal                      = "portal"
+	mkZFSOverISCSITarget                      = "target"
+	mkZFSOverISCSIPoolName                    = "pool"
+	mkZFSOverISCSIBlockSize                   = "blocksize"
+	mkZFSOverISCSIUseSparse                   = "sparse"
+	mkZFSOverISCSIWriteCache                  = "nowritecache"
+	mkZFSOverISCSIISCSIProvider               = "iscsiprovider"
+	mkZFSOverISCSICOMSTARHostGroup            = "comstar_hg"
+	mkZFSOverISCSICOMSTARTargetGroup          = "comstar_tg"
+	mkZFSOverISCSICOMSTARLIOTargetPortalGroup = "lio_tpg"
+)
+
+const (
+	DefaultStorageZFSOverISCSIUseSparse            = false
+	DefaultStorageZFSOverISCSIWriteCache           = true
+	DefaultStorageZFSOverISCSICOMSTARHostGroup     = ""
+	DefaultStorageZFSOverISCSICOMSTARTargetGroup   = ""
+	DefaultStorageZFSOverISCSILIOTargetPortalGroup = ""
+)
 
 func NewStorageZFSOverISCSIProperties(
 	props types.Properties,
 ) (*StorageZFSOverISCSIProperties, error) {
 	obj := new(StorageZFSOverISCSIProperties)
 
-	if v, ok := props["portal"].(string); ok {
-		obj.Portal = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "portal")
+	if err := props.SetRequiredString(mkZFSOverISCSIPortal, &obj.Portal, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["target"].(string); ok {
-		obj.Target = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "target")
+	if err := props.SetRequiredString(mkZFSOverISCSITarget, &obj.Target, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["pool"].(string); ok {
-		obj.PoolName = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "pool")
+	if err := props.SetRequiredString(mkZFSOverISCSIPoolName, &obj.PoolName, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["blocksize"].(string); ok {
-		obj.BlockSize = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "blocksize")
+	if err := props.SetRequiredString(mkZFSOverISCSIBlockSize, &obj.BlockSize, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["sparse"].(float64); ok {
-		obj.UseSparse = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.UseSparse = DefaultStorageZFSOverISCSIUseSparse
-	}
-
-	if v, ok := props["nowritecache"].(float64); ok {
-		obj.WriteCache = !internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.WriteCache = DefaultStorageZFSOverISCSIWriteCache
-	}
-
-	if v, ok := props["iscsiprovider"].(string); ok {
-		if err := (&obj.ISCSIProvider).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "iscsiprovider")
-			err.AddKey("value", v)
-			return nil, err
-		}
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "iscsiprovider")
+	if err := props.SetBool(mkZFSOverISCSIUseSparse, &obj.UseSparse, DefaultStorageZFSOverISCSIUseSparse, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["comstar_hg"].(string); ok {
-		obj.ComstarHostGroup = v
-	} else {
-		obj.ComstarHostGroup = DefaultStorageZFSOverISCSIComstarHostGroup
+	if err := props.SetBool(mkZFSOverISCSIWriteCache, &obj.WriteCache, DefaultStorageZFSOverISCSIWriteCache, &types.PropertyBoolFunctions{
+		TransformFunc: func(val bool) bool {
+			return !val
+		},
+	}); err != nil {
+		return nil, err
 	}
 
-	if v, ok := props["comstar_tg"].(string); ok {
-		obj.ComstarTargetGroup = v
-	} else {
-		obj.ComstarTargetGroup = DefaultStorageZFSOverISCSIComstarTargetGroup
+	if err := props.SetRequiredFixedValue(mkZFSOverISCSIISCSIProvider, &obj.ISCSIProvider, nil); err != nil {
+		return nil, err
 	}
 
-	if v, ok := props["lio_tpg"].(string); ok {
-		obj.LIOTargetPortalGroup = v
-	} else {
-		obj.LIOTargetPortalGroup = DefaultStorageZFSOverISCSILIOTargetPortalGroup
+	if err := props.SetString(mkZFSOverISCSICOMSTARHostGroup, &obj.COMSTARHostGroup, DefaultStorageZFSOverISCSICOMSTARHostGroup, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkZFSOverISCSICOMSTARTargetGroup, &obj.COMSTARTargetGroup, DefaultStorageZFSOverISCSICOMSTARTargetGroup, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkZFSOverISCSICOMSTARLIOTargetPortalGroup, &obj.LIOTargetPortalGroup, DefaultStorageZFSOverISCSILIOTargetPortalGroup, nil); err != nil {
+		return nil, err
 	}
 
 	return obj, nil
 }
 
-const (
-	StorageZFSOverISCSIKernelContents    = ContentQEMUData
-	StorageZFSOverISCSIKernelImageFormat = ImageFormatRaw
-	StorageZFSOverISCSIKernelShared      = AllowShareForced
-	StorageZFSOverISCSIKernelSnapshots   = AllowSnapshotAll
-	StorageZFSOverISCSIKernelClones      = AllowCloneAll
-)
+type ISCSIProvider string
 
 const (
-	DefaultStorageZFSOverISCSIUseSparse            = false
-	DefaultStorageZFSOverISCSIWriteCache           = true
-	DefaultStorageZFSOverISCSIComstarHostGroup     = ""
-	DefaultStorageZFSOverISCSIComstarTargetGroup   = ""
-	DefaultStorageZFSOverISCSILIOTargetPortalGroup = ""
+	ISCSIProviderCOMSTAR ISCSIProvider = "comstar"
+	ISCSIProviderISTGT   ISCSIProvider = "istgt"
+	ISCSIProviderIET     ISCSIProvider = "iet"
+	ISCSIProviderLIO     ISCSIProvider = "LIO"
 )
 
-type ISCSIProvider uint
-
-const (
-	ISCSIProviderComstar ISCSIProvider = iota
-	ISCSIProviderISTGT
-	ISCSIProviderIET
-	ISCSIProviderLIO
-)
-
-func (obj ISCSIProvider) Marshal() (string, error) {
+func (obj ISCSIProvider) IsValid() bool {
 	switch obj {
-	case ISCSIProviderComstar:
-		return "comstar", nil
-	case ISCSIProviderISTGT:
-		return "istgt", nil
-	case ISCSIProviderIET:
-		return "iet", nil
-	case ISCSIProviderLIO:
-		return "LIO", nil
+	case ISCSIProviderCOMSTAR, ISCSIProviderISTGT, ISCSIProviderIET, ISCSIProviderLIO:
+		return true
 	default:
-		return "", fmt.Errorf("unknown iscsi provider")
+		return false
 	}
 }
 
-func (obj *ISCSIProvider) Unmarshal(s string) error {
-	switch s {
-	case "comstar":
-		*obj = ISCSIProviderComstar
-	case "istgt":
-		*obj = ISCSIProviderISTGT
-	case "iet":
-		*obj = ISCSIProviderIET
-	case "LIO":
-		*obj = ISCSIProviderLIO
-	default:
-		return fmt.Errorf("can't unmarshal iscsi provider %s", s)
-	}
+func (obj ISCSIProvider) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj ISCSIProvider) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *ISCSIProvider) Unmarshal(s string) error {
+	*obj = ISCSIProvider(s)
 	return nil
 }
 

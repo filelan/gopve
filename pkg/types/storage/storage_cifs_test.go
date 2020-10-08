@@ -104,8 +104,8 @@ func TestStorageCIFSProperties(t *testing.T) {
 }
 
 func TestSMBVersion(t *testing.T) {
-	SMBVersionCases := map[string](struct {
-		Object storage.SMBVersion
+	test.HelperTestFixedValue(t, (*storage.SMBVersion)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"2.0": {
@@ -120,28 +120,5 @@ func TestSMBVersion(t *testing.T) {
 			Object: storage.SMBVersion30,
 			Value:  "3.0",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range SMBVersionCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedTransport storage.SMBVersion
-				err := (&receivedTransport).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedTransport)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range SMBVersionCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }

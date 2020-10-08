@@ -61,8 +61,8 @@ func TestStorageZFSOverISCSIProperties(t *testing.T) {
 				storage.ISCSIProviderIET,
 				storageProps.ISCSIProvider,
 			)
-			assert.Equal(t, "test_comstar_hg", storageProps.ComstarHostGroup)
-			assert.Equal(t, "test_comstar_tg", storageProps.ComstarTargetGroup)
+			assert.Equal(t, "test_comstar_hg", storageProps.COMSTARHostGroup)
+			assert.Equal(t, "test_comstar_tg", storageProps.COMSTARTargetGroup)
 			assert.Equal(t, "test_lio_tpg", storageProps.LIOTargetPortalGroup)
 		})
 
@@ -101,14 +101,14 @@ func TestStorageZFSOverISCSIProperties(t *testing.T) {
 
 				assert.Equal(
 					t,
-					storage.DefaultStorageZFSOverISCSIComstarHostGroup,
-					storageProps.ComstarHostGroup,
+					storage.DefaultStorageZFSOverISCSICOMSTARHostGroup,
+					storageProps.COMSTARHostGroup,
 				)
 
 				assert.Equal(
 					t,
-					storage.DefaultStorageZFSOverISCSIComstarTargetGroup,
-					storageProps.ComstarTargetGroup,
+					storage.DefaultStorageZFSOverISCSICOMSTARTargetGroup,
+					storageProps.COMSTARTargetGroup,
 				)
 
 				assert.Equal(
@@ -119,4 +119,28 @@ func TestStorageZFSOverISCSIProperties(t *testing.T) {
 			},
 		),
 	)
+}
+
+func TestISCSIProvider(t *testing.T) {
+	test.HelperTestFixedValue(t, (*storage.ISCSIProvider)(nil), map[string](struct {
+		Object types.FixedValue
+		Value  string
+	}){
+		"COMSTAR": {
+			Object: storage.ISCSIProviderCOMSTAR,
+			Value:  "comstar",
+		},
+		"ISTGT": {
+			Object: storage.ISCSIProviderISTGT,
+			Value:  "istgt",
+		},
+		"IET": {
+			Object: storage.ISCSIProviderIET,
+			Value:  "iet",
+		},
+		"LIO": {
+			Object: storage.ISCSIProviderLIO,
+			Value:  "LIO",
+		},
+	})
 }

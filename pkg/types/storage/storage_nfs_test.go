@@ -74,8 +74,8 @@ func TestStorageNFSProperties(t *testing.T) {
 }
 
 func TestNFSVersion(t *testing.T) {
-	NFSVersionCases := map[string](struct {
-		Object storage.NFSVersion
+	test.HelperTestFixedValue(t, (*storage.NFSVersion)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
 		"3": {
@@ -94,28 +94,5 @@ func TestNFSVersion(t *testing.T) {
 			Object: storage.NFSVersion42,
 			Value:  "4.2",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range NFSVersionCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedTransport storage.NFSVersion
-				err := (&receivedTransport).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedTransport)
-			})
-		}
-	})
-
-	t.Run("Unmarshal", func(t *testing.T) {
-		for n, tt := range NFSVersionCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }

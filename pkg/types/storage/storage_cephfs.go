@@ -19,6 +19,14 @@ type StorageCephFS interface {
 	LocalPath() string
 }
 
+const (
+	StorageCephFSContents    = ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
+	StorageCephFSImageFormat = ContentNone
+	StorageCephFSShared      = AllowShareNever
+	StorageCephFSSnapshots   = AllowSnapshotAll
+	StorageCephFSClones      = AllowCloneNever
+)
+
 type StorageCephFSProperties struct {
 	MonitorHosts []string
 	Username     string
@@ -29,60 +37,12 @@ type StorageCephFSProperties struct {
 	LocalPath  string
 }
 
-func NewStorageCephFSProperties(
-	props types.Properties,
-) (*StorageCephFSProperties, error) {
-	obj := new(StorageCephFSProperties)
-
-	if v, ok := props["monhost"].(string); ok {
-		monitorHosts := internal_types.PVEList{Separator: " "}
-		if err := (&monitorHosts).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "monhost")
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.MonitorHosts = monitorHosts.List()
-	} else {
-		obj.MonitorHosts = DefaultStorageCephFSMonitorHosts
-	}
-
-	if v, ok := props["username"].(string); ok {
-		obj.Username = v
-	} else {
-		obj.Username = DefaultStorageCephFSUsername
-	}
-
-	if v, ok := props["fuse"].(float64); ok {
-		obj.UseFUSE = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.UseFUSE = DefaultStorageCephFSUseFUSE
-	}
-
-	if v, ok := props["subdir"].(string); ok {
-		obj.ServerPath = v
-	} else {
-		obj.ServerPath = DefaultStorageCephFSServerPath
-	}
-
-	if v, ok := props["path"].(string); ok {
-		obj.LocalPath = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "path")
-		return nil, err
-	}
-
-	return obj, nil
-}
-
 const (
-	StorageCephFSContents    = ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
-	StorageCephFSImageFormat = ContentNone
-	StorageCephFSShared      = AllowShareNever
-	StorageCephFSSnapshots   = AllowSnapshotAll
-	StorageCephFSClones      = AllowCloneNever
+	mkCephFSMonitorHosts = "monhost"
+	mkCephFSUsername     = "username"
+	mkCephFSUseFUSE      = "fuse"
+	mkCephFSServerPath   = "subdir"
+	mkCephFSLocalPath    = "path"
 )
 
 var DefaultStorageCephFSMonitorHosts = []string{}
@@ -92,3 +52,41 @@ const (
 	DefaultStorageCephFSUseFUSE    = false
 	DefaultStorageCephFSServerPath = "/"
 )
+
+func NewStorageCephFSProperties(
+	props types.Properties,
+) (*StorageCephFSProperties, error) {
+	obj := new(StorageCephFSProperties)
+
+	if v, ok := props[mkCephFSMonitorHosts].(string); ok {
+		monitorHosts := internal_types.PVEList{Separator: " "}
+		if err := (&monitorHosts).Unmarshal(v); err != nil {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkCephFSMonitorHosts)
+			err.AddKey("value", v)
+			return nil, err
+		}
+
+		obj.MonitorHosts = monitorHosts.List()
+	} else {
+		obj.MonitorHosts = DefaultStorageCephFSMonitorHosts
+	}
+
+	if err := props.SetString(mkCephFSUsername, &obj.Username, DefaultStorageCephFSUsername, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkCephFSUseFUSE, &obj.UseFUSE, DefaultStorageCephFSUseFUSE, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkCephFSServerPath, &obj.ServerPath, DefaultStorageCephFSServerPath, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetRequiredString(mkCephFSLocalPath, &obj.LocalPath, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

@@ -1,9 +1,7 @@
 package storage
 
 import (
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageLVM interface {
@@ -25,61 +23,6 @@ type StorageLVM interface {
 	TaggedOnly() bool
 }
 
-type StorageLVMProperties struct {
-	BaseStorage          string
-	VolumeGroup          string
-	SafeRemove           bool
-	SafeRemoveThroughput int
-	TaggedOnly           bool
-}
-
-func NewStorageLVMProperties(
-	props types.Properties,
-) (*StorageLVMProperties, error) {
-	obj := new(StorageLVMProperties)
-
-	if v, ok := props["base"].(string); ok {
-		obj.BaseStorage = v
-	} else {
-		obj.BaseStorage = DefaultStorageLVMBaseStorage
-	}
-
-	if v, ok := props["vgname"].(string); ok {
-		obj.VolumeGroup = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "vgname")
-		return nil, err
-	}
-
-	if v, ok := props["saferemove"].(float64); ok {
-		obj.SafeRemove = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.SafeRemove = DefaultStorageLVMSafeRemove
-	}
-
-	if v, ok := props["saferemove_throughput"].(float64); ok {
-		if v == float64(int(v)) {
-			obj.SafeRemoveThroughput = int(v)
-		} else {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "saferemove_throughput")
-			err.AddKey("value", v)
-			return nil, err
-		}
-	} else {
-		obj.SafeRemoveThroughput = DefaultStorageLVMSafeRemoveThroughput
-	}
-
-	if v, ok := props["tagged_only"].(float64); ok {
-		obj.TaggedOnly = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.SafeRemove = DefaultStorageLVMTaggedOnly
-	}
-
-	return obj, nil
-}
-
 const (
 	StorageLVMContent       = ContentQEMUData & ContentContainerData
 	StorageLVMImageFormat   = ImageFormatRaw
@@ -88,9 +31,53 @@ const (
 	StorageLVMAllowClone    = AllowCloneNever
 )
 
+type StorageLVMProperties struct {
+	BaseStorage          string
+	VolumeGroup          string
+	SafeRemove           bool
+	SafeRemoveThroughput int
+	TaggedOnly           bool
+}
+
+const (
+	mkLVMBaseStorage          = "base"
+	mkLVMVolumeGroup          = "vgname"
+	mkLVMSafeRemove           = "saferemove"
+	mkLVMSafeRemoveThroughput = "saferemove_throughput"
+	mkLVMTaggedOnly           = "tagged_only"
+)
+
 const (
 	DefaultStorageLVMBaseStorage          = ""
 	DefaultStorageLVMSafeRemove           = false
 	DefaultStorageLVMSafeRemoveThroughput = -10485760
 	DefaultStorageLVMTaggedOnly           = false
 )
+
+func NewStorageLVMProperties(
+	props types.Properties,
+) (*StorageLVMProperties, error) {
+	obj := new(StorageLVMProperties)
+
+	if err := props.SetString(mkLVMBaseStorage, &obj.BaseStorage, DefaultStorageLVMBaseStorage, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetRequiredString(mkLVMVolumeGroup, &obj.VolumeGroup, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkLVMSafeRemove, &obj.SafeRemove, DefaultStorageLVMSafeRemove, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetInt(mkLVMSafeRemoveThroughput, &obj.SafeRemoveThroughput, DefaultStorageLVMSafeRemoveThroughput, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkLVMTaggedOnly, &obj.TaggedOnly, DefaultStorageLVMTaggedOnly, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

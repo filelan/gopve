@@ -18,6 +18,14 @@ type StorageRBD interface {
 	PoolName() string
 }
 
+const (
+	StorageRBDContents    = ContentQEMUData & ContentContainerData
+	StorageRBDImageFormat = ImageFormatRaw
+	StorageRBDShared      = AllowShareForced
+	StorageRBDSnapshots   = AllowSnapshotAll
+	StorageRBDClones      = AllowCloneAll
+)
+
 type StorageRBDProperties struct {
 	MonitorHosts []string
 	Username     string
@@ -27,52 +35,11 @@ type StorageRBDProperties struct {
 	PoolName string
 }
 
-func NewStorageRBDProperties(
-	props types.Properties,
-) (*StorageRBDProperties, error) {
-	obj := new(StorageRBDProperties)
-
-	if v, ok := props["monhost"].(string); ok {
-		monitorHosts := internal_types.PVEList{Separator: " "}
-		if err := (&monitorHosts).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "monhost")
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		obj.MonitorHosts = monitorHosts.List()
-	} else {
-		obj.MonitorHosts = DefaultStorageRBDMonitorHosts
-	}
-
-	if v, ok := props["username"].(string); ok {
-		obj.Username = v
-	} else {
-		obj.Username = DefaultStorageRBDUsername
-	}
-
-	if v, ok := props["krbd"].(float64); ok {
-		obj.UseKRBD = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.UseKRBD = DefaultStorageRBDUseKRBD
-	}
-
-	if v, ok := props["pool"].(string); ok {
-		obj.PoolName = v
-	} else {
-		obj.PoolName = DefaultStorageRBDPoolName
-	}
-
-	return obj, nil
-}
-
 const (
-	StorageRBDContents    = ContentQEMUData & ContentContainerData
-	StorageRBDImageFormat = ImageFormatRaw
-	StorageRBDShared      = AllowShareForced
-	StorageRBDSnapshots   = AllowSnapshotAll
-	StorageRBDClones      = AllowCloneAll
+	mkRBDMonitorHosts = "monhost"
+	mkRBDUsername     = "username"
+	mkRBDUseKRBD      = "krbd"
+	mkRBDPoolName     = "pool"
 )
 
 var DefaultStorageRBDMonitorHosts = []string{}
@@ -82,3 +49,37 @@ const (
 	DefaultStorageRBDUseKRBD  = false
 	DefaultStorageRBDPoolName = "rbd"
 )
+
+func NewStorageRBDProperties(
+	props types.Properties,
+) (*StorageRBDProperties, error) {
+	obj := new(StorageRBDProperties)
+
+	if v, ok := props[mkRBDMonitorHosts].(string); ok {
+		monitorHosts := internal_types.PVEList{Separator: " "}
+		if err := (&monitorHosts).Unmarshal(v); err != nil {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", mkRBDMonitorHosts)
+			err.AddKey("value", v)
+			return nil, err
+		}
+
+		obj.MonitorHosts = monitorHosts.List()
+	} else {
+		obj.MonitorHosts = DefaultStorageRBDMonitorHosts
+	}
+
+	if err := props.SetString(mkRBDUsername, &obj.Username, DefaultStorageRBDUsername, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkRBDUseKRBD, &obj.UseKRBD, DefaultStorageRBDUseKRBD, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkRBDPoolName, &obj.PoolName, DefaultStorageRBDPoolName, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

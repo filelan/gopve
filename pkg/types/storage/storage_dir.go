@@ -1,9 +1,7 @@
 package storage
 
 import (
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageDir interface {
@@ -19,40 +17,6 @@ type StorageDir interface {
 	LocalPathIsManaged() bool
 }
 
-type StorageDirProperties struct {
-	LocalPath          string
-	LocalPathCreate    bool
-	LocalPathIsManaged bool
-}
-
-func NewStorageDirProperties(
-	props types.Properties,
-) (*StorageDirProperties, error) {
-	obj := new(StorageDirProperties)
-
-	if v, ok := props["path"].(string); ok {
-		obj.LocalPath = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "path")
-		return nil, err
-	}
-
-	if v, ok := props["mkdir"].(float64); ok {
-		obj.LocalPathCreate = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.LocalPathCreate = DefaultStorageDirLocalPathCreate
-	}
-
-	if v, ok := props["is_mountpoint"].(float64); ok {
-		obj.LocalPathIsManaged = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.LocalPathIsManaged = DefaultStorageDirLocalIsManaged
-	}
-
-	return obj, nil
-}
-
 const (
 	StorageDirContent       = ContentQEMUData & ContentContainerData & ContentISO & ContentContainerTemplate & ContentBackup & ContentSnippet
 	StorageDirImageFormat   = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
@@ -61,7 +25,39 @@ const (
 	StorageDirAllowClone    = AllowCloneQcow2
 )
 
+type StorageDirProperties struct {
+	LocalPath          string
+	LocalPathCreate    bool
+	LocalPathIsManaged bool
+}
+
+const (
+	mkDirLocalPath          = "path"
+	mkDirLocalPathCreate    = "mkdir"
+	mkDirLocalPathIsManaged = "is_mountpoint"
+)
+
 const (
 	DefaultStorageDirLocalPathCreate = true
 	DefaultStorageDirLocalIsManaged  = false
 )
+
+func NewStorageDirProperties(
+	props types.Properties,
+) (*StorageDirProperties, error) {
+	obj := new(StorageDirProperties)
+
+	if err := props.SetRequiredString(mkDirLocalPath, &obj.LocalPath, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkDirLocalPathCreate, &obj.LocalPathCreate, DefaultStorageDirLocalPathCreate, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkDirLocalPathIsManaged, &obj.LocalPathIsManaged, DefaultStorageDirLocalIsManaged, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

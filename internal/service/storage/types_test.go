@@ -313,7 +313,7 @@ func TestStorageNewZFSOverISCSI(t *testing.T) {
 		storage_types.ISCSIProviderIET,
 		concreteStorage.ISCSIProvider(),
 	)
-	assert.Equal(t, "test_comstar_hg", concreteStorage.ComstarHostGroup())
-	assert.Equal(t, "test_comstar_tg", concreteStorage.ComstarTargetGroup())
+	assert.Equal(t, "test_comstar_hg", concreteStorage.COMSTARHostGroup())
+	assert.Equal(t, "test_comstar_tg", concreteStorage.COMSTARTargetGroup())
 	assert.Equal(t, "test_lio_tpg", concreteStorage.LIOTargetPortalGroup())
 }

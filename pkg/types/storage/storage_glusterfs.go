@@ -2,10 +2,8 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageGlusterFS interface {
@@ -18,55 +16,6 @@ type StorageGlusterFS interface {
 	Volume() string
 }
 
-type StorageGlusterFSProperties struct {
-	MainServer   string
-	BackupServer string
-	Transport    GlusterFSTransport
-
-	Volume string
-}
-
-func NewStorageGlusterFSProperties(
-	props types.Properties,
-) (*StorageGlusterFSProperties, error) {
-	obj := new(StorageGlusterFSProperties)
-
-	if v, ok := props["server"].(string); ok {
-		obj.MainServer = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "server")
-		return nil, err
-	}
-
-	if v, ok := props["server2"].(string); ok {
-		obj.BackupServer = v
-	} else {
-		obj.BackupServer = DefaultStorageGlusterFSBackupServer
-	}
-
-	if v, ok := props["transport"].(string); ok {
-		if err := (&obj.Transport).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "transport")
-			err.AddKey("value", v)
-			return nil, err
-		}
-	} else {
-		obj.Transport = DefaultStorageGlusterFSTransport
-	}
-
-	if v, ok := props["volume"].(string); ok {
-		obj.Volume = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "volume")
-		return nil, err
-	}
-
-	return obj, nil
-}
-
 const (
 	StorageGlusterFSContents    = ContentQEMUData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
 	StorageGlusterFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
@@ -75,47 +24,78 @@ const (
 	StorageGlusterFSClones      = AllowSnapshotQcow2
 )
 
+type StorageGlusterFSProperties struct {
+	MainServer   string
+	BackupServer string
+	Transport    GlusterFSTransport
+
+	Volume string
+}
+
+const (
+	mkGlusterFSMainServer   = "server"
+	mkGlusterFSBackupServer = "server2"
+	mkGlusterFSTransport    = "transport"
+	mkGlusterFSVolume       = "volume"
+)
+
 const (
 	DefaultStorageGlusterFSBackupServer = ""
 	DefaultStorageGlusterFSTransport    = GlusterFSTransportNone
 )
 
-type GlusterFSTransport uint
+func NewStorageGlusterFSProperties(
+	props types.Properties,
+) (*StorageGlusterFSProperties, error) {
+	obj := new(StorageGlusterFSProperties)
+
+	if err := props.SetRequiredString(mkGlusterFSMainServer, &obj.MainServer, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkGlusterFSBackupServer, &obj.BackupServer, DefaultStorageGlusterFSBackupServer, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetFixedValue(mkGlusterFSTransport, &obj.Transport, DefaultStorageGlusterFSTransport, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetRequiredString(mkGlusterFSVolume, &obj.Volume, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+type GlusterFSTransport string
 
 const (
-	GlusterFSTransportNone GlusterFSTransport = iota
-	GlusterFSTransportTCP
-	GlusterFSTransportUNIX
-	GlusterFSTransportRDMA
+	GlusterFSTransportNone GlusterFSTransport = ""
+	GlusterFSTransportTCP  GlusterFSTransport = "tcp"
+	GlusterFSTransportUNIX GlusterFSTransport = "unix"
+	GlusterFSTransportRDMA GlusterFSTransport = "rdma"
 )
 
-func (obj GlusterFSTransport) Marshal() (string, error) {
+func (obj GlusterFSTransport) IsValid() bool {
 	switch obj {
-	case GlusterFSTransportNone:
-		return "", nil
-	case GlusterFSTransportTCP:
-		return "tcp", nil
-	case GlusterFSTransportUNIX:
-		return "unix", nil
-	case GlusterFSTransportRDMA:
-		return "rdma", nil
+	case GlusterFSTransportNone, GlusterFSTransportTCP, GlusterFSTransportUNIX, GlusterFSTransportRDMA:
+		return true
 	default:
-		return "", fmt.Errorf("unknown glusterfs transport")
+		return false
 	}
 }
 
-func (obj *GlusterFSTransport) Unmarshal(s string) error {
-	switch s {
-	case "tcp":
-		*obj = GlusterFSTransportTCP
-	case "unix":
-		*obj = GlusterFSTransportUNIX
-	case "rdma":
-		*obj = GlusterFSTransportRDMA
-	default:
-		return fmt.Errorf("can't unmarshal glusterfs transport %s", s)
-	}
+func (obj GlusterFSTransport) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj GlusterFSTransport) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *GlusterFSTransport) Unmarshal(s string) error {
+	*obj = GlusterFSTransport(s)
 	return nil
 }
 

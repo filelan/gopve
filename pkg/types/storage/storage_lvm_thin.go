@@ -2,7 +2,6 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageLVMThin interface {
@@ -12,35 +11,6 @@ type StorageLVMThin interface {
 	ThinPool() string
 }
 
-type StorageLVMThinProperties struct {
-	VolumeGroup string
-	ThinPool    string
-}
-
-func NewStorageLVMThinProperties(
-	props types.Properties,
-) (*StorageLVMThinProperties, error) {
-	obj := new(StorageLVMThinProperties)
-
-	if v, ok := props["vgname"].(string); ok {
-		obj.VolumeGroup = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "vgname")
-		return nil, err
-	}
-
-	if v, ok := props["thinpool"].(string); ok {
-		obj.ThinPool = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "thinpool")
-		return nil, err
-	}
-
-	return obj, nil
-}
-
 const (
 	StorageLVMThinContents    = ContentQEMUData & ContentContainerData
 	StorageLVMThinImageFormat = ImageFormatRaw
@@ -48,3 +18,29 @@ const (
 	StorageLVMThinSnapshots   = AllowSnapshotAll
 	StorageLVMThinClones      = AllowCloneAll
 )
+
+type StorageLVMThinProperties struct {
+	VolumeGroup string
+	ThinPool    string
+}
+
+const (
+	mkLVMThinVolumeGroup = "vgname"
+	mkLVMThinThinPool    = "thinpool"
+)
+
+func NewStorageLVMThinProperties(
+	props types.Properties,
+) (*StorageLVMThinProperties, error) {
+	obj := new(StorageLVMThinProperties)
+
+	if err := props.SetRequiredString(mkLVMThinVolumeGroup, &obj.VolumeGroup, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetRequiredString(mkLVMThinThinPool, &obj.ThinPool, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

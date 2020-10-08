@@ -80,10 +80,14 @@ func TestStorageGlusterFSProperties(t *testing.T) {
 }
 
 func TestGlusterFSTransport(t *testing.T) {
-	GlusterFSTransportCases := map[string](struct {
-		Object storage.GlusterFSTransport
+	test.HelperTestFixedValue(t, (*storage.GlusterFSTransport)(nil), map[string](struct {
+		Object types.FixedValue
 		Value  string
 	}){
+		"None": {
+			Object: storage.GlusterFSTransportNone,
+			Value:  "",
+		},
 		"TCP": {
 			Object: storage.GlusterFSTransportTCP,
 			Value:  "tcp",
@@ -96,27 +100,5 @@ func TestGlusterFSTransport(t *testing.T) {
 			Object: storage.GlusterFSTransportRDMA,
 			Value:  "rdma",
 		},
-	}
-
-	t.Run("Marshal", func(t *testing.T) {
-		for n, tt := range GlusterFSTransportCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				var receivedTransport storage.GlusterFSTransport
-				err := (&receivedTransport).Unmarshal(tt.Value)
-				require.NoError(t, err)
-				assert.Equal(t, tt.Object, receivedTransport)
-			})
-		}
-	})
-	t.Run("Unarshal", func(t *testing.T) {
-		for n, tt := range GlusterFSTransportCases {
-			tt := tt
-			t.Run(n, func(t *testing.T) {
-				receivedValue, err := tt.Object.Marshal()
-				require.NoError(t, err)
-				assert.Equal(t, tt.Value, receivedValue)
-			})
-		}
 	})
 }

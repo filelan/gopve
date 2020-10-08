@@ -8,24 +8,6 @@ type StorageDRBD interface {
 	Redundancy() uint
 }
 
-type StorageDRBDProperties struct {
-	Redundancy uint
-}
-
-func NewStorageDRBDProperties(
-	props types.Properties,
-) (*StorageDRBDProperties, error) {
-	obj := new(StorageDRBDProperties)
-
-	if v, ok := props["redundancy"].(float64); ok {
-		obj.Redundancy = uint(v)
-	} else {
-		obj.Redundancy = DefaultStorageDRBDRedundancy
-	}
-
-	return obj, nil
-}
-
 const (
 	StorageDRBDContents    = ContentQEMUData & ContentContainerData
 	StorageDRBDImageFormat = ImageFormatRaw
@@ -34,6 +16,26 @@ const (
 	StorageDRBDClones      = AllowCloneNever
 )
 
+type StorageDRBDProperties struct {
+	Redundancy uint
+}
+
+const (
+	mkDRBDRedundancy = "redundancy"
+)
+
 const (
 	DefaultStorageDRBDRedundancy uint = 2
 )
+
+func NewStorageDRBDProperties(
+	props types.Properties,
+) (*StorageDRBDProperties, error) {
+	obj := new(StorageDRBDProperties)
+
+	if err := props.SetUint(mkDRBDRedundancy, &obj.Redundancy, DefaultStorageDRBDRedundancy, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

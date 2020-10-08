@@ -164,24 +164,24 @@ func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
 	}
 
 	if err := props.SetRequiredUint(mkLXCCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= 128
+		ValidateFunc: func(val uint) bool {
+			return val <= 128
 		},
 	}); err != nil {
 		return nil, err
 	}
 
 	if err := props.SetUint(mkLXCCPUPropertyLimit, &obj.Limit, DefaultLXCCPUPropertyLimit, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= 128
+		ValidateFunc: func(val uint) bool {
+			return val <= 128
 		},
 	}); err != nil {
 		return nil, err
 	}
 
 	if err := props.SetUint(mkLXCCPUPropertyUnits, &obj.Units, DefaultLXCCPUPropertyUnits, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v >= 8 && v <= 500000
+		ValidateFunc: func(val uint) bool {
+			return val >= 8 && val <= 500000
 		},
 	}); err != nil {
 		return nil, err

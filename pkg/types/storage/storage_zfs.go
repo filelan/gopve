@@ -1,9 +1,7 @@
 package storage
 
 import (
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageZFS interface {
@@ -17,47 +15,6 @@ type StorageZFS interface {
 	LocalPath() string
 }
 
-type StorageZFSProperties struct {
-	PoolName  string
-	BlockSize string
-	UseSparse bool
-	LocalPath string
-}
-
-func NewStorageZFSProperties(
-	props types.Properties,
-) (*StorageZFSProperties, error) {
-	obj := new(StorageZFSProperties)
-
-	if v, ok := props["pool"].(string); ok {
-		obj.PoolName = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "pool")
-		return nil, err
-	}
-
-	if v, ok := props["blocksize"].(string); ok {
-		obj.BlockSize = v
-	} else {
-		obj.BlockSize = DefaultStorageZFSBlockSize
-	}
-
-	if v, ok := props["sparse"].(float64); ok {
-		obj.UseSparse = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.UseSparse = DefaultStorageZFSUseSparse
-	}
-
-	if v, ok := props["mountpoint"].(string); ok {
-		obj.LocalPath = v
-	} else {
-		obj.LocalPath = DefaultStorageZFSMountPoint
-	}
-
-	return obj, nil
-}
-
 const (
 	StorageZFSContents    = ContentQEMUData & ContentContainerData
 	StorageZFSImageFormat = ImageFormatRaw & ImageFormatSubVolume
@@ -66,8 +23,46 @@ const (
 	StorageZFSClones      = AllowCloneAll
 )
 
+type StorageZFSProperties struct {
+	PoolName  string
+	BlockSize string
+	UseSparse bool
+	LocalPath string
+}
+
+const (
+	mkZFSPoolName  = "pool"
+	mkZFSBlockSize = "blocksize"
+	mkZFSUseSparse = "sparse"
+	mkZFSLocalPath = "mountpoint"
+)
+
 const (
 	DefaultStorageZFSBlockSize  = "8192"
 	DefaultStorageZFSUseSparse  = false
 	DefaultStorageZFSMountPoint = ""
 )
+
+func NewStorageZFSProperties(
+	props types.Properties,
+) (*StorageZFSProperties, error) {
+	obj := new(StorageZFSProperties)
+
+	if err := props.SetRequiredString(mkZFSPoolName, &obj.PoolName, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkZFSBlockSize, &obj.BlockSize, DefaultStorageZFSBlockSize, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkZFSUseSparse, &obj.UseSparse, DefaultStorageZFSUseSparse, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkZFSLocalPath, &obj.LocalPath, DefaultStorageZFSMountPoint, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}

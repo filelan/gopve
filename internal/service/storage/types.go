@@ -571,12 +571,12 @@ func (obj *StorageZFSOverISCSI) ISCSIProvider() storage.ISCSIProvider {
 	return obj.props.ISCSIProvider
 }
 
-func (obj *StorageZFSOverISCSI) ComstarHostGroup() string {
-	return obj.props.ComstarHostGroup
+func (obj *StorageZFSOverISCSI) COMSTARHostGroup() string {
+	return obj.props.COMSTARHostGroup
 }
 
-func (obj *StorageZFSOverISCSI) ComstarTargetGroup() string {
-	return obj.props.ComstarTargetGroup
+func (obj *StorageZFSOverISCSI) COMSTARTargetGroup() string {
+	return obj.props.COMSTARTargetGroup
 }
 
 func (obj *StorageZFSOverISCSI) LIOTargetPortalGroup() string {

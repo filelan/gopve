@@ -2,26 +2,24 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-type Kind int
+type Kind string
 
 const (
-	KindUnknown Kind = iota
-	KindDir
-	KindLVM
-	KindLVMThin
-	KindZFS
-	KindNFS
-	KindCIFS
-	KindGlusterFS
-	KindISCSIKernel
-	KindISCSIUser
-	KindCephFS
-	KindRBD
-	KindDRBD
-	KindZFSOverISCSI
+	KindDir          Kind = "dir"
+	KindLVM          Kind = "lvm"
+	KindLVMThin      Kind = "lvmthin"
+	KindZFS          Kind = "zfspool"
+	KindNFS          Kind = "nfs"
+	KindCIFS         Kind = "cifs"
+	KindGlusterFS    Kind = "glusterfs"
+	KindISCSIKernel  Kind = "iscsi"
+	KindISCSIUser    Kind = "iscsidirect"
+	KindCephFS       Kind = "cephfs"
+	KindRBD          Kind = "rbd"
+	KindDRBD         Kind = "drbd"
+	KindZFSOverISCSI Kind = "zfs"
 )
 
 func (obj Kind) String() string {
@@ -32,74 +30,25 @@ func (obj Kind) String() string {
 	return ""
 }
 
-func (obj Kind) Marshal() (string, error) {
+func (obj Kind) IsValid() bool {
 	switch obj {
-	case KindDir:
-		return "dir", nil
-	case KindLVM:
-		return "lvm", nil
-	case KindLVMThin:
-		return "lvmthin", nil
-	case KindZFS:
-		return "zfspool", nil
-	case KindNFS:
-		return "nfs", nil
-	case KindCIFS:
-		return "cifs", nil
-	case KindGlusterFS:
-		return "glusterfs", nil
-	case KindISCSIKernel:
-		return "iscsi", nil
-	case KindISCSIUser:
-		return "iscsidirect", nil
-	case KindCephFS:
-		return "cephfs", nil
-	case KindRBD:
-		return "rbd", nil
-	case KindDRBD:
-		return "drbd", nil
-	case KindZFSOverISCSI:
-		return "zfs", nil
-
+	case KindDir, KindLVM, KindLVMThin, KindZFS, KindNFS, KindCIFS, KindGlusterFS, KindISCSIKernel, KindISCSIUser, KindCephFS, KindRBD, KindDRBD, KindZFSOverISCSI:
+		return true
 	default:
-		return "", fmt.Errorf("unknown storage kind")
+		return false
 	}
 }
 
+func (obj Kind) IsUnknown() bool {
+	return !obj.IsValid()
+}
+
+func (obj Kind) Marshal() (string, error) {
+	return string(obj), nil
+}
+
 func (obj *Kind) Unmarshal(s string) error {
-	switch s {
-	case "dir":
-		*obj = KindDir
-	case "lvm":
-		*obj = KindLVM
-	case "lvmthin":
-		*obj = KindLVMThin
-	case "zfspool":
-		*obj = KindZFS
-	case "nfs":
-		*obj = KindNFS
-	case "cifs":
-		*obj = KindCIFS
-	case "glusterfs":
-		*obj = KindGlusterFS
-	case "iscsi":
-		*obj = KindISCSIKernel
-	case "iscsidirect":
-		*obj = KindISCSIUser
-	case "cephfs":
-		*obj = KindCephFS
-	case "rbd":
-		*obj = KindRBD
-	case "drbd":
-		*obj = KindDRBD
-	case "zfs":
-		*obj = KindZFSOverISCSI
-
-	default:
-		*obj = KindUnknown
-		return fmt.Errorf("unknown storage kind %s", s)
-	}
-
+	*obj = Kind(s)
 	return nil
 }
 

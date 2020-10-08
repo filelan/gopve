@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 
 	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
@@ -20,6 +19,14 @@ type StorageNFS interface {
 	LocalPathCreate() bool
 }
 
+const (
+	StorageNFSContents    = ContentQEMUData & ContentContainerData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
+	StorageNFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
+	StorageNFSShared      = AllowShareForced
+	StorageNFSSnapshots   = AllowSnapshotQcow2
+	StorageNFSClones      = AllowCloneQcow2
+)
+
 type StorageNFSProperties struct {
 	Server     string
 	NFSVersion NFSVersion
@@ -29,20 +36,29 @@ type StorageNFSProperties struct {
 	LocalPathCreate bool
 }
 
+const (
+	mkNFSServer          = "server"
+	mkNFSOptions         = "options"
+	mkNFSServerPath      = "export"
+	mkNFSLocalPath       = "path"
+	mkNFSLocalPathCreate = "mkdir"
+)
+
+const (
+	DefaultStorageNFSVersion         = NFSVersionNone
+	DefaultStorageNFSLocalPathCreate = false
+)
+
 func NewStorageNFSProperties(
 	props types.Properties,
 ) (*StorageNFSProperties, error) {
 	obj := new(StorageNFSProperties)
 
-	if v, ok := props["server"].(string); ok {
-		obj.Server = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "server")
+	if err := props.SetRequiredString(mkNFSServer, &obj.Server, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["options"].(string); ok {
+	if v, ok := props[mkNFSOptions].(string); ok {
 		nfsOptions := internal_types.PVEDictionary{
 			ListSeparator:     ",",
 			KeyValueSeparator: "=",
@@ -75,83 +91,50 @@ func NewStorageNFSProperties(
 		obj.NFSVersion = DefaultStorageNFSVersion
 	}
 
-	if v, ok := props["export"].(string); ok {
-		obj.ServerPath = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "export")
+	if err := props.SetRequiredString(mkNFSServerPath, &obj.ServerPath, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["path"].(string); ok {
-		obj.LocalPath = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "path")
+	if err := props.SetRequiredString(mkNFSLocalPath, &obj.LocalPath, nil); err != nil {
 		return nil, err
 	}
 
-	if v, ok := props["mkdir"].(float64); ok {
-		obj.LocalPathCreate = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.LocalPathCreate = DefaultStorageNFSLocalPathCreate
+	if err := props.SetBool(mkNFSLocalPathCreate, &obj.LocalPathCreate, DefaultStorageNFSLocalPathCreate, nil); err != nil {
+		return nil, err
 	}
 
 	return obj, nil
 }
 
-const (
-	StorageNFSContents    = ContentQEMUData & ContentContainerData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
-	StorageNFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
-	StorageNFSShared      = AllowShareForced
-	StorageNFSSnapshots   = AllowSnapshotQcow2
-	StorageNFSClones      = AllowCloneQcow2
-)
+type NFSVersion string
 
 const (
-	DefaultStorageNFSVersion         = NFSVersionNone
-	DefaultStorageNFSLocalPathCreate = false
+	NFSVersionNone NFSVersion = ""
+	NFSVersion30   NFSVersion = "3"
+	NFSVersion40   NFSVersion = "4"
+	NFSVersion41   NFSVersion = "4.1"
+	NFSVersion42   NFSVersion = "4.2"
 )
 
-type NFSVersion uint
-
-const (
-	NFSVersionNone NFSVersion = iota
-	NFSVersion30
-	NFSVersion40
-	NFSVersion41
-	NFSVersion42
-)
-
-func (obj NFSVersion) Marshal() (string, error) {
+func (obj NFSVersion) IsValid() bool {
 	switch obj {
-	case NFSVersion30:
-		return "3", nil
-	case NFSVersion40:
-		return "4", nil
-	case NFSVersion41:
-		return "4.1", nil
-	case NFSVersion42:
-		return "4.2", nil
+	case NFSVersionNone, NFSVersion30, NFSVersion40, NFSVersion41, NFSVersion42:
+		return true
 	default:
-		return "", fmt.Errorf("unknown nfs version")
+		return false
 	}
 }
 
-func (obj *NFSVersion) Unmarshal(s string) error {
-	switch s {
-	case "3":
-		*obj = NFSVersion30
-	case "4":
-		*obj = NFSVersion40
-	case "4.1":
-		*obj = NFSVersion41
-	case "4.2":
-		*obj = NFSVersion42
-	default:
-		return fmt.Errorf("can't unmarshal nfs version %s", s)
-	}
+func (obj NFSVersion) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj NFSVersion) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *NFSVersion) Unmarshal(s string) error {
+	*obj = NFSVersion(s)
 	return nil
 }
 

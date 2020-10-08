@@ -234,40 +234,40 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 	}
 
 	if err := props.SetRequiredUint(mkQEMUCPUPropertySockets, &obj.Sockets, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= 4
+		ValidateFunc: func(val uint) bool {
+			return val <= 4
 		},
 	}); err != nil {
 		return nil, err
 	}
 
 	if err := props.SetRequiredUint(mkQEMUCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= 128
+		ValidateFunc: func(val uint) bool {
+			return val <= 128
 		},
 	}); err != nil {
 		return nil, err
 	}
 
 	if err := props.SetRequiredUint(mkQEMUCPUPropertyVCPUs, &obj.VCPUs, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= obj.Sockets*obj.Cores
+		ValidateFunc: func(val uint) bool {
+			return val <= obj.Sockets*obj.Cores
 		},
 	}); err != nil {
 		return nil, err
 	}
 
 	if err := props.SetUintFromString(mkQEMUCPUPropertyLimit, &obj.Limit, DefaultQEMUCPUPropertyLimit, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= 128
+		ValidateFunc: func(val uint) bool {
+			return val <= 128
 		},
 	}); err != nil {
 		return nil, err
 	}
 
 	if err := props.SetUint(mkQEMUCPUPropertyUnits, &obj.Units, DefaultQEMUCPUPropertyUnits, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v >= 8 && v <= 500000
+		ValidateFunc: func(val uint) bool {
+			return val >= 8 && val <= 500000
 		},
 	}); err != nil {
 		return nil, err
@@ -354,8 +354,8 @@ func NewQEMUMemoryProperties(
 	obj := new(QEMUMemoryProperties)
 
 	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, &types.PropertyUintFunctions{
-		ValidateFunc: func(v uint) bool {
-			return v <= 4178944
+		ValidateFunc: func(val uint) bool {
+			return val <= 4178944
 		},
 	}); err != nil {
 		return nil, err

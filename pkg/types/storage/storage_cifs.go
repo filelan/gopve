@@ -2,11 +2,8 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageCIFS interface {
@@ -24,6 +21,14 @@ type StorageCIFS interface {
 	LocalPathCreate() bool
 }
 
+const (
+	StorageCIFSContents    = ContentQEMUData & ContentContainerData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
+	StorageCIFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
+	StorageCIFSShared      = AllowShareForced
+	StorageCIFSSnapshots   = AllowSnapshotQcow2
+	StorageCIFSClones      = AllowCloneQcow2
+)
+
 type StorageCIFSProperties struct {
 	Server     string
 	SMBVersion SMBVersion
@@ -37,79 +42,15 @@ type StorageCIFSProperties struct {
 	LocalPathCreate bool
 }
 
-func NewStorageCIFSProperties(
-	props types.Properties,
-) (*StorageCIFSProperties, error) {
-	obj := new(StorageCIFSProperties)
-
-	if v, ok := props["server"].(string); ok {
-		obj.Server = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "server")
-		return nil, err
-	}
-
-	if v, ok := props["smbversion"].(string); ok {
-		if err := (&obj.SMBVersion).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "smbversion")
-			err.AddKey("value", v)
-			return nil, err
-		}
-	} else {
-		obj.SMBVersion = DefaultStorageCIFSSMBVersion
-	}
-
-	if v, ok := props["domain"].(string); ok {
-		obj.Domain = v
-	} else {
-		obj.Domain = DefaultStorageCIFSDomain
-	}
-
-	if v, ok := props["username"].(string); ok {
-		obj.Username = v
-	} else {
-		obj.Username = DefaultStorageCIFSUsername
-	}
-
-	if v, ok := props["password"].(string); ok {
-		obj.Password = v
-	} else {
-		obj.Password = DefaultStorageCIFSPassword
-	}
-
-	if v, ok := props["share"].(string); ok {
-		obj.ServerShare = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "share")
-		return nil, err
-	}
-
-	if v, ok := props["path"].(string); ok {
-		obj.LocalPath = v
-	} else {
-		err := errors.ErrMissingProperty
-		err.AddKey("name", "path")
-		return nil, err
-	}
-
-	if v, ok := props["mkdir"].(float64); ok {
-		obj.LocalPathCreate = internal_types.NewPVEBoolFromFloat64(v).Bool()
-	} else {
-		obj.LocalPathCreate = DefaultStorageCIFSLocalPathCreate
-	}
-
-	return obj, nil
-}
-
 const (
-	StorageCIFSContents    = ContentQEMUData & ContentContainerData & ContentContainerTemplate & ContentISO & ContentBackup & ContentSnippet
-	StorageCIFSImageFormat = ImageFormatRaw & ImageFormatQcow2 & ImageFormatVMDK
-	StorageCIFSShared      = AllowShareForced
-	StorageCIFSSnapshots   = AllowSnapshotQcow2
-	StorageCIFSClones      = AllowCloneQcow2
+	mkCIFSServer          = "server"
+	mkCIFSSMBVersion      = "smbversion"
+	mkCIFSDomain          = "domain"
+	mkCIFSUsername        = "username"
+	mkCIFSPassword        = "password"
+	mkCIFSServerShare     = "share"
+	mkCIFSLocalPath       = "path"
+	mkCIFSLocalPathCreate = "mkdir"
 )
 
 const (
@@ -120,39 +61,73 @@ const (
 	DefaultStorageCIFSLocalPathCreate = false
 )
 
-type SMBVersion uint
+func NewStorageCIFSProperties(
+	props types.Properties,
+) (*StorageCIFSProperties, error) {
+	obj := new(StorageCIFSProperties)
+
+	if err := props.SetRequiredString(mkCIFSServer, &obj.Server, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetFixedValue(mkCIFSSMBVersion, &obj.SMBVersion, DefaultStorageCIFSSMBVersion, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkCIFSDomain, &obj.Domain, DefaultStorageCIFSDomain, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkCIFSUsername, &obj.Username, DefaultStorageCIFSUsername, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetString(mkCIFSPassword, &obj.Password, DefaultStorageCIFSPassword, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetRequiredString(mkCIFSServerShare, &obj.ServerShare, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetRequiredString(mkCIFSLocalPath, &obj.LocalPath, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkCIFSLocalPathCreate, &obj.LocalPathCreate, DefaultStorageCIFSLocalPathCreate, nil); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+type SMBVersion string
 
 const (
-	SMBVersion20 SMBVersion = iota
-	SMBVersion21
-	SMBVersion30
+	SMBVersion20 SMBVersion = "2.0"
+	SMBVersion21 SMBVersion = "2.1"
+	SMBVersion30 SMBVersion = "3.0"
 )
 
-func (obj SMBVersion) Marshal() (string, error) {
+func (obj SMBVersion) IsValid() bool {
 	switch obj {
-	case SMBVersion20:
-		return "2.0", nil
-	case SMBVersion21:
-		return "2.1", nil
-	case SMBVersion30:
-		return "3.0", nil
+	case SMBVersion20, SMBVersion21, SMBVersion30:
+		return true
 	default:
-		return "", fmt.Errorf("unknown smb version")
+		return false
 	}
 }
 
-func (obj *SMBVersion) Unmarshal(s string) error {
-	switch s {
-	case "2.0":
-		*obj = SMBVersion20
-	case "2.1":
-		*obj = SMBVersion21
-	case "3.0":
-		*obj = SMBVersion30
-	default:
-		return fmt.Errorf("can't unmarshal smb version %s", s)
-	}
+func (obj SMBVersion) IsUnknown() bool {
+	return !obj.IsValid()
+}
 
+func (obj SMBVersion) Marshal() (string, error) {
+	return string(obj), nil
+}
+
+func (obj *SMBVersion) Unmarshal(s string) error {
+	*obj = SMBVersion(s)
 	return nil
 }
 
