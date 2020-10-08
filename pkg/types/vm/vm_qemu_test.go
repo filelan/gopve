@@ -1,6 +1,7 @@
 package vm_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,8 +11,73 @@ import (
 	"github.com/xabinapal/gopve/test"
 )
 
+func TestStorageQEMUGlobalProperties(t *testing.T) {
+	props := test.HelperCreatePropertiesMap(types.Properties{
+		"ostype":     "l26",
+		"protection": 1,
+		"onboot":     1,
+	})
+
+	requiredProps := []string{"ostype"}
+
+	defaultProps := []string{"protection", "onboot"}
+
+	factoryFunc := func(props types.Properties) (interface{}, error) {
+		obj, err := vm.NewQEMUGlobalProperties(props)
+		return obj, err
+	}
+
+	t.Run(
+		"Create", func(t *testing.T) {
+			globalProps, err := vm.NewQEMUGlobalProperties(props)
+			require.NoError(t, err)
+
+			assert.Equal(t, vm.QEMUOSTypeLinux26, globalProps.OSType)
+			assert.Equal(t, true, globalProps.Protected)
+			assert.Equal(t, true, globalProps.StartAtBoot)
+		})
+
+	t.Run(
+		"RequiredProperties",
+		test.HelperTestRequiredProperties(t, props, requiredProps, factoryFunc),
+	)
+
+	t.Run(
+		"DefaultProperties",
+		test.HelperTestOptionalProperties(
+			t,
+			props,
+			defaultProps,
+			factoryFunc,
+			func(obj interface{}) {
+				require.IsType(t, (*vm.QEMUGlobalProperties)(nil), obj)
+
+				globalProps := obj.(*vm.QEMUGlobalProperties)
+
+				assert.Equal(
+					t,
+					vm.DefaultQEMUGlobalPropertyProtected,
+					globalProps.Protected,
+				)
+				assert.Equal(
+					t,
+					vm.DefaultQEMUGlobalPropertyProtected,
+					globalProps.Protected,
+				)
+				assert.Equal(
+					t,
+					vm.DefaultQEMUGlobalPropertyStartAtBoot,
+					globalProps.StartAtBoot,
+				)
+			},
+		),
+	)
+}
+
 func TestStorageQEMUCPUProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
+		"cpu":      "pentium,flags=+md-clear;-spec-ctrl",
+		"arch":     "aarch64",
 		"sockets":  2,
 		"cores":    16,
 		"vcpus":    8,
@@ -23,7 +89,7 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 
 	requiredProps := []string{"sockets", "cores", "vcpus"}
 
-	defaultProps := []string{"cpulimit", "cpuunits", "numa", "freeze"}
+	defaultProps := []string{"cpu", "arch", "cpulimit", "cpuunits", "numa", "freeze"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := vm.NewQEMUCPUProperties(props)
@@ -35,6 +101,8 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 			cpuProps, err := vm.NewQEMUCPUProperties(props)
 			require.NoError(t, err)
 
+			assert.Equal(t, vm.QEMUCPUKindIntelPentium, cpuProps.Kind)
+			assert.Equal(t, vm.QEMUCPUArchitectureAArch64, cpuProps.Architecture)
 			assert.Equal(t, uint(2), cpuProps.Sockets)
 			assert.Equal(t, uint(16), cpuProps.Cores)
 			assert.Equal(t, uint(8), cpuProps.VCPUs)
@@ -60,7 +128,18 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 				require.IsType(t, (*vm.QEMUCPUProperties)(nil), obj)
 
 				cpuProps := obj.(*vm.QEMUCPUProperties)
+				fmt.Printf("%+v\n", cpuProps)
 
+				assert.Equal(
+					t,
+					vm.DefaultQEMUCPUPropertyKind,
+					cpuProps.Kind,
+				)
+				assert.Equal(
+					t,
+					vm.DefaultQEMUCPUPropertyArchitecture,
+					cpuProps.Architecture,
+				)
 				assert.Equal(
 					t,
 					vm.DefaultQEMUCPUPropertyLimit,

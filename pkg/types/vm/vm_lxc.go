@@ -42,15 +42,19 @@ func (obj LXCCreateOptions) MapToValues() (request.Values, error) {
 }
 
 type LXCProperties struct {
+	LXCGlobalProperties
 	CPU    LXCCPUProperties
 	Memory LXCMemoryProperties
-
-	RootFSStorage string
-	RootFSSize    uint
 }
 
 func NewLXCProperties(props types.Properties) (*LXCProperties, error) {
 	obj := new(LXCProperties)
+
+	if v, err := NewLXCGlobalProperties(props); err != nil {
+		return nil, err
+	} else {
+		obj.LXCGlobalProperties = *v
+	}
 
 	if v, err := NewLXCCPUProperties(props); err != nil {
 		return nil, err
@@ -62,6 +66,44 @@ func NewLXCProperties(props types.Properties) (*LXCProperties, error) {
 		return nil, err
 	} else {
 		obj.Memory = *v
+	}
+
+	return obj, nil
+}
+
+type LXCGlobalProperties struct {
+	OSType LXCOSType
+
+	Protected bool
+
+	StartAtBoot bool
+
+	RootFSStorage string
+	RootFSSize    uint
+}
+
+const (
+	mkLXCGlobalPropertyOSType      = "ostype"
+	mkLXCGlobalPropertyProtected   = "protection"
+	mkLXCGlobalPropertyStartAtBoot = "onboot"
+
+	DefaultLXCGlobalPropertyProtected   bool = false
+	DefaultLXCGlobalPropertyStartAtBoot bool = false
+)
+
+func NewLXCGlobalProperties(props types.Properties) (*LXCGlobalProperties, error) {
+	obj := new(LXCGlobalProperties)
+
+	if err := props.SetRequiredFixedValue(mkLXCGlobalPropertyOSType, &obj.OSType, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkLXCGlobalPropertyProtected, &obj.Protected, DefaultLXCGlobalPropertyProtected, nil); err != nil {
+		return nil, err
+	}
+
+	if err := props.SetBool(mkLXCGlobalPropertyStartAtBoot, &obj.StartAtBoot, DefaultLXCGlobalPropertyStartAtBoot, nil); err != nil {
+		return nil, err
 	}
 
 	return obj, nil
@@ -95,6 +137,8 @@ func (obj LXCProperties) MapToValues() (request.Values, error) {
 }
 
 type LXCCPUProperties struct {
+	Architecture LXCCPUArchitecture
+
 	Cores uint
 
 	Limit uint
@@ -102,6 +146,8 @@ type LXCCPUProperties struct {
 }
 
 const (
+	mkLXCCPUPropertyArchitecture = "arch"
+
 	mkLXCCPUPropertyCores = "cores"
 	mkLXCCPUPropertyLimit = "cpulimit"
 	mkLXCCPUPropertyUnits = "cpuunits"
@@ -112,6 +158,10 @@ const (
 
 func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
 	obj := new(LXCCPUProperties)
+
+	if err := props.SetRequiredFixedValue(mkLXCCPUPropertyArchitecture, &obj.Architecture, nil); err != nil {
+		return nil, err
+	}
 
 	if err := props.SetRequiredUint(mkLXCCPUPropertyCores, &obj.Cores, func(v uint) bool {
 		return v <= 128
