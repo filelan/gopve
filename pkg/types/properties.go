@@ -1,9 +1,10 @@
 package types
 
 import (
+	"reflect"
 	"strconv"
 
-	types "github.com/xabinapal/gopve/internal/types"
+	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
@@ -152,11 +153,11 @@ func (props Properties) SetRequiredBool(
 	return nil
 }
 
-func (props Properties) SetObject(
+func (props Properties) SetFixedValue(
 	key string,
-	ptr Unmarshaler,
-	def Unmarshaler,
-	validate func(Unmarshaler) bool,
+	ptr FixedValuePtr,
+	def FixedValue,
+	validate func(FixedValue) bool,
 ) error {
 	if v, ok := props[key].(string); ok {
 		if err := ptr.Unmarshal(v); err != nil {
@@ -166,16 +167,16 @@ func (props Properties) SetObject(
 			return err
 		}
 	} else {
-		ptr = def
+		reflect.ValueOf(ptr).Elem().Set(reflect.ValueOf(def))
 	}
 
 	return nil
 }
 
-func (props Properties) SetRequiredObject(
+func (props Properties) SetRequiredFixedValue(
 	key string,
-	ptr Unmarshaler,
-	validate func(Unmarshaler) bool,
+	ptr FixedValuePtr,
+	validate func(FixedValue) bool,
 ) error {
 	if v, ok := props[key].(string); ok {
 		if err := ptr.Unmarshal(v); err != nil {
