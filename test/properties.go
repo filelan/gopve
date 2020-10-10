@@ -68,9 +68,7 @@ func HelperTestRequiredProperties(
 			expectedError := errors.ErrMissingProperty
 			expectedError.AddKey("name", prop)
 
-			obj, err := factoryFunc(finalProps)
-
-			assert.Nil(t, obj)
+			_, err := factoryFunc(finalProps)
 			assert.EqualError(t, err, expectedError.Error())
 		}
 	}

@@ -11,10 +11,14 @@ import (
 	"github.com/xabinapal/gopve/pkg/types"
 )
 
-func HelperTestFixedValue(t *testing.T, value types.FixedValuePtr, cases map[string]struct {
-	Object types.FixedValue
-	Value  string
-}) {
+func HelperTestFixedValue(
+	t *testing.T,
+	value types.FixedValuePtr,
+	cases map[string]struct {
+		Object types.FixedValue
+		Value  string
+	},
+) {
 	t.Helper()
 
 	r := reflect.ValueOf(value)
@@ -60,7 +64,9 @@ func HelperTestFixedValue(t *testing.T, value types.FixedValuePtr, cases map[str
 			t.Run("UnmarshalJSON", func(t *testing.T) {
 				ptr := reflect.New(val.Type()).Interface().(types.FixedValuePtr)
 
-				err := ptr.UnmarshalJSON([]byte(fmt.Sprintf("\"%s\"", tt.Value)))
+				err := ptr.UnmarshalJSON(
+					[]byte(fmt.Sprintf("\"%s\"", tt.Value)),
+				)
 				require.NoError(t, err)
 
 				v := reflect.ValueOf(ptr).Elem().Interface()

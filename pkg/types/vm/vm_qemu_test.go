@@ -34,7 +34,7 @@ func TestStorageQEMUGlobalProperties(t *testing.T) {
 
 			assert.Equal(t, vm.QEMUOSTypeLinux26, globalProps.OSType)
 			assert.Equal(t, true, globalProps.Protected)
-			assert.Equal(t, true, globalProps.StartAtBoot)
+			assert.Equal(t, true, globalProps.StartOnBoot)
 		})
 
 	t.Run(
@@ -50,9 +50,9 @@ func TestStorageQEMUGlobalProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*vm.QEMUGlobalProperties)(nil), obj)
+				require.IsType(t, vm.QEMUGlobalProperties{}, obj)
 
-				globalProps := obj.(*vm.QEMUGlobalProperties)
+				globalProps := obj.(vm.QEMUGlobalProperties)
 
 				assert.Equal(
 					t,
@@ -66,8 +66,8 @@ func TestStorageQEMUGlobalProperties(t *testing.T) {
 				)
 				assert.Equal(
 					t,
-					vm.DefaultQEMUGlobalPropertyStartAtBoot,
-					globalProps.StartAtBoot,
+					vm.DefaultQEMUGlobalPropertyStartOnBoot,
+					globalProps.StartOnBoot,
 				)
 			},
 		),
@@ -89,7 +89,14 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 
 	requiredProps := []string{"sockets", "cores", "vcpus"}
 
-	defaultProps := []string{"cpu", "arch", "cpulimit", "cpuunits", "numa", "freeze"}
+	defaultProps := []string{
+		"cpu",
+		"arch",
+		"cpulimit",
+		"cpuunits",
+		"numa",
+		"freeze",
+	}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := vm.NewQEMUCPUProperties(props)
@@ -102,7 +109,11 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, vm.QEMUCPUKindIntelPentium, cpuProps.Kind)
-			assert.Equal(t, vm.QEMUCPUArchitectureAArch64, cpuProps.Architecture)
+			assert.Equal(
+				t,
+				vm.QEMUCPUArchitectureAArch64,
+				cpuProps.Architecture,
+			)
 			assert.Equal(t, uint(2), cpuProps.Sockets)
 			assert.Equal(t, uint(16), cpuProps.Cores)
 			assert.Equal(t, uint(8), cpuProps.VCPUs)
@@ -125,9 +136,9 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*vm.QEMUCPUProperties)(nil), obj)
+				require.IsType(t, vm.QEMUCPUProperties{}, obj)
 
-				cpuProps := obj.(*vm.QEMUCPUProperties)
+				cpuProps := obj.(vm.QEMUCPUProperties)
 				fmt.Printf("%+v\n", cpuProps)
 
 				assert.Equal(
@@ -205,9 +216,9 @@ func TestStorageQEMUMemoryProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*vm.QEMUMemoryProperties)(nil), obj)
+				require.IsType(t, vm.QEMUMemoryProperties{}, obj)
 
-				memoryProps := obj.(*vm.QEMUMemoryProperties)
+				memoryProps := obj.(vm.QEMUMemoryProperties)
 
 				assert.Equal(
 					t,

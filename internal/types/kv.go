@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -21,6 +22,26 @@ func (obj PVEKeyValue) Key() string {
 
 func (obj PVEKeyValue) Value() string {
 	return obj.value
+}
+
+func (obj PVEKeyValue) ValueAsInt() (int, error) {
+	if obj.HasValue() {
+		return strconv.Atoi(obj.Value())
+	}
+
+	return 0, fmt.Errorf("no value")
+}
+
+func (obj PVEKeyValue) ValueAsBool() (bool, error) {
+	if obj.HasValue() {
+		if b, err := NewPVEBoolFromString(obj.Value()); err == nil {
+			return b.Bool(), nil
+		} else {
+			return false, err
+		}
+	}
+
+	return false, fmt.Errorf("no value")
 }
 
 func (obj PVEKeyValue) HasValue() bool {

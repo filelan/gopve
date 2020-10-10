@@ -91,7 +91,9 @@ const (
 	DefaultLXCGlobalPropertyStartAtBoot bool = false
 )
 
-func NewLXCGlobalProperties(props types.Properties) (*LXCGlobalProperties, error) {
+func NewLXCGlobalProperties(
+	props types.Properties,
+) (*LXCGlobalProperties, error) {
 	obj := new(LXCGlobalProperties)
 
 	if err := props.SetRequiredFixedValue(mkLXCGlobalPropertyOSType, &obj.OSType, nil); err != nil {

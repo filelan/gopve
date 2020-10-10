@@ -289,11 +289,11 @@ const (
 	QEMUCPUFlagsEnablePDPE1GB  QEMUCPUFlags = "+pdpe1gb"
 	QEMUCPUFlagsDisablePDPE1GB QEMUCPUFlags = "-pdpe1gb"
 
-	//Improve performance in overcommited Windows guests. May lead to guest bluescreens on old CPUs.
+	// Improve performance in overcommited Windows guests. May lead to guest bluescreens on old CPUs.
 	QEMUCPUFlagsEnableHVTLBFlush  QEMUCPUFlags = "+hv-tlbflush"
 	QEMUCPUFlagsDisableHVTLBFlush QEMUCPUFlags = "-hv-tlbflush"
 
-	//Improve performance for nested virtualization. Only supported on Intel CPUs.
+	// Improve performance for nested virtualization. Only supported on Intel CPUs.
 	QEMUCPUFlagsEnableHVEVMCS  QEMUCPUFlags = "+hv-evmcs"
 	QEMUCPUFlagsDisableHVEVMCS QEMUCPUFlags = "-hv-evmcs"
 

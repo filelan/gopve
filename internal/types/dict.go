@@ -24,6 +24,16 @@ func (obj PVEDictionary) Elem(index int) PVEKeyValue {
 	return obj.list[index]
 }
 
+func (obj PVEDictionary) ElemByKey(key string) (PVEKeyValue, bool) {
+	for _, elem := range obj.list {
+		if elem.key == key {
+			return elem, true
+		}
+	}
+
+	return PVEKeyValue{}, false
+}
+
 func (obj PVEDictionary) List() []PVEKeyValue {
 	return obj.list
 }

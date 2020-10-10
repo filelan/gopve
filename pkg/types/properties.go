@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math"
 	"reflect"
 	"strconv"
 
@@ -34,14 +35,9 @@ func (props Properties) SetInt(
 	funcs *PropertyIntFunctions,
 ) error {
 	err := props.SetRequiredInt(key, ptr, funcs)
-	if err != nil {
-		missing := errors.ErrMissingProperty
-		missing.AddKey("name", key)
-
-		if missing.Is(err) {
-			*ptr = def
-			return nil
-		}
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		*ptr = def
+		return nil
 	}
 
 	return err
@@ -53,7 +49,7 @@ func (props Properties) SetRequiredInt(
 	funcs *PropertyIntFunctions,
 ) error {
 	if v, ok := props[key].(float64); ok {
-		if v != float64(int(v)) {
+		if v != float64(int(v)) || v < math.MinInt32 || v > math.MaxInt32 {
 			err := errors.ErrInvalidProperty
 			err.AddKey("name", key)
 			err.AddKey("value", v)
@@ -79,6 +75,7 @@ func (props Properties) SetRequiredInt(
 }
 
 type PropertyUintFunctions struct {
+	DefaultValue  *uint
 	ValidateFunc  func(uint) bool
 	TransformFunc func(uint) uint
 }
@@ -102,14 +99,9 @@ func (props Properties) SetUint(
 	funcs *PropertyUintFunctions,
 ) error {
 	err := props.SetRequiredUint(key, ptr, funcs)
-	if err != nil {
-		missing := errors.ErrMissingProperty
-		missing.AddKey("name", key)
-
-		if missing.Is(err) {
-			*ptr = def
-			return nil
-		}
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		*ptr = def
+		return nil
 	}
 
 	return err
@@ -121,7 +113,7 @@ func (props Properties) SetRequiredUint(
 	funcs *PropertyUintFunctions,
 ) error {
 	if v, ok := props[key].(float64); ok {
-		if v != float64(int(v)) || v < 0 {
+		if v != float64(int(v)) || v < 0 || v > math.MaxInt32 {
 			err := errors.ErrInvalidProperty
 			err.AddKey("name", key)
 			err.AddKey("value", v)
@@ -152,16 +144,10 @@ func (props Properties) SetUintFromString(
 	def uint,
 	funcs *PropertyUintFunctions,
 ) error {
-
 	err := props.SetRequiredUintFromString(key, ptr, funcs)
-	if err != nil {
-		missing := errors.ErrMissingProperty
-		missing.AddKey("name", key)
-
-		if missing.Is(err) {
-			*ptr = def
-			return nil
-		}
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		*ptr = def
+		return nil
 	}
 
 	return err
@@ -224,14 +210,9 @@ func (props Properties) SetString(
 	funcs *PropertyStringFunctions,
 ) error {
 	err := props.SetRequiredString(key, ptr, funcs)
-	if err != nil {
-		missing := errors.ErrMissingProperty
-		missing.AddKey("name", key)
-
-		if missing.Is(err) {
-			*ptr = def
-			return nil
-		}
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		*ptr = def
+		return nil
 	}
 
 	return err
@@ -284,14 +265,9 @@ func (props Properties) SetBool(
 	funcs *PropertyBoolFunctions,
 ) error {
 	err := props.SetRequiredBool(key, ptr, funcs)
-	if err != nil {
-		missing := errors.ErrMissingProperty
-		missing.AddKey("name", key)
-
-		if missing.Is(err) {
-			*ptr = def
-			return nil
-		}
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		*ptr = def
+		return nil
 	}
 
 	return err
@@ -335,14 +311,9 @@ func (props Properties) SetFixedValue(
 	validate func(FixedValue) bool,
 ) error {
 	err := props.SetRequiredFixedValue(key, ptr, validate)
-	if err != nil {
-		missing := errors.ErrMissingProperty
-		missing.AddKey("name", key)
-
-		if missing.Is(err) {
-			reflect.ValueOf(ptr).Elem().Set(reflect.ValueOf(def))
-			return nil
-		}
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		reflect.ValueOf(ptr).Elem().Set(reflect.ValueOf(def))
+		return nil
 	}
 
 	return err

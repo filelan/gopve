@@ -40,6 +40,14 @@ func (err KeyedClientError) Is(target error) bool {
 	return ts == es
 }
 
+func (err KeyedClientError) IsBase(target error) bool {
+	if t, ok := target.(KeyedClientError); ok {
+		return t.msg == err.msg
+	}
+
+	return false
+}
+
 func (err *KeyedClientError) AddKey(key string, value interface{}) {
 	if err.keys == nil {
 		err.keys = make(map[string]interface{})

@@ -183,7 +183,7 @@ func NewQEMU(
 			return nil, err
 		}
 
-		qemuObj.props = props
+		qemuObj.props = &props
 	}
 
 	return qemuObj, nil

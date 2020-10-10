@@ -9,21 +9,25 @@ import (
 )
 
 func TestQEMUConsoleMode(t *testing.T) {
-	test.HelperTestFixedValue(t, (*vm.QEMUConsoleMode)(nil), map[string](struct {
-		Object types.FixedValue
-		Value  string
-	}){
-		"Shell": {
-			Object: vm.QEMUConsoleModeShell,
-			Value:  "shell",
+	test.HelperTestFixedValue(
+		t,
+		(*vm.QEMUConsoleMode)(nil),
+		map[string](struct {
+			Object types.FixedValue
+			Value  string
+		}){
+			"Shell": {
+				Object: vm.QEMUConsoleModeShell,
+				Value:  "shell",
+			},
+			"Console": {
+				Object: vm.QEMUConsoleModeConsole,
+				Value:  "console",
+			},
+			"TTY": {
+				Object: vm.QEMUConsoleModeTTY,
+				Value:  "tty",
+			},
 		},
-		"Console": {
-			Object: vm.QEMUConsoleModeConsole,
-			Value:  "console",
-		},
-		"TTY": {
-			Object: vm.QEMUConsoleModeTTY,
-			Value:  "tty",
-		},
-	})
+	)
 }

@@ -41,6 +41,7 @@ func (obj QEMUOSType) IsValid() bool {
 		return false
 	}
 }
+
 func (obj QEMUOSType) IsUnknown() bool {
 	return !obj.IsValid()
 }
@@ -94,6 +95,7 @@ func (obj LXCOSType) IsValid() bool {
 		return false
 	}
 }
+
 func (obj LXCOSType) IsUnknown() bool {
 	return !obj.IsValid()
 }

@@ -14,7 +14,9 @@ const (
 
 func (obj QEMUCPUArchitecture) IsValid() bool {
 	switch obj {
-	case QEMUCPUArchitectureHost, QEMUCPUArchitectureX86_64, QEMUCPUArchitectureAArch64:
+	case QEMUCPUArchitectureHost,
+		QEMUCPUArchitectureX86_64,
+		QEMUCPUArchitectureAArch64:
 		return true
 	default:
 		return false
@@ -54,7 +56,10 @@ const (
 
 func (obj LXCCPUArchitecture) IsValid() bool {
 	switch obj {
-	case LXCCPUArchitectureAMD64, LXCCPUArchitectureI386, LXCCPUArchitectureARM64, LXCCPUArchitectureARMHF:
+	case LXCCPUArchitectureAMD64,
+		LXCCPUArchitectureI386,
+		LXCCPUArchitectureARM64,
+		LXCCPUArchitectureARMHF:
 		return true
 	default:
 		return false

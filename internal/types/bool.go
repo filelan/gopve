@@ -23,6 +23,17 @@ func NewPVEBoolFromFloat64(x float64) PVEBool {
 	return PVEBool(true)
 }
 
+func NewPVEBoolFromString(x string) (PVEBool, error) {
+	switch x {
+	case "0", "no", "off":
+		return PVEBool(false), nil
+	case "1", "yes", "on":
+		return PVEBool(true), nil
+	default:
+		return PVEBool(false), fmt.Errorf("unknown value")
+	}
+}
+
 func (obj PVEBool) String() string {
 	if obj {
 		return "1"

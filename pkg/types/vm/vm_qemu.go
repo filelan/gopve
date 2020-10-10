@@ -37,32 +37,34 @@ func (obj QEMUCreateOptions) MapToValues() (request.Values, error) {
 
 type QEMUProperties struct {
 	QEMUGlobalProperties
-	CPU    QEMUCPUProperties
-	Memory QEMUMemoryProperties
+	CPU     QEMUCPUProperties
+	Memory  QEMUMemoryProperties
+	Storage QEMUStorageProperties
 }
 
-func NewQEMUProperties(props types.Properties) (*QEMUProperties, error) {
-	obj := new(QEMUProperties)
+func NewQEMUProperties(props types.Properties) (QEMUProperties, error) {
+	obj := QEMUProperties{}
 
-	if v, err := NewQEMUGlobalProperties(props); err != nil {
-		return nil, err
-	} else {
-		obj.QEMUGlobalProperties = *v
-	}
+	err := errors.ChainUntilFail(
+		func() (err error) {
+			obj.QEMUGlobalProperties, err = NewQEMUGlobalProperties(props)
+			return err
+		},
+		func() (err error) {
+			obj.CPU, err = NewQEMUCPUProperties(props)
+			return err
+		},
+		func() (err error) {
+			obj.Memory, err = NewQEMUMemoryProperties(props)
+			return err
+		},
+		func() (err error) {
+			obj.Storage, err = NewQEMUStorageProperties(props)
+			return err
+		},
+	)
 
-	if v, err := NewQEMUCPUProperties(props); err != nil {
-		return nil, err
-	} else {
-		obj.CPU = *v
-	}
-
-	if v, err := NewQEMUMemoryProperties(props); err != nil {
-		return nil, err
-	} else {
-		obj.Memory = *v
-	}
-
-	return obj, nil
+	return obj, err
 }
 
 type QEMUGlobalProperties struct {
@@ -70,34 +72,50 @@ type QEMUGlobalProperties struct {
 
 	Protected bool
 
-	StartAtBoot bool
+	StartOnBoot bool
 }
 
 const (
 	mkQEMUGlobalPropertyOSType      = "ostype"
 	mkQEMUGlobalPropertyProtected   = "protection"
-	mkQEMUGlobalPropertyStartAtBoot = "onboot"
+	mkQEMUGlobalPropertyStartOnBoot = "onboot"
 
 	DefaultQEMUGlobalPropertyProtected   bool = false
-	DefaultQEMUGlobalPropertyStartAtBoot bool = false
+	DefaultQEMUGlobalPropertyStartOnBoot bool = false
 )
 
-func NewQEMUGlobalProperties(props types.Properties) (*QEMUGlobalProperties, error) {
-	obj := new(QEMUGlobalProperties)
+func NewQEMUGlobalProperties(
+	props types.Properties,
+) (QEMUGlobalProperties, error) {
+	obj := QEMUGlobalProperties{}
 
-	if err := props.SetRequiredFixedValue(mkQEMUGlobalPropertyOSType, &obj.OSType, nil); err != nil {
-		return nil, err
-	}
+	err := errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredFixedValue(
+				mkQEMUGlobalPropertyOSType,
+				&obj.OSType,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkQEMUGlobalPropertyProtected,
+				&obj.Protected,
+				DefaultQEMUGlobalPropertyProtected,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkQEMUGlobalPropertyStartOnBoot,
+				&obj.StartOnBoot,
+				DefaultQEMUGlobalPropertyStartOnBoot,
+				nil,
+			)
+		},
+	)
 
-	if err := props.SetBool(mkQEMUGlobalPropertyProtected, &obj.Protected, DefaultQEMUGlobalPropertyProtected, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkQEMUGlobalPropertyStartAtBoot, &obj.StartAtBoot, DefaultQEMUGlobalPropertyStartAtBoot, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, err
 }
 
 func (obj QEMUProperties) MapToValues() (request.Values, error) {
@@ -167,11 +185,11 @@ const (
 	DefaultQEMUCPUPropertyFreezeAtStartup bool = false
 )
 
-func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
-	obj := new(QEMUCPUProperties)
+func NewQEMUCPUProperties(props types.Properties) (QEMUCPUProperties, error) {
+	obj := QEMUCPUProperties{}
 
 	if err := props.SetFixedValue(mkQEMUCPUPropertyCPU, &obj.Kind, DefaultQEMUCPUPropertyKind, nil); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	obj.Flags = []QEMUCPUFlags{}
@@ -186,7 +204,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 			err := errors.ErrInvalidProperty
 			err.AddKey("name", mkQEMUCPUPropertyCPU)
 			err.AddKey("value", v)
-			return nil, err
+			return obj, err
 		}
 
 		for _, vv := range cpuOptions.List() {
@@ -195,7 +213,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 					err := errors.ErrInvalidProperty
 					err.AddKey("name", mkQEMUCPUPropertyCPU)
 					err.AddKey("value", v)
-					return nil, err
+					return obj, err
 				}
 			} else {
 				switch vv.Key() {
@@ -208,7 +226,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 						err := errors.ErrInvalidProperty
 						err.AddKey("name", mkQEMUCPUPropertyCPU)
 						err.AddKey("value", v)
-						return nil, err
+						return obj, err
 					}
 
 					for _, v := range flags.List() {
@@ -217,7 +235,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 							err := errors.ErrInvalidProperty
 							err.AddKey("name", mkQEMUCPUPropertyCPU)
 							err.AddKey("value", v)
-							return nil, err
+							return obj, err
 						}
 
 						obj.Flags = append(obj.Flags, flag)
@@ -230,7 +248,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 	}
 
 	if err := props.SetFixedValue(mkQEMUCPUPropertyArchitecture, &obj.Architecture, DefaultQEMUCPUPropertyArchitecture, nil); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetRequiredUint(mkQEMUCPUPropertySockets, &obj.Sockets, &types.PropertyUintFunctions{
@@ -238,7 +256,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 			return val <= 4
 		},
 	}); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetRequiredUint(mkQEMUCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
@@ -246,7 +264,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 			return val <= 128
 		},
 	}); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetRequiredUint(mkQEMUCPUPropertyVCPUs, &obj.VCPUs, &types.PropertyUintFunctions{
@@ -254,7 +272,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 			return val <= obj.Sockets*obj.Cores
 		},
 	}); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetUintFromString(mkQEMUCPUPropertyLimit, &obj.Limit, DefaultQEMUCPUPropertyLimit, &types.PropertyUintFunctions{
@@ -262,7 +280,7 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 			return val <= 128
 		},
 	}); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetUint(mkQEMUCPUPropertyUnits, &obj.Units, DefaultQEMUCPUPropertyUnits, &types.PropertyUintFunctions{
@@ -270,15 +288,15 @@ func NewQEMUCPUProperties(props types.Properties) (*QEMUCPUProperties, error) {
 			return val >= 8 && val <= 500000
 		},
 	}); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetBool(mkQEMUCPUPropertyNUMA, &obj.NUMA, DefaultQEMUCPUPropertyNUMA, nil); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if err := props.SetBool(mkQEMUCPUPropertyFreezeAtStartup, &obj.FreezeAtStartup, DefaultQEMUCPUPropertyFreezeAtStartup, nil); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	return obj, nil
@@ -350,15 +368,15 @@ const (
 
 func NewQEMUMemoryProperties(
 	props types.Properties,
-) (*QEMUMemoryProperties, error) {
-	obj := new(QEMUMemoryProperties)
+) (QEMUMemoryProperties, error) {
+	obj := QEMUMemoryProperties{}
 
 	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, &types.PropertyUintFunctions{
 		ValidateFunc: func(val uint) bool {
 			return val <= 4178944
 		},
 	}); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	if v, ok := props[mkQEMUMemoryPropertyBalloon].(float64); ok {
@@ -366,7 +384,7 @@ func NewQEMUMemoryProperties(
 			err := errors.ErrInvalidProperty
 			err.AddKey("name", mkQEMUMemoryPropertyBalloon)
 			err.AddKey("value", v)
-			return nil, err
+			return obj, err
 		} else if v == 0 {
 			obj.Ballooning = false
 			obj.MinimumMemory = obj.Memory
@@ -384,7 +402,7 @@ func NewQEMUMemoryProperties(
 					err := errors.ErrInvalidProperty
 					err.AddKey("name", mkQEMUMemoryPropertyShares)
 					err.AddKey("value", v)
-					return nil, err
+					return obj, err
 				}
 
 				obj.Shares = uint(v)
@@ -401,7 +419,7 @@ func NewQEMUMemoryProperties(
 	return obj, nil
 }
 
-func (obj *QEMUMemoryProperties) MapToValues() (request.Values, error) {
+func (obj QEMUMemoryProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
 
 	memory := obj.Memory
@@ -437,4 +455,167 @@ func (obj *QEMUMemoryProperties) MapToValues() (request.Values, error) {
 	}
 
 	return values, nil
+}
+
+type QEMUStorageProperties struct {
+	HardDrives []QEMUHardDriveProperties
+	CDROMs     []QEMUCDROMProperties
+}
+
+const (
+	maxQEMUIDEPropertiesArrayCapacity    = 4
+	maxQEMUSATAPropertiesArrayCapacity   = 6
+	maxQEMUSCSIPropertiesArrayCapacity   = 31
+	maxQEMUVirtIOPropertiesArrayCapacity = 16
+)
+
+func NewQEMUStorageProperties(props types.Properties) (QEMUStorageProperties, error) {
+	obj := QEMUStorageProperties{}
+
+	for i := 0; i < maxQEMUIDEPropertiesArrayCapacity; i++ {
+		propName := fmt.Sprintf("ide%d", i)
+		prop, ok := props[propName]
+		if !ok {
+			continue
+		}
+
+		media, ok := prop.(string)
+		if !ok {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", propName)
+			err.AddKey("value", prop)
+			return obj, err
+		}
+
+		if drive, err := NewQEMUStorageDrive(media); err == nil {
+			switch x := drive.(type) {
+			case QEMUHardDriveProperties:
+				obj.HardDrives = append(obj.HardDrives, x)
+			case QEMUCDROMProperties:
+				obj.CDROMs = append(obj.CDROMs, x)
+			default:
+				panic("this should never happen")
+			}
+		} else {
+			return obj, err
+		}
+	}
+
+	return obj, nil
+}
+
+func NewQEMUStorageDrive(media string) (interface{}, error) {
+	dict := internal_types.PVEDictionary{
+		ListSeparator:     ",",
+		KeyValueSeparator: "=",
+		AllowNoValue:      true,
+	}
+
+	if err := (&dict).Unmarshal(media); err != nil {
+		return nil, err
+	}
+
+	if x, ok := dict.ElemByKey("media"); ok {
+		switch x.Key() {
+		case "cdrom":
+			return NewQEMUCDROMProperties(dict)
+		default:
+			return nil, fmt.Errorf("unknown media type %s", x.Key())
+		}
+	} else {
+		return NewQEMUHardDriveProperties(dict)
+	}
+}
+
+type QEMUHardDriveProperties struct {
+	Size           string
+	Cache          string
+	Discard        bool
+	EmulateSSD     bool
+	IOThread       bool
+	Backup         bool
+	Replicate      bool
+	ReadMBLimit    int
+	ReadIOPSLimit  int
+	ReadMBBurst    int
+	ReadIOPSBurst  int
+	WriteMBLimit   int
+	WriteIOPSLimit int
+	WriteMBBurst   int
+	WriteIOPSBurst int
+}
+
+func NewQEMUHardDriveProperties(dict internal_types.PVEDictionary) (obj QEMUHardDriveProperties, err error) {
+	for _, kv := range dict.List() {
+		switch kv.Key() {
+		case "size":
+			obj.Size = kv.Value()
+		case "cache":
+			obj.Cache = kv.Value()
+		case "discard":
+			if obj.Discard, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "ssd":
+			if obj.EmulateSSD, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "iothread":
+			if obj.IOThread, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "backup":
+			if obj.Backup, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "replicate":
+			if obj.Replicate, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "mbps_rd":
+			if obj.ReadMBLimit, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "iops_rd":
+			if obj.ReadIOPSLimit, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "mbps_rd_max":
+			if obj.ReadMBBurst, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "ios_rd_max":
+			if obj.ReadIOPSBurst, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "mbps_wr":
+			if obj.WriteMBLimit, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "iops_wr":
+			if obj.WriteIOPSLimit, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "mbps_wr_max":
+			if obj.WriteMBBurst, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "ios_wr_max":
+			if obj.WriteIOPSBurst, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		default:
+		}
+	}
+
+	return obj, nil
+}
+
+type QEMUCDROMProperties struct {
+}
+
+func NewQEMUCDROMProperties(dict internal_types.PVEDictionary) (QEMUCDROMProperties, error) {
+	obj := QEMUCDROMProperties{}
+
+	return obj, nil
 }
