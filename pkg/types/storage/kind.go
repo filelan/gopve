@@ -32,7 +32,19 @@ func (obj Kind) String() string {
 
 func (obj Kind) IsValid() bool {
 	switch obj {
-	case KindDir, KindLVM, KindLVMThin, KindZFS, KindNFS, KindCIFS, KindGlusterFS, KindISCSIKernel, KindISCSIUser, KindCephFS, KindRBD, KindDRBD, KindZFSOverISCSI:
+	case KindDir,
+		KindLVM,
+		KindLVMThin,
+		KindZFS,
+		KindNFS,
+		KindCIFS,
+		KindGlusterFS,
+		KindISCSIKernel,
+		KindISCSIUser,
+		KindCephFS,
+		KindRBD,
+		KindDRBD,
+		KindZFSOverISCSI:
 		return true
 	default:
 		return false
