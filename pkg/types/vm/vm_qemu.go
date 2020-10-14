@@ -41,7 +41,12 @@ type QEMUProperties struct {
 	CPU     QEMUCPUProperties
 	Memory  QEMUMemoryProperties
 	Storage QEMUStorageProperties
+	Network []QEMUNetworkInterfaceProperties
 }
+
+const (
+	maxQEMUNetworkInterfacePropertiesArrayCapacity = 32
+)
 
 func NewQEMUProperties(props types.Properties) (QEMUProperties, error) {
 	obj := QEMUProperties{}
@@ -62,6 +67,31 @@ func NewQEMUProperties(props types.Properties) (QEMUProperties, error) {
 		func() (err error) {
 			obj.Storage, err = NewQEMUStorageProperties(props)
 			return err
+		},
+		func() (err error) {
+			for i := 0; i < maxQEMUNetworkInterfacePropertiesArrayCapacity; i++ {
+				propName := fmt.Sprintf("net%d", i)
+				prop, ok := props[propName]
+				if !ok {
+					continue
+				}
+
+				x, ok := prop.(string)
+				if !ok {
+					err := errors.ErrInvalidProperty
+					err.AddKey("name", propName)
+					err.AddKey("value", prop)
+					return err
+				}
+
+				if network, err := NewQEMUNetworkInterfaceProperties(x); err == nil {
+					obj.Network = append(obj.Network, network)
+				} else {
+					return err
+				}
+			}
+
+			return nil
 		},
 	)
 
@@ -461,6 +491,7 @@ func (obj QEMUMemoryProperties) MapToValues() (request.Values, error) {
 type QEMUStorageProperties struct {
 	HardDrives []QEMUHardDriveProperties
 	CDROMs     []QEMUCDROMProperties
+	EFIDisk    QEMUEFIDiskProperties
 }
 
 const (
@@ -524,6 +555,23 @@ func NewQEMUStorageProperties(
 				return obj, err
 			}
 		}
+
+		prop, ok := props["efidisk0"]
+		if ok {
+			media, ok := prop.(string)
+			if !ok {
+				err := errors.ErrInvalidProperty
+				err.AddKey("name", "efidisk0")
+				err.AddKey("value", prop)
+				return obj, err
+			}
+
+			if efiDisk, err := NewQEMUEFIDiskProperties(media); err == nil {
+				obj.EFIDisk = efiDisk
+			} else {
+				return obj, err
+			}
+		}
 	}
 
 	return obj, nil
@@ -556,12 +604,43 @@ func NewQEMUStorageDrive(
 	}
 }
 
-type QEMUHardDriveProperties struct {
+type QEMUDriveBusProperties struct {
 	BusKind   Bus
 	BusNumber int
+}
 
-	Storage string
-	Drive   string
+type QEMUDriveStorageProperties struct {
+	StorageName string
+	StorageFile string
+}
+
+func (obj *QEMUDriveStorageProperties) setProperties(value string, prefix string) error {
+	storage := internal_types.PVEList{
+		Separator: ":",
+	}
+
+	if err := (&storage).Unmarshal(value); err != nil {
+		return err
+	} else if storage.Len() != 2 {
+		err := errors.ErrInvalidProperty
+		return err
+	}
+
+	obj.StorageName = storage.Elem(0)
+
+	file := storage.Elem(1)
+	if prefix != "" {
+		file = strings.TrimPrefix(file, prefix)
+	}
+
+	obj.StorageFile = file
+
+	return nil
+}
+
+type QEMUHardDriveProperties struct {
+	QEMUDriveBusProperties
+	QEMUDriveStorageProperties
 
 	Size  string
 	Cache QEMUHardDriveCache
@@ -610,21 +689,9 @@ func NewQEMUHardDriveProperties(
 
 	for _, kv := range props.List() {
 		if !kv.HasValue() {
-			storage := internal_types.PVEList{
-				Separator: ":",
-			}
-
-			if err := (&storage).Unmarshal(kv.Key()); err != nil {
-				return obj, err
-			} else if storage.Len() != 2 {
-				err := errors.ErrInvalidProperty
-				err.AddKey("name", fmt.Sprintf("%s%d", busKind.String(), busNumber))
+			if err := (&obj.QEMUDriveStorageProperties).setProperties(kv.Key(), ""); err != nil {
 				return obj, err
 			}
-
-			obj.Storage = storage.Elem(0)
-			obj.Drive = storage.Elem(1)
-
 			continue
 		}
 
@@ -698,13 +765,11 @@ func NewQEMUHardDriveProperties(
 }
 
 type QEMUCDROMProperties struct {
-	BusKind   Bus
-	BusNumber int
+	QEMUDriveBusProperties
+	QEMUDriveStorageProperties
 
 	Source QEMUCDROMSource
-
-	Storage string
-	Drive   string
+	Size   string
 }
 
 type QEMUCDROMSource int
@@ -732,21 +797,9 @@ func NewQEMUCDROMProperties(
 				obj.Source = QEMUCDROMSourcePhysical
 			default:
 				obj.Source = QEMUCDROMSourceISOFile
-
-				storage := internal_types.PVEList{
-					Separator: ":",
-				}
-
-				if err := (&storage).Unmarshal(kv.Key()); err != nil {
-					return obj, err
-				} else if storage.Len() != 2 {
-					err := errors.ErrInvalidProperty
-					err.AddKey("name", fmt.Sprintf("%s%d", busKind.String(), busNumber))
+				if err := (&obj.QEMUDriveStorageProperties).setProperties(kv.Key(), "iso/"); err != nil {
 					return obj, err
 				}
-
-				obj.Storage = storage.Elem(0)
-				obj.Drive = strings.TrimPrefix(storage.Elem(1), "iso/")
 			}
 
 			continue
@@ -756,11 +809,132 @@ func NewQEMUCDROMProperties(
 		case "media":
 			continue
 		case "size":
-			continue
+			obj.Size = kv.Value()
 		default:
 			err := errors.ErrInvalidProperty
 			err.AddKey("name", fmt.Sprintf("%s%d", busKind.String(), busNumber))
 			return obj, err
+		}
+	}
+
+	return obj, nil
+}
+
+type QEMUEFIDiskProperties struct {
+	QEMUDriveStorageProperties
+
+	Size string
+}
+
+func NewQEMUEFIDiskProperties(
+	media string,
+) (obj QEMUEFIDiskProperties, err error) {
+	props := internal_types.PVEDictionary{
+		ListSeparator:     ",",
+		KeyValueSeparator: "=",
+		AllowNoValue:      true,
+	}
+
+	if err := (&props).Unmarshal(media); err != nil {
+		return obj, err
+	}
+
+	for _, kv := range props.List() {
+		if !kv.HasValue() {
+			if err := (&obj.QEMUDriveStorageProperties).setProperties(kv.Key(), ""); err != nil {
+				return obj, err
+			}
+
+			continue
+		}
+
+		switch kv.Key() {
+		case "size":
+			obj.Size = kv.Value()
+		default:
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", fmt.Sprintf("%s%d", "efidisk0"))
+			return obj, err
+		}
+	}
+
+	return obj, nil
+}
+
+type QEMUNetworkInterfaceProperties struct {
+	Model      QEMUNetworkModel
+	MACAddress string
+
+	Bridge string
+	VLAN   int
+
+	Enabled        bool
+	EnableFirewall bool
+
+	RateLimitMBps int
+	Multiqueue    int
+}
+
+type QEMUNetworkModel string
+
+const (
+	QEMUNetworkModelIntelE1000     QEMUNetworkModel = "e1000"
+	QEMUNetworkModelVirtIO         QEMUNetworkModel = "VirtIO"
+	QEMUNetworkModelRealtekRTL8139 QEMUNetworkModel = "rtl8139"
+	QEMUNetworkModelVMwareVMXNET3  QEMUNetworkModel = "vmxnet3"
+)
+
+func NewQEMUNetworkInterfaceProperties(
+	media string,
+) (obj QEMUNetworkInterfaceProperties, err error) {
+	props := internal_types.PVEDictionary{
+		ListSeparator:     ",",
+		KeyValueSeparator: "=",
+		AllowNoValue:      true,
+	}
+
+	if err := (&props).Unmarshal(media); err != nil {
+		return obj, err
+	}
+
+	for _, kv := range props.List() {
+		switch kv.Key() {
+		case "e1000":
+			obj.Model = QEMUNetworkModelIntelE1000
+			obj.MACAddress = kv.Value()
+		case "virtio":
+			obj.Model = QEMUNetworkModelVirtIO
+			obj.MACAddress = kv.Value()
+		case "rtl8139":
+			obj.Model = QEMUNetworkModelRealtekRTL8139
+			obj.MACAddress = kv.Value()
+		case "vmxnet3":
+			obj.Model = QEMUNetworkModelVMwareVMXNET3
+			obj.MACAddress = kv.Value()
+		case "bridge":
+			obj.Bridge = kv.Value()
+		case "tag":
+			if obj.VLAN, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "link_down":
+			if obj.Enabled, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "firewall":
+			if obj.EnableFirewall, err = kv.ValueAsBool(); err != nil {
+				return obj, err
+			}
+		case "rate":
+			if obj.RateLimitMBps, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		case "queues":
+			if obj.Multiqueue, err = kv.ValueAsInt(); err != nil {
+				return obj, err
+			}
+		default:
+			return obj, fmt.Errorf("unknown property %s", kv.Key())
 		}
 	}
 
