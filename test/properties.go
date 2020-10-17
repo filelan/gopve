@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,7 +70,7 @@ func HelperTestRequiredProperties(
 			expectedError.AddKey("name", prop)
 
 			_, err := factoryFunc(finalProps)
-			assert.EqualError(t, err, expectedError.Error())
+			assert.EqualError(t, err, expectedError.Error(), fmt.Sprintf("An error is expected with missing required property `%s`", prop))
 		}
 	}
 }

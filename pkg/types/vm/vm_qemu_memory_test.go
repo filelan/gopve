@@ -7,32 +7,34 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
-	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestLXCGlobalProperties(t *testing.T) {
+func TestQEMUMemoryProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
-		"ostype":     "archlinux",
-		"protection": 1,
-		"onboot":     1,
+		"memory":  4096,
+		"balloon": 2048,
+		"shares":  512,
 	})
 
-	requiredProps := []string{"ostype"}
+	requiredProps := []string{"memory"}
 
-	defaultProps := []string{"protection", "onboot"}
+	defaultProps := []string{"shares"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
-		obj, err := vm.NewLXCGlobalProperties(props)
+		obj, err := vm.NewQEMUMemoryProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			globalProps, err := vm.NewLXCGlobalProperties(props)
+			memoryProps, err := vm.NewQEMUMemoryProperties(props)
 			require.NoError(t, err)
 
-			assert.Equal(t, lxc.OSTypeArchLinux, globalProps.OSType)
+			assert.Equal(t, uint(4096), memoryProps.Memory)
+			assert.Equal(t, true, memoryProps.Ballooning)
+			assert.Equal(t, uint(2048), memoryProps.MinimumMemory)
+			assert.Equal(t, uint(512), memoryProps.Shares)
 		})
 
 	t.Run(
@@ -48,19 +50,14 @@ func TestLXCGlobalProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*vm.LXCGlobalProperties)(nil), obj)
+				require.IsType(t, vm.QEMUMemoryProperties{}, obj)
 
-				globalProps := obj.(*vm.LXCGlobalProperties)
+				memoryProps := obj.(vm.QEMUMemoryProperties)
 
 				assert.Equal(
 					t,
-					vm.DefaultLXCGlobalPropertyProtected,
-					globalProps.Protected,
-				)
-				assert.Equal(
-					t,
-					vm.DefaultLXCGlobalPropertyStartAtBoot,
-					globalProps.StartAtBoot,
+					vm.DefaultQEMUMemoryShares,
+					memoryProps.Shares,
 				)
 			},
 		),

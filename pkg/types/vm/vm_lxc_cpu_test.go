@@ -11,28 +11,32 @@ import (
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestLXCGlobalProperties(t *testing.T) {
+func TestLXCCPUProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
-		"ostype":     "archlinux",
-		"protection": 1,
-		"onboot":     1,
+		"arch":     "arm64",
+		"cores":    16,
+		"cpulimit": 2,
+		"cpuunits": 2048,
 	})
 
-	requiredProps := []string{"ostype"}
+	requiredProps := []string{"arch", "cores"}
 
-	defaultProps := []string{"protection", "onboot"}
+	defaultProps := []string{"cpulimit", "cpuunits"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
-		obj, err := vm.NewLXCGlobalProperties(props)
+		obj, err := vm.NewLXCCPUProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			globalProps, err := vm.NewLXCGlobalProperties(props)
+			cpuProps, err := vm.NewLXCCPUProperties(props)
 			require.NoError(t, err)
 
-			assert.Equal(t, lxc.OSTypeArchLinux, globalProps.OSType)
+			assert.Equal(t, lxc.CPUArchitectureARM64, cpuProps.Architecture)
+			assert.Equal(t, uint(16), cpuProps.Cores)
+			assert.Equal(t, uint(2), cpuProps.Limit)
+			assert.Equal(t, uint(2048), cpuProps.Units)
 		})
 
 	t.Run(
@@ -48,19 +52,19 @@ func TestLXCGlobalProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*vm.LXCGlobalProperties)(nil), obj)
+				require.IsType(t, (*vm.LXCCPUProperties)(nil), obj)
 
-				globalProps := obj.(*vm.LXCGlobalProperties)
+				cpuProps := obj.(*vm.LXCCPUProperties)
 
 				assert.Equal(
 					t,
-					vm.DefaultLXCGlobalPropertyProtected,
-					globalProps.Protected,
+					vm.DefaultLXCCPUPropertyLimit,
+					cpuProps.Limit,
 				)
 				assert.Equal(
 					t,
-					vm.DefaultLXCGlobalPropertyStartAtBoot,
-					globalProps.StartAtBoot,
+					vm.DefaultLXCCPUPropertyUnits,
+					cpuProps.Units,
 				)
 			},
 		),
