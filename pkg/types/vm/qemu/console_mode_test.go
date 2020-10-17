@@ -1,31 +1,31 @@
-package vm_test
+package qemu_test
 
 import (
 	"testing"
 
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestQEMUConsoleMode(t *testing.T) {
+func TestConsoleMode(t *testing.T) {
 	test.HelperTestFixedValue(
 		t,
-		(*vm.QEMUConsoleMode)(nil),
+		(*qemu.ConsoleMode)(nil),
 		map[string](struct {
 			Object types.FixedValue
 			Value  string
 		}){
 			"Shell": {
-				Object: vm.QEMUConsoleModeShell,
+				Object: qemu.ConsoleModeShell,
 				Value:  "shell",
 			},
 			"Console": {
-				Object: vm.QEMUConsoleModeConsole,
+				Object: qemu.ConsoleModeConsole,
 				Value:  "console",
 			},
 			"TTY": {
-				Object: vm.QEMUConsoleModeTTY,
+				Object: qemu.ConsoleModeTTY,
 				Value:  "tty",
 			},
 		},

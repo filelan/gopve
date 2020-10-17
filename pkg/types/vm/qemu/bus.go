@@ -1,4 +1,4 @@
-package vm
+package qemu
 
 type Bus string
 

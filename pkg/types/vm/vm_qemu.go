@@ -8,6 +8,7 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 )
 
 type QEMUVirtualMachine interface {
@@ -99,7 +100,7 @@ func NewQEMUProperties(props types.Properties) (QEMUProperties, error) {
 }
 
 type QEMUGlobalProperties struct {
-	OSType QEMUOSType
+	OSType qemu.OSType
 
 	Protected bool
 
@@ -174,10 +175,10 @@ func (obj QEMUProperties) MapToValues() (request.Values, error) {
 }
 
 type QEMUCPUProperties struct {
-	Kind  QEMUCPUKind
-	Flags []QEMUCPUFlags
+	Kind  qemu.CPUType
+	Flags []qemu.CPUFlags
 
-	Architecture QEMUCPUArchitecture
+	Architecture qemu.CPUArchitecture
 
 	Sockets uint
 	Cores   uint
@@ -206,8 +207,8 @@ const (
 	mkQEMUCPUPropertyNUMA            = "numa"
 	mkQEMUCPUPropertyFreezeAtStartup = "freeze"
 
-	DefaultQEMUCPUPropertyKind         QEMUCPUKind         = QEMUCPUKindKVM64
-	DefaultQEMUCPUPropertyArchitecture QEMUCPUArchitecture = QEMUCPUArchitectureHost
+	DefaultQEMUCPUPropertyKind         qemu.CPUType         = qemu.CPUTypeKVM64
+	DefaultQEMUCPUPropertyArchitecture qemu.CPUArchitecture = qemu.CPUArchitectureHost
 
 	DefaultQEMUCPUPropertyLimit uint = 0
 	DefaultQEMUCPUPropertyUnits uint = 1024
@@ -223,7 +224,7 @@ func NewQEMUCPUProperties(props types.Properties) (QEMUCPUProperties, error) {
 		return obj, err
 	}
 
-	obj.Flags = []QEMUCPUFlags{}
+	obj.Flags = []qemu.CPUFlags{}
 	if v, ok := props[mkQEMUCPUPropertyCPU].(string); ok {
 		cpuOptions := internal_types.PVEDictionary{
 			ListSeparator:     ",",
@@ -261,7 +262,7 @@ func NewQEMUCPUProperties(props types.Properties) (QEMUCPUProperties, error) {
 					}
 
 					for _, v := range flags.List() {
-						var flag QEMUCPUFlags
+						var flag qemu.CPUFlags
 						if err := (&flag).Unmarshal(v); err != nil {
 							err := errors.ErrInvalidProperty
 							err.AddKey("name", mkQEMUCPUPropertyCPU)
@@ -507,23 +508,23 @@ func NewQEMUStorageProperties(
 	obj := QEMUStorageProperties{}
 
 	for _, x := range [](struct {
-		Kind  Bus
+		Kind  qemu.Bus
 		Count int
 	}){
 		{
-			Kind:  BusIDE,
+			Kind:  qemu.BusIDE,
 			Count: maxQEMUIDEPropertiesArrayCapacity,
 		},
 		{
-			Kind:  BusSATA,
+			Kind:  qemu.BusSATA,
 			Count: maxQEMUSATAPropertiesArrayCapacity,
 		},
 		{
-			Kind:  BusSCSI,
+			Kind:  qemu.BusSCSI,
 			Count: maxQEMUSCSIPropertiesArrayCapacity,
 		},
 		{
-			Kind:  BusVirtIO,
+			Kind:  qemu.BusVirtIO,
 			Count: maxQEMUVirtIOPropertiesArrayCapacity,
 		},
 	} {
@@ -578,7 +579,7 @@ func NewQEMUStorageProperties(
 }
 
 func NewQEMUStorageDrive(
-	busKind Bus,
+	busKind qemu.Bus,
 	busNumber int,
 	media string,
 ) (interface{}, error) {
@@ -605,7 +606,7 @@ func NewQEMUStorageDrive(
 }
 
 type QEMUDriveBusProperties struct {
-	BusKind   Bus
+	BusKind   qemu.Bus
 	BusNumber int
 }
 
@@ -643,7 +644,7 @@ type QEMUHardDriveProperties struct {
 	QEMUDriveStorageProperties
 
 	Size  string
-	Cache QEMUHardDriveCache
+	Cache qemu.HardDriveCache
 
 	Discard    bool
 	EmulateSSD bool
@@ -662,7 +663,7 @@ type QEMUHardDriveProperties struct {
 }
 
 const (
-	DefaultQEMUHardDriveCache QEMUHardDriveCache = QEMUHardDriveCacheNone
+	DefaultQEMUHardDriveCache qemu.HardDriveCache = qemu.HardDriveCacheNone
 
 	DefaultQEMUHardDriveDiscard    bool = false
 	DefaultQEMUHardDriveEmulateSSD bool = false
@@ -672,7 +673,7 @@ const (
 )
 
 func NewQEMUHardDriveProperties(
-	busKind Bus,
+	busKind qemu.Bus,
 	busNumber int,
 	props internal_types.PVEDictionary,
 ) (obj QEMUHardDriveProperties, err error) {
@@ -781,7 +782,7 @@ const (
 )
 
 func NewQEMUCDROMProperties(
-	busKind Bus,
+	busKind qemu.Bus,
 	busNumber int,
 	props internal_types.PVEDictionary,
 ) (obj QEMUCDROMProperties, err error) {
@@ -862,7 +863,7 @@ func NewQEMUEFIDiskProperties(
 }
 
 type QEMUNetworkInterfaceProperties struct {
-	Model      QEMUNetworkModel
+	Model      qemu.NetworkModel
 	MACAddress string
 
 	Bridge string
@@ -874,15 +875,6 @@ type QEMUNetworkInterfaceProperties struct {
 	RateLimitMBps int
 	Multiqueue    int
 }
-
-type QEMUNetworkModel string
-
-const (
-	QEMUNetworkModelIntelE1000     QEMUNetworkModel = "e1000"
-	QEMUNetworkModelVirtIO         QEMUNetworkModel = "VirtIO"
-	QEMUNetworkModelRealtekRTL8139 QEMUNetworkModel = "rtl8139"
-	QEMUNetworkModelVMwareVMXNET3  QEMUNetworkModel = "vmxnet3"
-)
 
 func NewQEMUNetworkInterfaceProperties(
 	media string,
@@ -900,16 +892,16 @@ func NewQEMUNetworkInterfaceProperties(
 	for _, kv := range props.List() {
 		switch kv.Key() {
 		case "e1000":
-			obj.Model = QEMUNetworkModelIntelE1000
+			obj.Model = qemu.NetworkModelIntelE1000
 			obj.MACAddress = kv.Value()
 		case "virtio":
-			obj.Model = QEMUNetworkModelVirtIO
+			obj.Model = qemu.NetworkModelVirtIO
 			obj.MACAddress = kv.Value()
 		case "rtl8139":
-			obj.Model = QEMUNetworkModelRealtekRTL8139
+			obj.Model = qemu.NetworkModelRealtekRTL8139
 			obj.MACAddress = kv.Value()
 		case "vmxnet3":
-			obj.Model = QEMUNetworkModelVMwareVMXNET3
+			obj.Model = qemu.NetworkModelVMwareVMXNET3
 			obj.MACAddress = kv.Value()
 		case "bridge":
 			obj.Bridge = kv.Value()

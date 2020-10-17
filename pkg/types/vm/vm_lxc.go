@@ -5,6 +5,7 @@ import (
 
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
 )
 
 type LXCVirtualMachine interface {
@@ -72,7 +73,7 @@ func NewLXCProperties(props types.Properties) (*LXCProperties, error) {
 }
 
 type LXCGlobalProperties struct {
-	OSType LXCOSType
+	OSType lxc.OSType
 
 	Protected bool
 
@@ -139,7 +140,7 @@ func (obj LXCProperties) MapToValues() (request.Values, error) {
 }
 
 type LXCCPUProperties struct {
-	Architecture LXCCPUArchitecture
+	Architecture lxc.CPUArchitecture
 
 	Cores uint
 
