@@ -79,7 +79,10 @@ const (
 
 func (obj GlusterFSTransport) IsValid() bool {
 	switch obj {
-	case GlusterFSTransportNone, GlusterFSTransportTCP, GlusterFSTransportUNIX, GlusterFSTransportRDMA:
+	case GlusterFSTransportNone,
+		GlusterFSTransportTCP,
+		GlusterFSTransportUNIX,
+		GlusterFSTransportRDMA:
 		return true
 	default:
 		return false

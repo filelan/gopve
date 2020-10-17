@@ -74,25 +74,29 @@ func TestStorageNFSProperties(t *testing.T) {
 }
 
 func TestNFSVersion(t *testing.T) {
-	test.HelperTestFixedValue(t, (*storage.NFSVersion)(nil), map[string](struct {
-		Object types.FixedValue
-		Value  string
-	}){
-		"3": {
-			Object: storage.NFSVersion30,
-			Value:  "3",
+	test.HelperTestFixedValue(
+		t,
+		(*storage.NFSVersion)(nil),
+		map[string](struct {
+			Object types.FixedValue
+			Value  string
+		}){
+			"3": {
+				Object: storage.NFSVersion30,
+				Value:  "3",
+			},
+			"4": {
+				Object: storage.NFSVersion40,
+				Value:  "4",
+			},
+			"4.1": {
+				Object: storage.NFSVersion41,
+				Value:  "4.1",
+			},
+			"4.2": {
+				Object: storage.NFSVersion42,
+				Value:  "4.2",
+			},
 		},
-		"4": {
-			Object: storage.NFSVersion40,
-			Value:  "4",
-		},
-		"4.1": {
-			Object: storage.NFSVersion41,
-			Value:  "4.1",
-		},
-		"4.2": {
-			Object: storage.NFSVersion42,
-			Value:  "4.2",
-		},
-	})
+	)
 }

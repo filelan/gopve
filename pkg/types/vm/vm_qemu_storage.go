@@ -136,7 +136,10 @@ type QEMUDriveStorageProperties struct {
 	StorageFile string
 }
 
-func (obj *QEMUDriveStorageProperties) setProperties(value string, prefix string) error {
+func (obj *QEMUDriveStorageProperties) setProperties(
+	value string,
+	prefix string,
+) error {
 	storage := internal_types.PVEList{
 		Separator: ":",
 	}

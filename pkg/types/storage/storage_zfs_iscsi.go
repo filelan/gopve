@@ -134,7 +134,10 @@ const (
 
 func (obj ISCSIProvider) IsValid() bool {
 	switch obj {
-	case ISCSIProviderCOMSTAR, ISCSIProviderISTGT, ISCSIProviderIET, ISCSIProviderLIO:
+	case ISCSIProviderCOMSTAR,
+		ISCSIProviderISTGT,
+		ISCSIProviderIET,
+		ISCSIProviderLIO:
 		return true
 	default:
 		return false

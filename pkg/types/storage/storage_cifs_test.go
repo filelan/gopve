@@ -104,21 +104,25 @@ func TestStorageCIFSProperties(t *testing.T) {
 }
 
 func TestSMBVersion(t *testing.T) {
-	test.HelperTestFixedValue(t, (*storage.SMBVersion)(nil), map[string](struct {
-		Object types.FixedValue
-		Value  string
-	}){
-		"2.0": {
-			Object: storage.SMBVersion20,
-			Value:  "2.0",
+	test.HelperTestFixedValue(
+		t,
+		(*storage.SMBVersion)(nil),
+		map[string](struct {
+			Object types.FixedValue
+			Value  string
+		}){
+			"2.0": {
+				Object: storage.SMBVersion20,
+				Value:  "2.0",
+			},
+			"2.1": {
+				Object: storage.SMBVersion21,
+				Value:  "2.1",
+			},
+			"3.0": {
+				Object: storage.SMBVersion30,
+				Value:  "3.0",
+			},
 		},
-		"2.1": {
-			Object: storage.SMBVersion21,
-			Value:  "2.1",
-		},
-		"3.0": {
-			Object: storage.SMBVersion30,
-			Value:  "3.0",
-		},
-	})
+	)
 }

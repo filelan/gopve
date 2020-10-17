@@ -122,25 +122,29 @@ func TestStorageZFSOverISCSIProperties(t *testing.T) {
 }
 
 func TestISCSIProvider(t *testing.T) {
-	test.HelperTestFixedValue(t, (*storage.ISCSIProvider)(nil), map[string](struct {
-		Object types.FixedValue
-		Value  string
-	}){
-		"COMSTAR": {
-			Object: storage.ISCSIProviderCOMSTAR,
-			Value:  "comstar",
+	test.HelperTestFixedValue(
+		t,
+		(*storage.ISCSIProvider)(nil),
+		map[string](struct {
+			Object types.FixedValue
+			Value  string
+		}){
+			"COMSTAR": {
+				Object: storage.ISCSIProviderCOMSTAR,
+				Value:  "comstar",
+			},
+			"ISTGT": {
+				Object: storage.ISCSIProviderISTGT,
+				Value:  "istgt",
+			},
+			"IET": {
+				Object: storage.ISCSIProviderIET,
+				Value:  "iet",
+			},
+			"LIO": {
+				Object: storage.ISCSIProviderLIO,
+				Value:  "LIO",
+			},
 		},
-		"ISTGT": {
-			Object: storage.ISCSIProviderISTGT,
-			Value:  "istgt",
-		},
-		"IET": {
-			Object: storage.ISCSIProviderIET,
-			Value:  "iet",
-		},
-		"LIO": {
-			Object: storage.ISCSIProviderLIO,
-			Value:  "LIO",
-		},
-	})
+	)
 }

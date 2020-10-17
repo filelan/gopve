@@ -80,25 +80,29 @@ func TestStorageGlusterFSProperties(t *testing.T) {
 }
 
 func TestGlusterFSTransport(t *testing.T) {
-	test.HelperTestFixedValue(t, (*storage.GlusterFSTransport)(nil), map[string](struct {
-		Object types.FixedValue
-		Value  string
-	}){
-		"None": {
-			Object: storage.GlusterFSTransportNone,
-			Value:  "",
+	test.HelperTestFixedValue(
+		t,
+		(*storage.GlusterFSTransport)(nil),
+		map[string](struct {
+			Object types.FixedValue
+			Value  string
+		}){
+			"None": {
+				Object: storage.GlusterFSTransportNone,
+				Value:  "",
+			},
+			"TCP": {
+				Object: storage.GlusterFSTransportTCP,
+				Value:  "tcp",
+			},
+			"UNIX": {
+				Object: storage.GlusterFSTransportUNIX,
+				Value:  "unix",
+			},
+			"RDMA": {
+				Object: storage.GlusterFSTransportRDMA,
+				Value:  "rdma",
+			},
 		},
-		"TCP": {
-			Object: storage.GlusterFSTransportTCP,
-			Value:  "tcp",
-		},
-		"UNIX": {
-			Object: storage.GlusterFSTransportUNIX,
-			Value:  "unix",
-		},
-		"RDMA": {
-			Object: storage.GlusterFSTransportRDMA,
-			Value:  "rdma",
-		},
-	})
+	)
 }
