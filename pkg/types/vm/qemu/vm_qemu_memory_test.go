@@ -1,4 +1,4 @@
-package vm_test
+package qemu_test
 
 import (
 	"testing"
@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestQEMUMemoryProperties(t *testing.T) {
+func TestMemoryProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
 		"memory":  4096,
 		"balloon": 2048,
@@ -22,13 +22,13 @@ func TestQEMUMemoryProperties(t *testing.T) {
 	defaultProps := []string{"shares"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
-		obj, err := vm.NewQEMUMemoryProperties(props)
+		obj, err := qemu.NewMemoryProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			memoryProps, err := vm.NewQEMUMemoryProperties(props)
+			memoryProps, err := qemu.NewMemoryProperties(props)
 			require.NoError(t, err)
 
 			assert.Equal(t, uint(4096), memoryProps.Memory)
@@ -50,13 +50,13 @@ func TestQEMUMemoryProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, vm.QEMUMemoryProperties{}, obj)
+				require.IsType(t, qemu.MemoryProperties{}, obj)
 
-				memoryProps := obj.(vm.QEMUMemoryProperties)
+				memoryProps := obj.(qemu.MemoryProperties)
 
 				assert.Equal(
 					t,
-					vm.DefaultQEMUMemoryShares,
+					qemu.DefaultMemoryShares,
 					memoryProps.Shares,
 				)
 			},

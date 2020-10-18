@@ -1,4 +1,4 @@
-package vm
+package lxc
 
 import (
 	"fmt"
@@ -7,33 +7,33 @@ import (
 	"github.com/xabinapal/gopve/pkg/types"
 )
 
-type LXCMemoryProperties struct {
+type MemoryProperties struct {
 	Memory uint
 	Swap   uint
 }
 
 const (
-	mkLXCMemoryPropertyMemory = "memory"
-	mkLXCMemoryPropertySwap   = "swap"
+	mkMemoryPropertyMemory = "memory"
+	mkMemoryPropertySwap   = "swap"
 )
 
-func NewLXCMemoryProperties(
+func NewMemoryProperties(
 	props types.Properties,
-) (*LXCMemoryProperties, error) {
-	obj := new(LXCMemoryProperties)
+) (*MemoryProperties, error) {
+	obj := new(MemoryProperties)
 
-	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, nil); err != nil {
+	if err := props.SetRequiredUint(mkMemoryPropertyMemory, &obj.Memory, nil); err != nil {
 		return nil, err
 	}
 
-	if err := props.SetRequiredUint(mkLXCMemoryPropertySwap, &obj.Swap, nil); err != nil {
+	if err := props.SetRequiredUint(mkMemoryPropertySwap, &obj.Swap, nil); err != nil {
 		return nil, err
 	}
 
 	return obj, nil
 }
 
-func (obj LXCMemoryProperties) MapToValues() (request.Values, error) {
+func (obj MemoryProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
 
 	memory := obj.Memory

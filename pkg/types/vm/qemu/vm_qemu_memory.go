@@ -1,4 +1,4 @@
-package vm
+package qemu
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
-type QEMUMemoryProperties struct {
+type MemoryProperties struct {
 	Memory uint
 
 	Ballooning    bool
@@ -17,19 +17,19 @@ type QEMUMemoryProperties struct {
 }
 
 const (
-	mkQEMUMemoryPropertyMemory  = "memory"
-	mkQEMUMemoryPropertyBalloon = "balloon"
-	mkQEMUMemoryPropertyShares  = "shares"
+	mkMemoryPropertyMemory  = "memory"
+	mkMemoryPropertyBalloon = "balloon"
+	mkMemoryPropertyShares  = "shares"
 
-	DefaultQEMUMemoryShares uint = 1000
+	DefaultMemoryShares uint = 1000
 )
 
-func NewQEMUMemoryProperties(
+func NewMemoryProperties(
 	props types.Properties,
-) (QEMUMemoryProperties, error) {
-	obj := QEMUMemoryProperties{}
+) (MemoryProperties, error) {
+	obj := MemoryProperties{}
 
-	if err := props.SetRequiredUint(mkQEMUMemoryPropertyMemory, &obj.Memory, &types.PropertyUintFunctions{
+	if err := props.SetRequiredUint(mkMemoryPropertyMemory, &obj.Memory, &types.PropertyUintFunctions{
 		ValidateFunc: func(val uint) bool {
 			return val <= 4178944
 		},
@@ -37,10 +37,10 @@ func NewQEMUMemoryProperties(
 		return obj, err
 	}
 
-	if v, ok := props[mkQEMUMemoryPropertyBalloon].(float64); ok {
+	if v, ok := props[mkMemoryPropertyBalloon].(float64); ok {
 		if v != float64(int(v)) || v < 0 || uint(v) > obj.Memory {
 			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkQEMUMemoryPropertyBalloon)
+			err.AddKey("name", mkMemoryPropertyBalloon)
 			err.AddKey("value", v)
 			return obj, err
 		} else if v == 0 {
@@ -55,17 +55,17 @@ func NewQEMUMemoryProperties(
 			obj.Ballooning = true
 			obj.MinimumMemory = uint(v)
 
-			if v, ok := props[mkQEMUMemoryPropertyShares].(float64); ok {
+			if v, ok := props[mkMemoryPropertyShares].(float64); ok {
 				if v != float64(int(v)) || v < 0 || v > 50000 {
 					err := errors.ErrInvalidProperty
-					err.AddKey("name", mkQEMUMemoryPropertyShares)
+					err.AddKey("name", mkMemoryPropertyShares)
 					err.AddKey("value", v)
 					return obj, err
 				}
 
 				obj.Shares = uint(v)
 			} else {
-				obj.Shares = DefaultQEMUMemoryShares
+				obj.Shares = DefaultMemoryShares
 			}
 		}
 	} else {
@@ -77,7 +77,7 @@ func NewQEMUMemoryProperties(
 	return obj, nil
 }
 
-func (obj QEMUMemoryProperties) MapToValues() (request.Values, error) {
+func (obj MemoryProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
 
 	memory := obj.Memory

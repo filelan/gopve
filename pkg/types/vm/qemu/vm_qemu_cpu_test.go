@@ -1,4 +1,4 @@
-package vm_test
+package qemu_test
 
 import (
 	"fmt"
@@ -7,12 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/vm"
 	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageQEMUCPUProperties(t *testing.T) {
+func TestStorageCPUProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
 		"cpu":      "pentium,flags=+md-clear;-spec-ctrl",
 		"arch":     "aarch64",
@@ -38,13 +37,13 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 	}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
-		obj, err := vm.NewQEMUCPUProperties(props)
+		obj, err := qemu.NewCPUProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			cpuProps, err := vm.NewQEMUCPUProperties(props)
+			cpuProps, err := qemu.NewCPUProperties(props)
 			require.NoError(t, err)
 
 			assert.Equal(t, qemu.CPUTypeIntelPentium, cpuProps.Kind)
@@ -75,19 +74,19 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, vm.QEMUCPUProperties{}, obj)
+				require.IsType(t, qemu.CPUProperties{}, obj)
 
-				cpuProps := obj.(vm.QEMUCPUProperties)
+				cpuProps := obj.(qemu.CPUProperties)
 				fmt.Printf("%+v\n", cpuProps)
 
 				assert.Equal(
 					t,
-					vm.DefaultQEMUCPUPropertyKind,
+					qemu.DefaultCPUPropertyKind,
 					cpuProps.Kind,
 				)
 				assert.Equal(
 					t,
-					vm.DefaultQEMUCPUPropertyArchitecture,
+					qemu.DefaultCPUPropertyArchitecture,
 					cpuProps.Architecture,
 				)
 
@@ -99,22 +98,22 @@ func TestStorageQEMUCPUProperties(t *testing.T) {
 				)
 				assert.Equal(
 					t,
-					vm.DefaultQEMUCPUPropertyLimit,
+					qemu.DefaultCPUPropertyLimit,
 					cpuProps.Limit,
 				)
 				assert.Equal(
 					t,
-					vm.DefaultQEMUCPUPropertyUnits,
+					qemu.DefaultCPUPropertyUnits,
 					cpuProps.Units,
 				)
 				assert.Equal(
 					t,
-					vm.DefaultQEMUCPUPropertyNUMA,
+					qemu.DefaultCPUPropertyNUMA,
 					cpuProps.NUMA,
 				)
 				assert.Equal(
 					t,
-					vm.DefaultQEMUCPUPropertyFreezeAtStartup,
+					qemu.DefaultCPUPropertyFreezeAtStartup,
 					cpuProps.FreezeAtStartup,
 				)
 			},

@@ -1,15 +1,14 @@
-package vm
+package lxc
 
 import (
 	"fmt"
 
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
 )
 
-type LXCCPUProperties struct {
-	Architecture lxc.CPUArchitecture
+type CPUProperties struct {
+	Architecture CPUArchitecture
 
 	Cores uint
 
@@ -18,24 +17,24 @@ type LXCCPUProperties struct {
 }
 
 const (
-	mkLXCCPUPropertyArchitecture = "arch"
+	mkCPUPropertyArchitecture = "arch"
 
-	mkLXCCPUPropertyCores = "cores"
-	mkLXCCPUPropertyLimit = "cpulimit"
-	mkLXCCPUPropertyUnits = "cpuunits"
+	mkCPUPropertyCores = "cores"
+	mkCPUPropertyLimit = "cpulimit"
+	mkCPUPropertyUnits = "cpuunits"
 
-	DefaultLXCCPUPropertyLimit uint = 0
-	DefaultLXCCPUPropertyUnits uint = 1024
+	DefaultCPUPropertyLimit uint = 0
+	DefaultCPUPropertyUnits uint = 1024
 )
 
-func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
-	obj := new(LXCCPUProperties)
+func NewCPUProperties(props types.Properties) (*CPUProperties, error) {
+	obj := new(CPUProperties)
 
-	if err := props.SetRequiredFixedValue(mkLXCCPUPropertyArchitecture, &obj.Architecture, nil); err != nil {
+	if err := props.SetRequiredFixedValue(mkCPUPropertyArchitecture, &obj.Architecture, nil); err != nil {
 		return nil, err
 	}
 
-	if err := props.SetRequiredUint(mkLXCCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
+	if err := props.SetRequiredUint(mkCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
 		ValidateFunc: func(val uint) bool {
 			return val <= 128
 		},
@@ -43,7 +42,7 @@ func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
 		return nil, err
 	}
 
-	if err := props.SetUint(mkLXCCPUPropertyLimit, &obj.Limit, DefaultLXCCPUPropertyLimit, &types.PropertyUintFunctions{
+	if err := props.SetUint(mkCPUPropertyLimit, &obj.Limit, DefaultCPUPropertyLimit, &types.PropertyUintFunctions{
 		ValidateFunc: func(val uint) bool {
 			return val <= 128
 		},
@@ -51,7 +50,7 @@ func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
 		return nil, err
 	}
 
-	if err := props.SetUint(mkLXCCPUPropertyUnits, &obj.Units, DefaultLXCCPUPropertyUnits, &types.PropertyUintFunctions{
+	if err := props.SetUint(mkCPUPropertyUnits, &obj.Units, DefaultCPUPropertyUnits, &types.PropertyUintFunctions{
 		ValidateFunc: func(val uint) bool {
 			return val >= 8 && val <= 500000
 		},
@@ -62,7 +61,7 @@ func NewLXCCPUProperties(props types.Properties) (*LXCCPUProperties, error) {
 	return obj, nil
 }
 
-func (obj LXCCPUProperties) MapToValues() (request.Values, error) {
+func (obj CPUProperties) MapToValues() (request.Values, error) {
 	values := request.Values{}
 
 	cores := obj.Cores

@@ -1,4 +1,4 @@
-package vm_test
+package lxc_test
 
 import (
 	"testing"
@@ -6,37 +6,32 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/vm"
 	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestLXCCPUProperties(t *testing.T) {
+func TestGlobalProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
-		"arch":     "arm64",
-		"cores":    16,
-		"cpulimit": 2,
-		"cpuunits": 2048,
+		"ostype":     "archlinux",
+		"protection": 1,
+		"onboot":     1,
 	})
 
-	requiredProps := []string{"arch", "cores"}
+	requiredProps := []string{"ostype"}
 
-	defaultProps := []string{"cpulimit", "cpuunits"}
+	defaultProps := []string{"protection", "onboot"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
-		obj, err := vm.NewLXCCPUProperties(props)
+		obj, err := lxc.NewGlobalProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			cpuProps, err := vm.NewLXCCPUProperties(props)
+			globalProps, err := lxc.NewGlobalProperties(props)
 			require.NoError(t, err)
 
-			assert.Equal(t, lxc.CPUArchitectureARM64, cpuProps.Architecture)
-			assert.Equal(t, uint(16), cpuProps.Cores)
-			assert.Equal(t, uint(2), cpuProps.Limit)
-			assert.Equal(t, uint(2048), cpuProps.Units)
+			assert.Equal(t, lxc.OSTypeArchLinux, globalProps.OSType)
 		})
 
 	t.Run(
@@ -52,19 +47,19 @@ func TestLXCCPUProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*vm.LXCCPUProperties)(nil), obj)
+				require.IsType(t, (*lxc.GlobalProperties)(nil), obj)
 
-				cpuProps := obj.(*vm.LXCCPUProperties)
+				globalProps := obj.(*lxc.GlobalProperties)
 
 				assert.Equal(
 					t,
-					vm.DefaultLXCCPUPropertyLimit,
-					cpuProps.Limit,
+					lxc.DefaultGlobalPropertyProtected,
+					globalProps.Protected,
 				)
 				assert.Equal(
 					t,
-					vm.DefaultLXCCPUPropertyUnits,
-					cpuProps.Units,
+					lxc.DefaultGlobalPropertyStartAtBoot,
+					globalProps.StartAtBoot,
 				)
 			},
 		),

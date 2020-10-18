@@ -1,14 +1,13 @@
-package vm
+package qemu
 
 import (
 	"fmt"
 
 	internal_types "github.com/xabinapal/gopve/internal/types"
-	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 )
 
-type QEMUNetworkInterfaceProperties struct {
-	Model      qemu.NetworkModel
+type NetworkInterfaceProperties struct {
+	Model      NetworkModel
 	MACAddress string
 
 	Bridge string
@@ -21,9 +20,9 @@ type QEMUNetworkInterfaceProperties struct {
 	Multiqueue    int
 }
 
-func NewQEMUNetworkInterfaceProperties(
+func NewNetworkInterfaceProperties(
 	media string,
-) (obj QEMUNetworkInterfaceProperties, err error) {
+) (obj NetworkInterfaceProperties, err error) {
 	props := internal_types.PVEDictionary{
 		ListSeparator:     ",",
 		KeyValueSeparator: "=",
@@ -37,16 +36,16 @@ func NewQEMUNetworkInterfaceProperties(
 	for _, kv := range props.List() {
 		switch kv.Key() {
 		case "e1000":
-			obj.Model = qemu.NetworkModelIntelE1000
+			obj.Model = NetworkModelIntelE1000
 			obj.MACAddress = kv.Value()
 		case "virtio":
-			obj.Model = qemu.NetworkModelVirtIO
+			obj.Model = NetworkModelVirtIO
 			obj.MACAddress = kv.Value()
 		case "rtl8139":
-			obj.Model = qemu.NetworkModelRealtekRTL8139
+			obj.Model = NetworkModelRealtekRTL8139
 			obj.MACAddress = kv.Value()
 		case "vmxnet3":
-			obj.Model = qemu.NetworkModelVMwareVMXNET3
+			obj.Model = NetworkModelVMwareVMXNET3
 			obj.MACAddress = kv.Value()
 		case "bridge":
 			obj.Bridge = kv.Value()

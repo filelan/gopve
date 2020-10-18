@@ -4,6 +4,9 @@ package mocks
 
 import (
 	mock "github.com/stretchr/testify/mock"
+	lxc "github.com/xabinapal/gopve/pkg/types/vm/lxc"
+
+	qemu "github.com/xabinapal/gopve/pkg/types/vm/qemu"
 
 	task "github.com/xabinapal/gopve/pkg/types/task"
 
@@ -16,11 +19,11 @@ type VirtualMachine struct {
 }
 
 // CreateLXC provides a mock function with given fields: opts
-func (_m *VirtualMachine) CreateLXC(opts vm.LXCCreateOptions) (task.Task, error) {
+func (_m *VirtualMachine) CreateLXC(opts lxc.CreateOptions) (task.Task, error) {
 	ret := _m.Called(opts)
 
 	var r0 task.Task
-	if rf, ok := ret.Get(0).(func(vm.LXCCreateOptions) task.Task); ok {
+	if rf, ok := ret.Get(0).(func(lxc.CreateOptions) task.Task); ok {
 		r0 = rf(opts)
 	} else {
 		if ret.Get(0) != nil {
@@ -29,7 +32,7 @@ func (_m *VirtualMachine) CreateLXC(opts vm.LXCCreateOptions) (task.Task, error)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(vm.LXCCreateOptions) error); ok {
+	if rf, ok := ret.Get(1).(func(lxc.CreateOptions) error); ok {
 		r1 = rf(opts)
 	} else {
 		r1 = ret.Error(1)
@@ -39,11 +42,11 @@ func (_m *VirtualMachine) CreateLXC(opts vm.LXCCreateOptions) (task.Task, error)
 }
 
 // CreateQEMU provides a mock function with given fields: opts
-func (_m *VirtualMachine) CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, error) {
+func (_m *VirtualMachine) CreateQEMU(opts qemu.CreateOptions) (task.Task, error) {
 	ret := _m.Called(opts)
 
 	var r0 task.Task
-	if rf, ok := ret.Get(0).(func(vm.QEMUCreateOptions) task.Task); ok {
+	if rf, ok := ret.Get(0).(func(qemu.CreateOptions) task.Task); ok {
 		r0 = rf(opts)
 	} else {
 		if ret.Get(0) != nil {
@@ -52,7 +55,7 @@ func (_m *VirtualMachine) CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, erro
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(vm.QEMUCreateOptions) error); ok {
+	if rf, ok := ret.Get(1).(func(qemu.CreateOptions) error); ok {
 		r1 = rf(opts)
 	} else {
 		r1 = ret.Error(1)

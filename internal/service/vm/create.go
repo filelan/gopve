@@ -7,7 +7,8 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types/node"
 	"github.com/xabinapal/gopve/pkg/types/task"
-	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
+	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 )
 
 func (svc *Service) createVM(
@@ -41,7 +42,7 @@ func (svc *Service) createVM(
 	return svc.api.Task().Get(task)
 }
 
-func (svc *Service) CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, error) {
+func (svc *Service) CreateQEMU(opts qemu.CreateOptions) (task.Task, error) {
 	values, err := opts.MapToValues()
 	if err != nil {
 		return nil, err
@@ -50,7 +51,7 @@ func (svc *Service) CreateQEMU(opts vm.QEMUCreateOptions) (task.Task, error) {
 	return svc.createVM("qemu", opts.VMID, opts.Node, values)
 }
 
-func (svc *Service) CreateLXC(opts vm.LXCCreateOptions) (task.Task, error) {
+func (svc *Service) CreateLXC(opts lxc.CreateOptions) (task.Task, error) {
 	values, err := opts.MapToValues()
 	if err != nil {
 		return nil, err

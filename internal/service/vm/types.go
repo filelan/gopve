@@ -6,6 +6,8 @@ import (
 
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
+	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 )
 
 type VirtualMachine struct {
@@ -166,7 +168,7 @@ func (obj *VirtualMachine) ConvertToTemplate() error {
 
 type QEMUVirtualMachine struct {
 	VirtualMachine
-	props *vm.QEMUProperties
+	props *qemu.Properties
 }
 
 func NewQEMU(
@@ -178,7 +180,7 @@ func NewQEMU(
 	}
 
 	if extraProps != nil {
-		props, err := vm.NewQEMUProperties(extraProps)
+		props, err := qemu.NewProperties(extraProps)
 		if err != nil {
 			return nil, err
 		}
@@ -220,16 +222,16 @@ func (this *QEMUVirtualMachine) Load() error {
 	return nil
 }
 
-func (obj *QEMUVirtualMachine) GetQEMUProperties() (vm.QEMUProperties, error) {
+func (obj *QEMUVirtualMachine) GetQEMUProperties() (qemu.Properties, error) {
 	if err := obj.Load(); err != nil {
-		return vm.QEMUProperties{}, err
+		return qemu.Properties{}, err
 	}
 
 	return *obj.props, nil
 }
 
 func (obj *QEMUVirtualMachine) SetQEMUProperties(
-	props vm.QEMUProperties,
+	props qemu.Properties,
 ) error {
 	form, err := props.MapToValues()
 	if err != nil {
@@ -245,17 +247,17 @@ func (obj *QEMUVirtualMachine) SetQEMUProperties(
 	return nil
 }
 
-func (obj *QEMUVirtualMachine) CPU() (vm.QEMUCPUProperties, error) {
+func (obj *QEMUVirtualMachine) CPU() (qemu.CPUProperties, error) {
 	if err := obj.Load(); err != nil {
-		return vm.QEMUCPUProperties{}, err
+		return qemu.CPUProperties{}, err
 	}
 
 	return obj.props.CPU, nil
 }
 
-func (obj *QEMUVirtualMachine) Memory() (vm.QEMUMemoryProperties, error) {
+func (obj *QEMUVirtualMachine) Memory() (qemu.MemoryProperties, error) {
 	if err := obj.Load(); err != nil {
-		return vm.QEMUMemoryProperties{}, err
+		return qemu.MemoryProperties{}, err
 	}
 
 	return obj.props.Memory, nil
@@ -263,10 +265,10 @@ func (obj *QEMUVirtualMachine) Memory() (vm.QEMUMemoryProperties, error) {
 
 type LXCVirtualMachine struct {
 	VirtualMachine
-	props *vm.LXCProperties
+	props *lxc.Properties
 
-	cpu    vm.LXCCPUProperties
-	memory vm.LXCMemoryProperties
+	cpu    lxc.CPUProperties
+	memory lxc.MemoryProperties
 }
 
 func NewLXC(
@@ -278,7 +280,7 @@ func NewLXC(
 	}
 
 	if extraProps != nil {
-		props, err := vm.NewLXCProperties(extraProps)
+		props, err := lxc.NewProperties(extraProps)
 		if err != nil {
 			return nil, err
 		}
@@ -320,15 +322,15 @@ func (this *LXCVirtualMachine) Load() error {
 	return nil
 }
 
-func (obj *LXCVirtualMachine) GetLXCProperties() (vm.LXCProperties, error) {
+func (obj *LXCVirtualMachine) GetLXCProperties() (lxc.Properties, error) {
 	if err := obj.Load(); err != nil {
-		return vm.LXCProperties{}, err
+		return lxc.Properties{}, err
 	}
 
 	return *obj.props, nil
 }
 
-func (obj *LXCVirtualMachine) SetLXCProperties(props vm.LXCProperties) error {
+func (obj *LXCVirtualMachine) SetLXCProperties(props lxc.Properties) error {
 	form, err := props.MapToValues()
 	if err != nil {
 		return err
@@ -343,17 +345,17 @@ func (obj *LXCVirtualMachine) SetLXCProperties(props vm.LXCProperties) error {
 	return nil
 }
 
-func (obj *LXCVirtualMachine) CPU() (vm.LXCCPUProperties, error) {
+func (obj *LXCVirtualMachine) CPU() (lxc.CPUProperties, error) {
 	if err := obj.Load(); err != nil {
-		return vm.LXCCPUProperties{}, err
+		return lxc.CPUProperties{}, err
 	}
 
 	return obj.cpu, nil
 }
 
-func (obj *LXCVirtualMachine) Memory() (vm.LXCMemoryProperties, error) {
+func (obj *LXCVirtualMachine) Memory() (lxc.MemoryProperties, error) {
 	if err := obj.Load(); err != nil {
-		return vm.LXCMemoryProperties{}, err
+		return lxc.MemoryProperties{}, err
 	}
 
 	return obj.memory, nil

@@ -1,4 +1,4 @@
-package vm
+package qemu
 
 import (
 	"fmt"
@@ -7,46 +7,45 @@ import (
 	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
-	"github.com/xabinapal/gopve/pkg/types/vm/qemu"
 )
 
-type QEMUStorageProperties struct {
-	HardDrives []QEMUHardDriveProperties
-	CDROMs     []QEMUCDROMProperties
-	EFIDisk    QEMUEFIDiskProperties
+type StorageProperties struct {
+	HardDrives []HardDriveProperties
+	CDROMs     []CDROMProperties
+	EFIDisk    EFIDiskProperties
 }
 
 const (
-	maxQEMUIDEPropertiesArrayCapacity    = 4
-	maxQEMUSATAPropertiesArrayCapacity   = 6
-	maxQEMUSCSIPropertiesArrayCapacity   = 31
-	maxQEMUVirtIOPropertiesArrayCapacity = 16
+	maxIDEPropertiesArrayCapacity    = 4
+	maxSATAPropertiesArrayCapacity   = 6
+	maxSCSIPropertiesArrayCapacity   = 31
+	maxVirtIOPropertiesArrayCapacity = 16
 )
 
-func NewQEMUStorageProperties(
+func NewStorageProperties(
 	props types.Properties,
-) (QEMUStorageProperties, error) {
-	obj := QEMUStorageProperties{}
+) (StorageProperties, error) {
+	obj := StorageProperties{}
 
 	for _, x := range [](struct {
-		Kind  qemu.Bus
+		Kind  Bus
 		Count int
 	}){
 		{
-			Kind:  qemu.BusIDE,
-			Count: maxQEMUIDEPropertiesArrayCapacity,
+			Kind:  BusIDE,
+			Count: maxIDEPropertiesArrayCapacity,
 		},
 		{
-			Kind:  qemu.BusSATA,
-			Count: maxQEMUSATAPropertiesArrayCapacity,
+			Kind:  BusSATA,
+			Count: maxSATAPropertiesArrayCapacity,
 		},
 		{
-			Kind:  qemu.BusSCSI,
-			Count: maxQEMUSCSIPropertiesArrayCapacity,
+			Kind:  BusSCSI,
+			Count: maxSCSIPropertiesArrayCapacity,
 		},
 		{
-			Kind:  qemu.BusVirtIO,
-			Count: maxQEMUVirtIOPropertiesArrayCapacity,
+			Kind:  BusVirtIO,
+			Count: maxVirtIOPropertiesArrayCapacity,
 		},
 	} {
 		for i := 0; i < x.Count; i++ {
@@ -64,11 +63,11 @@ func NewQEMUStorageProperties(
 				return obj, err
 			}
 
-			if drive, err := NewQEMUStorageDrive(x.Kind, i, media); err == nil {
+			if drive, err := NewStorageDrive(x.Kind, i, media); err == nil {
 				switch x := drive.(type) {
-				case QEMUHardDriveProperties:
+				case HardDriveProperties:
 					obj.HardDrives = append(obj.HardDrives, x)
-				case QEMUCDROMProperties:
+				case CDROMProperties:
 					obj.CDROMs = append(obj.CDROMs, x)
 				default:
 					panic("this should never happen")
@@ -88,7 +87,7 @@ func NewQEMUStorageProperties(
 				return obj, err
 			}
 
-			if efiDisk, err := NewQEMUEFIDiskProperties(media); err == nil {
+			if efiDisk, err := NewEFIDiskProperties(media); err == nil {
 				obj.EFIDisk = efiDisk
 			} else {
 				return obj, err
@@ -99,8 +98,8 @@ func NewQEMUStorageProperties(
 	return obj, nil
 }
 
-func NewQEMUStorageDrive(
-	busKind qemu.Bus,
+func NewStorageDrive(
+	busKind Bus,
 	busNumber int,
 	media string,
 ) (interface{}, error) {
@@ -117,26 +116,26 @@ func NewQEMUStorageDrive(
 	if x, ok := props.ElemByKey("media"); ok {
 		switch x.Value() {
 		case "cdrom":
-			return NewQEMUCDROMProperties(busKind, busNumber, props)
+			return NewCDROMProperties(busKind, busNumber, props)
 		default:
 			return nil, fmt.Errorf("unknown media type %s", x.Value())
 		}
 	} else {
-		return NewQEMUHardDriveProperties(busKind, busNumber, props)
+		return NewHardDriveProperties(busKind, busNumber, props)
 	}
 }
 
-type QEMUDriveBusProperties struct {
-	BusKind   qemu.Bus
+type DriveBusProperties struct {
+	BusKind   Bus
 	BusNumber int
 }
 
-type QEMUDriveStorageProperties struct {
+type DriveStorageProperties struct {
 	StorageName string
 	StorageFile string
 }
 
-func (obj *QEMUDriveStorageProperties) setProperties(
+func (obj *DriveStorageProperties) setProperties(
 	value string,
 	prefix string,
 ) error {
@@ -163,12 +162,12 @@ func (obj *QEMUDriveStorageProperties) setProperties(
 	return nil
 }
 
-type QEMUHardDriveProperties struct {
-	QEMUDriveBusProperties
-	QEMUDriveStorageProperties
+type HardDriveProperties struct {
+	DriveBusProperties
+	DriveStorageProperties
 
 	Size  string
-	Cache qemu.HardDriveCache
+	Cache HardDriveCache
 
 	Discard    bool
 	EmulateSSD bool
@@ -187,34 +186,34 @@ type QEMUHardDriveProperties struct {
 }
 
 const (
-	DefaultQEMUHardDriveCache qemu.HardDriveCache = qemu.HardDriveCacheNone
+	DefaultHardDriveCache HardDriveCache = HardDriveCacheNone
 
-	DefaultQEMUHardDriveDiscard    bool = false
-	DefaultQEMUHardDriveEmulateSSD bool = false
-	DefaultQEMUHardDriveIOThread   bool = false
-	DefaultQEMUHardDriveBackup     bool = true
-	DefaultQEMUHardDriveReplicate  bool = true
+	DefaultHardDriveDiscard    bool = false
+	DefaultHardDriveEmulateSSD bool = false
+	DefaultHardDriveIOThread   bool = false
+	DefaultHardDriveBackup     bool = true
+	DefaultHardDriveReplicate  bool = true
 )
 
-func NewQEMUHardDriveProperties(
-	busKind qemu.Bus,
+func NewHardDriveProperties(
+	busKind Bus,
 	busNumber int,
 	props internal_types.PVEDictionary,
-) (obj QEMUHardDriveProperties, err error) {
+) (obj HardDriveProperties, err error) {
 	obj.BusKind = busKind
 	obj.BusNumber = busNumber
 
-	obj.Cache = DefaultQEMUHardDriveCache
+	obj.Cache = DefaultHardDriveCache
 
-	obj.Discard = DefaultQEMUHardDriveDiscard
-	obj.EmulateSSD = DefaultQEMUHardDriveEmulateSSD
-	obj.IOThread = DefaultQEMUHardDriveIOThread
-	obj.Backup = DefaultQEMUHardDriveBackup
-	obj.Replicate = DefaultQEMUHardDriveReplicate
+	obj.Discard = DefaultHardDriveDiscard
+	obj.EmulateSSD = DefaultHardDriveEmulateSSD
+	obj.IOThread = DefaultHardDriveIOThread
+	obj.Backup = DefaultHardDriveBackup
+	obj.Replicate = DefaultHardDriveReplicate
 
 	for _, kv := range props.List() {
 		if !kv.HasValue() {
-			if err := (&obj.QEMUDriveStorageProperties).setProperties(kv.Key(), ""); err != nil {
+			if err := (&obj.DriveStorageProperties).setProperties(kv.Key(), ""); err != nil {
 				return obj, err
 			}
 			continue
@@ -289,27 +288,27 @@ func NewQEMUHardDriveProperties(
 	return obj, nil
 }
 
-type QEMUCDROMProperties struct {
-	QEMUDriveBusProperties
-	QEMUDriveStorageProperties
+type CDROMProperties struct {
+	DriveBusProperties
+	DriveStorageProperties
 
-	Source QEMUCDROMSource
+	Source CDROMSource
 	Size   string
 }
 
-type QEMUCDROMSource int
+type CDROMSource int
 
 const (
-	QEMUCDROMSourceNone QEMUCDROMSource = iota
-	QEMUCDROMSourcePhysical
-	QEMUCDROMSourceISOFile
+	CDROMSourceNone CDROMSource = iota
+	CDROMSourcePhysical
+	CDROMSourceISOFile
 )
 
-func NewQEMUCDROMProperties(
-	busKind qemu.Bus,
+func NewCDROMProperties(
+	busKind Bus,
 	busNumber int,
 	props internal_types.PVEDictionary,
-) (obj QEMUCDROMProperties, err error) {
+) (obj CDROMProperties, err error) {
 	obj.BusKind = busKind
 	obj.BusNumber = busNumber
 
@@ -317,12 +316,12 @@ func NewQEMUCDROMProperties(
 		if !kv.HasValue() {
 			switch kv.Key() {
 			case "none":
-				obj.Source = QEMUCDROMSourceNone
+				obj.Source = CDROMSourceNone
 			case "cdrom":
-				obj.Source = QEMUCDROMSourcePhysical
+				obj.Source = CDROMSourcePhysical
 			default:
-				obj.Source = QEMUCDROMSourceISOFile
-				if err := (&obj.QEMUDriveStorageProperties).setProperties(kv.Key(), "iso/"); err != nil {
+				obj.Source = CDROMSourceISOFile
+				if err := (&obj.DriveStorageProperties).setProperties(kv.Key(), "iso/"); err != nil {
 					return obj, err
 				}
 			}
@@ -345,15 +344,15 @@ func NewQEMUCDROMProperties(
 	return obj, nil
 }
 
-type QEMUEFIDiskProperties struct {
-	QEMUDriveStorageProperties
+type EFIDiskProperties struct {
+	DriveStorageProperties
 
 	Size string
 }
 
-func NewQEMUEFIDiskProperties(
+func NewEFIDiskProperties(
 	media string,
-) (obj QEMUEFIDiskProperties, err error) {
+) (obj EFIDiskProperties, err error) {
 	props := internal_types.PVEDictionary{
 		ListSeparator:     ",",
 		KeyValueSeparator: "=",
@@ -366,7 +365,7 @@ func NewQEMUEFIDiskProperties(
 
 	for _, kv := range props.List() {
 		if !kv.HasValue() {
-			if err := (&obj.QEMUDriveStorageProperties).setProperties(kv.Key(), ""); err != nil {
+			if err := (&obj.DriveStorageProperties).setProperties(kv.Key(), ""); err != nil {
 				return obj, err
 			}
 

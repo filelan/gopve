@@ -1,4 +1,4 @@
-package vm_test
+package lxc_test
 
 import (
 	"testing"
@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xabinapal/gopve/pkg/types"
-	"github.com/xabinapal/gopve/pkg/types/vm"
+	"github.com/xabinapal/gopve/pkg/types/vm/lxc"
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestLXCMemoryProperties(t *testing.T) {
+func TestMemoryProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
 		"memory": 4096,
 		"swap":   2048,
@@ -19,13 +19,13 @@ func TestLXCMemoryProperties(t *testing.T) {
 	requiredProps := []string{"memory", "swap"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
-		obj, err := vm.NewLXCMemoryProperties(props)
+		obj, err := lxc.NewMemoryProperties(props)
 		return obj, err
 	}
 
 	t.Run(
 		"Create", func(t *testing.T) {
-			memoryProps, err := vm.NewLXCMemoryProperties(props)
+			memoryProps, err := lxc.NewMemoryProperties(props)
 			require.NoError(t, err)
 
 			assert.Equal(t, uint(4096), memoryProps.Memory)
