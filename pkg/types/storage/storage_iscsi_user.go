@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageISCSIUser interface {
@@ -37,13 +38,20 @@ func NewStorageISCSIUserProperties(
 ) (*StorageISCSIUserProperties, error) {
 	obj := new(StorageISCSIUserProperties)
 
-	if err := props.SetRequiredString(mkISCSIUserPortal, &obj.Portal, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkISCSIUserTarget, &obj.Target, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkISCSIUserPortal,
+				&obj.Portal,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkISCSIUserTarget,
+				&obj.Target,
+				nil,
+			)
+		},
+	)
 }

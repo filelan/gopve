@@ -66,9 +66,9 @@ func (res getResponseJSON) Map(
 	svc *Service,
 ) (storage.Storage, error) {
 	props := &storage.Properties{
-		Content:  res.Content,
-		Shared:   res.Shared.Bool(),
-		Disabled: res.Disabled.Bool(),
+		Content: res.Content,
+		Shared:  res.Shared.Bool(),
+		Enabled: !res.Disabled.Bool(),
 
 		ImageFormat:     res.ImageFormat,
 		MaxBackupsPerVM: res.MaxBackupsPerVM,

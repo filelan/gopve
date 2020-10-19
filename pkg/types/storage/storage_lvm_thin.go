@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageLVMThin interface {
@@ -34,13 +35,20 @@ func NewStorageLVMThinProperties(
 ) (*StorageLVMThinProperties, error) {
 	obj := new(StorageLVMThinProperties)
 
-	if err := props.SetRequiredString(mkLVMThinVolumeGroup, &obj.VolumeGroup, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkLVMThinThinPool, &obj.ThinPool, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkLVMThinVolumeGroup,
+				&obj.VolumeGroup,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkLVMThinThinPool,
+				&obj.ThinPool,
+				nil,
+			)
+		},
+	)
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageCIFS interface {
@@ -66,39 +67,69 @@ func NewStorageCIFSProperties(
 ) (*StorageCIFSProperties, error) {
 	obj := new(StorageCIFSProperties)
 
-	if err := props.SetRequiredString(mkCIFSServer, &obj.Server, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetFixedValue(mkCIFSSMBVersion, &obj.SMBVersion, DefaultStorageCIFSSMBVersion, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkCIFSDomain, &obj.Domain, DefaultStorageCIFSDomain, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkCIFSUsername, &obj.Username, DefaultStorageCIFSUsername, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkCIFSPassword, &obj.Password, DefaultStorageCIFSPassword, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkCIFSServerShare, &obj.ServerShare, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkCIFSLocalPath, &obj.LocalPath, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkCIFSLocalPathCreate, &obj.LocalPathCreate, DefaultStorageCIFSLocalPathCreate, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkCIFSServer,
+				&obj.Server,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetFixedValue(
+				mkCIFSSMBVersion,
+				&obj.SMBVersion,
+				DefaultStorageCIFSSMBVersion,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkCIFSDomain,
+				&obj.Domain,
+				DefaultStorageCIFSDomain,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkCIFSUsername,
+				&obj.Username,
+				DefaultStorageCIFSUsername,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkCIFSPassword,
+				&obj.Password,
+				DefaultStorageCIFSPassword,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkCIFSServerShare,
+				&obj.ServerShare,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkCIFSLocalPath,
+				&obj.LocalPath,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkCIFSLocalPathCreate,
+				&obj.LocalPathCreate,
+				DefaultStorageCIFSLocalPathCreate,
+				nil,
+			)
+		},
+	)
 }
 
 type SMBVersion string

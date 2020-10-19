@@ -7,32 +7,79 @@ import (
 
 	"github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/schema"
 )
 
 type Properties map[string]interface{}
 
-type PropertyIntFunctions struct {
-	ValidateFunc  func(int) bool
-	TransformFunc func(int) int
-}
-
-func (funcs *PropertyIntFunctions) Validate(obj int) bool {
-	return funcs == nil || funcs.ValidateFunc == nil || funcs.ValidateFunc(obj)
-}
-
-func (funcs *PropertyIntFunctions) Transform(obj int) int {
-	if funcs == nil || funcs.TransformFunc == nil {
-		return obj
+func (obj Properties) GetAsList(key, separator string) (types.PVEList, error) {
+	prop := types.PVEList{
+		Separator: separator,
 	}
 
-	return funcs.TransformFunc(obj)
+	var ok bool
+
+	var v interface{}
+	if v, ok = obj[key]; !ok {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", key)
+		return prop, err
+	}
+
+	var vv string
+	if vv, ok = v.(string); !ok {
+		err := errors.ErrInvalidProperty
+		err.AddKey("name", key)
+		err.AddKey("value", v)
+		return prop, err
+	}
+
+	if err := (&prop).Unmarshal(vv); err != nil {
+		return prop, err
+	}
+
+	return prop, nil
+}
+
+func (obj Properties) GetAsDict(
+	key, listSeparator, keyValueSeparator string,
+	allowNoValue bool,
+) (types.PVEDictionary, error) {
+	prop := types.PVEDictionary{
+		ListSeparator:     listSeparator,
+		KeyValueSeparator: keyValueSeparator,
+		AllowNoValue:      allowNoValue,
+	}
+
+	var ok bool
+
+	var v interface{}
+	if v, ok = obj[key]; !ok {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", key)
+		return prop, err
+	}
+
+	var vv string
+	if vv, ok = v.(string); !ok {
+		err := errors.ErrInvalidProperty
+		err.AddKey("name", key)
+		err.AddKey("value", v)
+		return prop, err
+	}
+
+	if err := (&prop).Unmarshal(vv); err != nil {
+		return prop, err
+	}
+
+	return prop, nil
 }
 
 func (props Properties) SetInt(
 	key string,
 	ptr *int,
 	def int,
-	funcs *PropertyIntFunctions,
+	funcs *schema.IntFunctions,
 ) error {
 	err := props.SetRequiredInt(key, ptr, funcs)
 	if err != nil && errors.ErrMissingProperty.IsBase(err) {
@@ -46,7 +93,7 @@ func (props Properties) SetInt(
 func (props Properties) SetRequiredInt(
 	key string,
 	ptr *int,
-	funcs *PropertyIntFunctions,
+	funcs *schema.IntFunctions,
 ) error {
 	if v, ok := props[key].(float64); ok {
 		if v != float64(int(v)) || v < math.MinInt32 || v > math.MaxInt32 {
@@ -74,29 +121,11 @@ func (props Properties) SetRequiredInt(
 	return nil
 }
 
-type PropertyUintFunctions struct {
-	DefaultValue  *uint
-	ValidateFunc  func(uint) bool
-	TransformFunc func(uint) uint
-}
-
-func (funcs *PropertyUintFunctions) Validate(obj uint) bool {
-	return funcs == nil || funcs.ValidateFunc == nil || funcs.ValidateFunc(obj)
-}
-
-func (funcs *PropertyUintFunctions) Transform(obj uint) uint {
-	if funcs == nil || funcs.TransformFunc == nil {
-		return obj
-	}
-
-	return funcs.TransformFunc(obj)
-}
-
 func (props Properties) SetUint(
 	key string,
 	ptr *uint,
 	def uint,
-	funcs *PropertyUintFunctions,
+	funcs *schema.UintFunctions,
 ) error {
 	err := props.SetRequiredUint(key, ptr, funcs)
 	if err != nil && errors.ErrMissingProperty.IsBase(err) {
@@ -110,7 +139,7 @@ func (props Properties) SetUint(
 func (props Properties) SetRequiredUint(
 	key string,
 	ptr *uint,
-	funcs *PropertyUintFunctions,
+	funcs *schema.UintFunctions,
 ) error {
 	if v, ok := props[key].(float64); ok {
 		if v != float64(int(v)) || v < 0 || v > math.MaxInt32 {
@@ -142,7 +171,7 @@ func (props Properties) SetUintFromString(
 	key string,
 	ptr *uint,
 	def uint,
-	funcs *PropertyUintFunctions,
+	funcs *schema.UintFunctions,
 ) error {
 	err := props.SetRequiredUintFromString(key, ptr, funcs)
 	if err != nil && errors.ErrMissingProperty.IsBase(err) {
@@ -156,7 +185,7 @@ func (props Properties) SetUintFromString(
 func (props Properties) SetRequiredUintFromString(
 	key string,
 	ptr *uint,
-	funcs *PropertyUintFunctions,
+	funcs *schema.UintFunctions,
 ) error {
 	if v, ok := props[key].(string); ok {
 		vv, err := strconv.Atoi(v)
@@ -186,28 +215,11 @@ func (props Properties) SetRequiredUintFromString(
 	return nil
 }
 
-type PropertyStringFunctions struct {
-	ValidateFunc  func(string) bool
-	TransformFunc func(string) string
-}
-
-func (funcs *PropertyStringFunctions) Validate(obj string) bool {
-	return funcs == nil || funcs.ValidateFunc == nil || funcs.ValidateFunc(obj)
-}
-
-func (funcs *PropertyStringFunctions) Transform(obj string) string {
-	if funcs == nil || funcs.TransformFunc == nil {
-		return obj
-	}
-
-	return funcs.TransformFunc(obj)
-}
-
 func (props Properties) SetString(
 	key string,
 	ptr *string,
 	def string,
-	funcs *PropertyStringFunctions,
+	funcs *schema.StringFunctions,
 ) error {
 	err := props.SetRequiredString(key, ptr, funcs)
 	if err != nil && errors.ErrMissingProperty.IsBase(err) {
@@ -221,7 +233,7 @@ func (props Properties) SetString(
 func (props Properties) SetRequiredString(
 	key string,
 	ptr *string,
-	funcs *PropertyStringFunctions,
+	funcs *schema.StringFunctions,
 ) error {
 	if v, ok := props[key].(string); ok {
 		if !funcs.Validate(v) {
@@ -241,28 +253,11 @@ func (props Properties) SetRequiredString(
 	return nil
 }
 
-type PropertyBoolFunctions struct {
-	ValidateFunc  func(bool) bool
-	TransformFunc func(bool) bool
-}
-
-func (funcs *PropertyBoolFunctions) Validate(obj bool) bool {
-	return funcs == nil || funcs.ValidateFunc == nil || funcs.ValidateFunc(obj)
-}
-
-func (funcs *PropertyBoolFunctions) Transform(obj bool) bool {
-	if funcs == nil || funcs.TransformFunc == nil {
-		return obj
-	}
-
-	return funcs.TransformFunc(obj)
-}
-
 func (props Properties) SetBool(
 	key string,
 	ptr *bool,
 	def bool,
-	funcs *PropertyBoolFunctions,
+	funcs *schema.BoolFunctions,
 ) error {
 	err := props.SetRequiredBool(key, ptr, funcs)
 	if err != nil && errors.ErrMissingProperty.IsBase(err) {
@@ -276,7 +271,7 @@ func (props Properties) SetBool(
 func (props Properties) SetRequiredBool(
 	key string,
 	ptr *bool,
-	funcs *PropertyBoolFunctions,
+	funcs *schema.BoolFunctions,
 ) error {
 	if v, ok := props[key].(float64); ok {
 		if v != 0 && v != 1 {

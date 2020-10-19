@@ -99,8 +99,8 @@ func NewStorageProperties(
 }
 
 func NewStorageDrive(
-	busKind Bus,
-	busNumber int,
+	deviceBus Bus,
+	deviceNumber int,
 	media string,
 ) (interface{}, error) {
 	props := internal_types.PVEDictionary{
@@ -113,21 +113,16 @@ func NewStorageDrive(
 		return nil, err
 	}
 
-	if x, ok := props.ElemByKey("media"); ok {
-		switch x.Value() {
+	if x, ok := props.Elem("media"); ok {
+		switch x {
 		case "cdrom":
-			return NewCDROMProperties(busKind, busNumber, props)
+			return NewCDROMProperties(deviceBus, deviceNumber, props)
 		default:
-			return nil, fmt.Errorf("unknown media type %s", x.Value())
+			return nil, fmt.Errorf("unknown media type %s", x)
 		}
 	} else {
-		return NewHardDriveProperties(busKind, busNumber, props)
+		return NewHardDriveProperties(deviceBus, deviceNumber, props)
 	}
-}
-
-type DriveBusProperties struct {
-	BusKind   Bus
-	BusNumber int
 }
 
 type DriveStorageProperties struct {
@@ -163,7 +158,9 @@ func (obj *DriveStorageProperties) setProperties(
 }
 
 type HardDriveProperties struct {
-	DriveBusProperties
+	DeviceBus    Bus
+	DeviceNumber int
+
 	DriveStorageProperties
 
 	Size  string
@@ -196,12 +193,12 @@ const (
 )
 
 func NewHardDriveProperties(
-	busKind Bus,
-	busNumber int,
+	deviceBus Bus,
+	deviceNumber int,
 	props internal_types.PVEDictionary,
 ) (obj HardDriveProperties, err error) {
-	obj.BusKind = busKind
-	obj.BusNumber = busNumber
+	obj.DeviceBus = deviceBus
+	obj.DeviceNumber = deviceNumber
 
 	obj.Cache = DefaultHardDriveCache
 
@@ -280,7 +277,6 @@ func NewHardDriveProperties(
 			}
 		default:
 			err := errors.ErrInvalidProperty
-			err.AddKey("name", fmt.Sprintf("%s%d", busKind.String(), busNumber))
 			return obj, err
 		}
 	}
@@ -289,7 +285,9 @@ func NewHardDriveProperties(
 }
 
 type CDROMProperties struct {
-	DriveBusProperties
+	DeviceBus    Bus
+	DeviceNumber int
+
 	DriveStorageProperties
 
 	Source CDROMSource
@@ -305,12 +303,12 @@ const (
 )
 
 func NewCDROMProperties(
-	busKind Bus,
-	busNumber int,
+	deviceBus Bus,
+	deviceNumber int,
 	props internal_types.PVEDictionary,
 ) (obj CDROMProperties, err error) {
-	obj.BusKind = busKind
-	obj.BusNumber = busNumber
+	obj.DeviceBus = deviceBus
+	obj.DeviceNumber = deviceNumber
 
 	for _, kv := range props.List() {
 		if !kv.HasValue() {
@@ -336,7 +334,6 @@ func NewCDROMProperties(
 			obj.Size = kv.Value()
 		default:
 			err := errors.ErrInvalidProperty
-			err.AddKey("name", fmt.Sprintf("%s%d", busKind.String(), busNumber))
 			return obj, err
 		}
 	}

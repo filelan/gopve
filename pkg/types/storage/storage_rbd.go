@@ -55,31 +55,47 @@ func NewStorageRBDProperties(
 ) (*StorageRBDProperties, error) {
 	obj := new(StorageRBDProperties)
 
-	if v, ok := props[mkRBDMonitorHosts].(string); ok {
-		monitorHosts := internal_types.PVEList{Separator: " "}
-		if err := (&monitorHosts).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkRBDMonitorHosts)
-			err.AddKey("value", v)
-			return nil, err
-		}
+	return obj, errors.ChainUntilFail(
+		func() error {
+			if v, ok := props[mkRBDMonitorHosts].(string); ok {
+				monitorHosts := internal_types.PVEList{Separator: " "}
+				if err := (&monitorHosts).Unmarshal(v); err != nil {
+					err := errors.ErrInvalidProperty
+					err.AddKey("name", mkRBDMonitorHosts)
+					err.AddKey("value", v)
+					return err
+				}
 
-		obj.MonitorHosts = monitorHosts.List()
-	} else {
-		obj.MonitorHosts = DefaultStorageRBDMonitorHosts
-	}
+				obj.MonitorHosts = monitorHosts.List()
+			} else {
+				obj.MonitorHosts = DefaultStorageRBDMonitorHosts
+			}
 
-	if err := props.SetString(mkRBDUsername, &obj.Username, DefaultStorageRBDUsername, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkRBDUseKRBD, &obj.UseKRBD, DefaultStorageRBDUseKRBD, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkRBDPoolName, &obj.PoolName, DefaultStorageRBDPoolName, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+			return nil
+		},
+		func() error {
+			return props.SetString(
+				mkRBDUsername,
+				&obj.Username,
+				DefaultStorageRBDUsername,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkRBDUseKRBD,
+				&obj.UseKRBD,
+				DefaultStorageRBDUseKRBD,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkRBDPoolName,
+				&obj.PoolName,
+				DefaultStorageRBDPoolName,
+				nil,
+			)
+		},
+	)
 }

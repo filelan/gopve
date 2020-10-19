@@ -51,9 +51,9 @@ func TestCPUProperties(t *testing.T) {
 			defaultProps,
 			factoryFunc,
 			func(obj interface{}) {
-				require.IsType(t, (*lxc.CPUProperties)(nil), obj)
+				require.IsType(t, lxc.CPUProperties{}, obj)
 
-				cpuProps := obj.(*lxc.CPUProperties)
+				cpuProps := obj.(lxc.CPUProperties)
 
 				assert.Equal(
 					t,

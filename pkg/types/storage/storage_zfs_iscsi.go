@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/schema"
 )
 
 type StorageZFSOverISCSI interface {
@@ -76,51 +78,87 @@ func NewStorageZFSOverISCSIProperties(
 ) (*StorageZFSOverISCSIProperties, error) {
 	obj := new(StorageZFSOverISCSIProperties)
 
-	if err := props.SetRequiredString(mkZFSOverISCSIPortal, &obj.Portal, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkZFSOverISCSITarget, &obj.Target, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkZFSOverISCSIPoolName, &obj.PoolName, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkZFSOverISCSIBlockSize, &obj.BlockSize, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkZFSOverISCSIUseSparse, &obj.UseSparse, DefaultStorageZFSOverISCSIUseSparse, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkZFSOverISCSIWriteCache, &obj.WriteCache, DefaultStorageZFSOverISCSIWriteCache, &types.PropertyBoolFunctions{
-		TransformFunc: func(val bool) bool {
-			return !val
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkZFSOverISCSIPortal,
+				&obj.Portal,
+				nil,
+			)
 		},
-	}); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredFixedValue(mkZFSOverISCSIISCSIProvider, &obj.ISCSIProvider, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkZFSOverISCSICOMSTARHostGroup, &obj.COMSTARHostGroup, DefaultStorageZFSOverISCSICOMSTARHostGroup, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkZFSOverISCSICOMSTARTargetGroup, &obj.COMSTARTargetGroup, DefaultStorageZFSOverISCSICOMSTARTargetGroup, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkZFSOverISCSICOMSTARLIOTargetPortalGroup, &obj.LIOTargetPortalGroup, DefaultStorageZFSOverISCSILIOTargetPortalGroup, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+		func() error {
+			return props.SetRequiredString(
+				mkZFSOverISCSITarget,
+				&obj.Target,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkZFSOverISCSIPoolName,
+				&obj.PoolName,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkZFSOverISCSIBlockSize,
+				&obj.BlockSize,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkZFSOverISCSIUseSparse,
+				&obj.UseSparse,
+				DefaultStorageZFSOverISCSIUseSparse,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkZFSOverISCSIWriteCache,
+				&obj.WriteCache,
+				DefaultStorageZFSOverISCSIWriteCache,
+				&schema.BoolFunctions{
+					TransformFunc: func(val bool) bool {
+						return !val
+					},
+				},
+			)
+		},
+		func() error {
+			return props.SetRequiredFixedValue(
+				mkZFSOverISCSIISCSIProvider,
+				&obj.ISCSIProvider,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkZFSOverISCSICOMSTARHostGroup,
+				&obj.COMSTARHostGroup,
+				DefaultStorageZFSOverISCSICOMSTARHostGroup,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkZFSOverISCSICOMSTARTargetGroup,
+				&obj.COMSTARTargetGroup,
+				DefaultStorageZFSOverISCSICOMSTARTargetGroup,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkZFSOverISCSICOMSTARLIOTargetPortalGroup,
+				&obj.LIOTargetPortalGroup,
+				DefaultStorageZFSOverISCSILIOTargetPortalGroup,
+				nil,
+			)
+		},
+	)
 }
 
 type ISCSIProvider string

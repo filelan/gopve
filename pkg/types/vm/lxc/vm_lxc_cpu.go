@@ -5,6 +5,8 @@ import (
 
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/schema"
 )
 
 type CPUProperties struct {
@@ -27,38 +29,51 @@ const (
 	DefaultCPUPropertyUnits uint = 1024
 )
 
-func NewCPUProperties(props types.Properties) (*CPUProperties, error) {
-	obj := new(CPUProperties)
-
-	if err := props.SetRequiredFixedValue(mkCPUPropertyArchitecture, &obj.Architecture, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredUint(mkCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= 128
+func NewCPUProperties(props types.Properties) (obj CPUProperties, err error) {
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredFixedValue(
+				mkCPUPropertyArchitecture,
+				&obj.Architecture,
+				nil,
+			)
 		},
-	}); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetUint(mkCPUPropertyLimit, &obj.Limit, DefaultCPUPropertyLimit, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= 128
+		func() error {
+			return props.SetRequiredUint(
+				mkCPUPropertyCores,
+				&obj.Cores,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= 128
+					},
+				},
+			)
 		},
-	}); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetUint(mkCPUPropertyUnits, &obj.Units, DefaultCPUPropertyUnits, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val >= 8 && val <= 500000
+		func() error {
+			return props.SetUint(
+				mkCPUPropertyLimit,
+				&obj.Limit,
+				DefaultCPUPropertyLimit,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= 128
+					},
+				},
+			)
 		},
-	}); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+		func() error {
+			return props.SetUint(
+				mkCPUPropertyUnits,
+				&obj.Units,
+				DefaultCPUPropertyUnits,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val >= 8 && val <= 500000
+					},
+				},
+			)
+		},
+	)
 }
 
 func (obj CPUProperties) MapToValues() (request.Values, error) {

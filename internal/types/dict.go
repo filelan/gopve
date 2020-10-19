@@ -2,6 +2,10 @@ package types
 
 import (
 	"encoding/json"
+	"strconv"
+
+	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/schema"
 )
 
 type PVEDictionary struct {
@@ -16,26 +20,61 @@ func (obj PVEDictionary) Len() int {
 	return len(obj.list)
 }
 
-func (obj *PVEDictionary) Append(elem PVEKeyValue) {
-	obj.list = append(obj.list, elem)
-}
-
-func (obj PVEDictionary) Elem(index int) PVEKeyValue {
-	return obj.list[index]
-}
-
-func (obj PVEDictionary) ElemByKey(key string) (PVEKeyValue, bool) {
+func (obj PVEDictionary) Elem(key string) (string, bool) {
 	for _, elem := range obj.list {
 		if elem.key == key {
-			return elem, true
+			return elem.value, true
 		}
 	}
 
-	return PVEKeyValue{}, false
+	return "", false
 }
 
 func (obj PVEDictionary) List() []PVEKeyValue {
 	return obj.list
+}
+
+func (obj PVEDictionary) InjectInt(
+	key string,
+	ptr *int,
+	def int,
+	funcs *schema.IntFunctions,
+) error {
+	err := obj.InjectRequiredInt(key, ptr, funcs)
+	if err != nil && errors.ErrMissingProperty.IsBase(err) {
+		*ptr = def
+		return nil
+	}
+
+	return err
+}
+
+func (obj PVEDictionary) InjectRequiredInt(
+	key string,
+	ptr *int,
+	funcs *schema.IntFunctions,
+) error {
+	if v, ok := obj.Elem(key); ok {
+		if val, err := strconv.Atoi(v); err != nil {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", key)
+			err.AddKey("value", v)
+			return err
+		} else if !funcs.Validate(val) {
+			err := errors.ErrInvalidProperty
+			err.AddKey("name", key)
+			err.AddKey("value", v)
+			return err
+		} else {
+			*ptr = funcs.Transform(val)
+		}
+	} else {
+		err := errors.ErrMissingProperty
+		err.AddKey("name", key)
+		return err
+	}
+
+	return nil
 }
 
 func (obj PVEDictionary) Marshal() (string, error) {

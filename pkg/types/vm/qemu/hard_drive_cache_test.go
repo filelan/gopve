@@ -9,29 +9,33 @@ import (
 )
 
 func TestHardDriveCache(t *testing.T) {
-	test.HelperTestFixedValue(t, (*qemu.HardDriveCache)(nil), map[string](struct {
-		Object types.FixedValue
-		Value  string
-	}){
-		"None": {
-			Object: qemu.HardDriveCacheNone,
-			Value:  "none",
+	test.HelperTestFixedValue(
+		t,
+		(*qemu.HardDriveCache)(nil),
+		map[string](struct {
+			Object types.FixedValue
+			Value  string
+		}){
+			"None": {
+				Object: qemu.HardDriveCacheNone,
+				Value:  "none",
+			},
+			"DirectSync": {
+				Object: qemu.HardDriveCacheDirectSync,
+				Value:  "directsync",
+			},
+			"WriteThrough": {
+				Object: qemu.HardDriveCacheWriteThrough,
+				Value:  "writethrough",
+			},
+			"WriteBack": {
+				Object: qemu.HardDriveCacheWriteBack,
+				Value:  "writeback",
+			},
+			"WriteBackUnsafe": {
+				Object: qemu.HardDriveCacheWriteBackUnsafe,
+				Value:  "unsafe",
+			},
 		},
-		"DirectSync": {
-			Object: qemu.HardDriveCacheDirectSync,
-			Value:  "directsync",
-		},
-		"WriteThrough": {
-			Object: qemu.HardDriveCacheWriteThrough,
-			Value:  "writethrough",
-		},
-		"WriteBack": {
-			Object: qemu.HardDriveCacheWriteBack,
-			Value:  "writeback",
-		},
-		"WriteBackUnsafe": {
-			Object: qemu.HardDriveCacheWriteBackUnsafe,
-			Value:  "unsafe",
-		},
-	})
+	)
 }

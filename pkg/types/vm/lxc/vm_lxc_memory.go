@@ -5,6 +5,7 @@ import (
 
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type MemoryProperties struct {
@@ -19,18 +20,19 @@ const (
 
 func NewMemoryProperties(
 	props types.Properties,
-) (*MemoryProperties, error) {
-	obj := new(MemoryProperties)
-
-	if err := props.SetRequiredUint(mkMemoryPropertyMemory, &obj.Memory, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredUint(mkMemoryPropertySwap, &obj.Swap, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+) (obj MemoryProperties, err error) {
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredUint(
+				mkMemoryPropertyMemory,
+				&obj.Memory,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredUint(mkMemoryPropertySwap, &obj.Swap, nil)
+		},
+	)
 }
 
 func (obj MemoryProperties) MapToValues() (request.Values, error) {

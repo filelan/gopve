@@ -1,7 +1,6 @@
 package storage
 
 import (
-	internal_types "github.com/xabinapal/gopve/internal/types"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
 )
@@ -58,35 +57,48 @@ func NewStorageCephFSProperties(
 ) (*StorageCephFSProperties, error) {
 	obj := new(StorageCephFSProperties)
 
-	if v, ok := props[mkCephFSMonitorHosts].(string); ok {
-		monitorHosts := internal_types.PVEList{Separator: " "}
-		if err := (&monitorHosts).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkCephFSMonitorHosts)
-			err.AddKey("value", v)
-			return nil, err
-		}
+	return obj, errors.ChainUntilFail(
+		func() error {
+			if v, err := props.GetAsList(mkCephFSMonitorHosts, " "); err == nil {
+				obj.MonitorHosts = v.List()
+			} else if errors.ErrMissingProperty.IsBase(err) {
+				obj.MonitorHosts = DefaultStorageCephFSMonitorHosts
+			} else {
+				return err
+			}
 
-		obj.MonitorHosts = monitorHosts.List()
-	} else {
-		obj.MonitorHosts = DefaultStorageCephFSMonitorHosts
-	}
-
-	if err := props.SetString(mkCephFSUsername, &obj.Username, DefaultStorageCephFSUsername, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkCephFSUseFUSE, &obj.UseFUSE, DefaultStorageCephFSUseFUSE, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkCephFSServerPath, &obj.ServerPath, DefaultStorageCephFSServerPath, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkCephFSLocalPath, &obj.LocalPath, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+			return nil
+		},
+		func() error {
+			return props.SetString(
+				mkCephFSUsername,
+				&obj.Username,
+				DefaultStorageCephFSUsername,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkCephFSUseFUSE,
+				&obj.UseFUSE,
+				DefaultStorageCephFSUseFUSE,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkCephFSServerPath,
+				&obj.ServerPath,
+				DefaultStorageCephFSServerPath,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkCephFSLocalPath,
+				&obj.LocalPath,
+				nil,
+			)
+		},
+	)
 }

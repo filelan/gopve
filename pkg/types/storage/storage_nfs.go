@@ -54,56 +54,69 @@ func NewStorageNFSProperties(
 ) (*StorageNFSProperties, error) {
 	obj := new(StorageNFSProperties)
 
-	if err := props.SetRequiredString(mkNFSServer, &obj.Server, nil); err != nil {
-		return nil, err
-	}
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(mkNFSServer, &obj.Server, nil)
+		},
+		func() error {
+			if v, ok := props[mkNFSOptions].(string); ok {
+				nfsOptions := internal_types.PVEDictionary{
+					ListSeparator:     ",",
+					KeyValueSeparator: "=",
+					AllowNoValue:      true,
+				}
 
-	if v, ok := props[mkNFSOptions].(string); ok {
-		nfsOptions := internal_types.PVEDictionary{
-			ListSeparator:     ",",
-			KeyValueSeparator: "=",
-			AllowNoValue:      true,
-		}
-
-		if err := (&nfsOptions).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", "options")
-			err.AddKey("value", v)
-			return nil, err
-		}
-
-		for _, option := range nfsOptions.List() {
-			if option.Key() == "vers" {
-				var nfsVersion NFSVersion
-				if err := (&nfsVersion).Unmarshal(option.Value()); err == nil {
-					obj.NFSVersion = nfsVersion
-				} else {
+				if err := (&nfsOptions).Unmarshal(v); err != nil {
 					err := errors.ErrInvalidProperty
 					err.AddKey("name", "options")
 					err.AddKey("value", v)
-					return nil, err
+					return err
 				}
 
-				break
+				for _, option := range nfsOptions.List() {
+					if option.Key() == "vers" {
+						var nfsVersion NFSVersion
+						if err := (&nfsVersion).Unmarshal(option.Value()); err == nil {
+							obj.NFSVersion = nfsVersion
+						} else {
+							err := errors.ErrInvalidProperty
+							err.AddKey("name", "options")
+							err.AddKey("value", v)
+							return err
+						}
+
+						break
+					}
+				}
+			} else {
+				obj.NFSVersion = DefaultStorageNFSVersion
 			}
-		}
-	} else {
-		obj.NFSVersion = DefaultStorageNFSVersion
-	}
 
-	if err := props.SetRequiredString(mkNFSServerPath, &obj.ServerPath, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkNFSLocalPath, &obj.LocalPath, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkNFSLocalPathCreate, &obj.LocalPathCreate, DefaultStorageNFSLocalPathCreate, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+			return nil
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkNFSServerPath,
+				&obj.ServerPath,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkNFSLocalPath,
+				&obj.LocalPath,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkNFSLocalPathCreate,
+				&obj.LocalPathCreate,
+				DefaultStorageNFSLocalPathCreate,
+				nil,
+			)
+		},
+	)
 }
 
 type NFSVersion string

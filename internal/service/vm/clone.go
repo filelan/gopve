@@ -56,7 +56,7 @@ func (obj *VirtualMachine) Clone(options vm.CloneOptions) (task.Task, error) {
 	}
 
 	fullClone := options.TemplateFullClone
-	if obj.isTemplate {
+	if obj.template {
 		values.AddBool("full", options.TemplateFullClone)
 	} else {
 		fullClone = true

@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/xabinapal/gopve/pkg/types"
+import (
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
+)
 
 type StorageDRBD interface {
 	Storage
@@ -33,9 +36,14 @@ func NewStorageDRBDProperties(
 ) (*StorageDRBDProperties, error) {
 	obj := new(StorageDRBDProperties)
 
-	if err := props.SetUint(mkDRBDRedundancy, &obj.Redundancy, DefaultStorageDRBDRedundancy, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetUint(
+				mkDRBDRedundancy,
+				&obj.Redundancy,
+				DefaultStorageDRBDRedundancy,
+				nil,
+			)
+		},
+	)
 }

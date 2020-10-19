@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageDir interface {
@@ -47,17 +48,31 @@ func NewStorageDirProperties(
 ) (*StorageDirProperties, error) {
 	obj := new(StorageDirProperties)
 
-	if err := props.SetRequiredString(mkDirLocalPath, &obj.LocalPath, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkDirLocalPathCreate, &obj.LocalPathCreate, DefaultStorageDirLocalPathCreate, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkDirLocalPathIsManaged, &obj.LocalPathIsManaged, DefaultStorageDirLocalIsManaged, nil); err != nil {
-		return nil, err
-	}
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkDirLocalPath,
+				&obj.LocalPath,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkDirLocalPathCreate,
+				&obj.LocalPathCreate,
+				DefaultStorageDirLocalPathCreate,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkDirLocalPathIsManaged,
+				&obj.LocalPathIsManaged,
+				DefaultStorageDirLocalIsManaged,
+				nil,
+			)
+		},
+	)
 
 	return obj, nil
 }

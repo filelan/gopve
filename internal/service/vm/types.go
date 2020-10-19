@@ -13,11 +13,11 @@ import (
 type VirtualMachine struct {
 	svc *Service
 
-	vmid uint
-	kind vm.Kind
-	node string
-
-	isTemplate bool
+	vmid     uint
+	kind     vm.Kind
+	node     string
+	name     string
+	template bool
 
 	props *vm.Properties
 }
@@ -27,16 +27,19 @@ func NewVirtualMachine(
 	vmid uint,
 	kind vm.Kind,
 	node string,
-	isTemplate bool,
+	name string,
+	template bool,
 	props *vm.Properties,
 ) *VirtualMachine {
 	return &VirtualMachine{
-		svc:        svc,
-		vmid:       vmid,
-		kind:       kind,
-		node:       node,
-		isTemplate: isTemplate,
-		props:      props,
+		svc:      svc,
+		vmid:     vmid,
+		kind:     kind,
+		node:     node,
+		name:     name,
+		template: template,
+
+		props: props,
 	}
 }
 
@@ -45,11 +48,12 @@ func NewDynamicVirtualMachine(
 	vmid uint,
 	kind vm.Kind,
 	node string,
-	isTemplate bool,
+	name string,
+	template bool,
 	props *vm.Properties,
 	extraProps types.Properties,
 ) (vm.VirtualMachine, error) {
-	obj := NewVirtualMachine(svc, vmid, kind, node, isTemplate, props)
+	obj := NewVirtualMachine(svc, vmid, kind, node, name, template, props)
 	switch kind {
 	case vm.KindQEMU:
 		return NewQEMU(*obj, extraProps)
@@ -92,8 +96,12 @@ func (obj *VirtualMachine) Node() string {
 	return obj.node
 }
 
-func (obj *VirtualMachine) IsTemplate() bool {
-	return obj.isTemplate
+func (obj *VirtualMachine) Name() string {
+	return obj.name
+}
+
+func (obj *VirtualMachine) Template() bool {
+	return obj.template
 }
 
 func (this *VirtualMachine) GetProperties() (vm.Properties, error) {
@@ -102,15 +110,6 @@ func (this *VirtualMachine) GetProperties() (vm.Properties, error) {
 	}
 
 	return *this.props, nil
-}
-
-func (this *VirtualMachine) Name() (string, error) {
-	props, err := this.GetProperties()
-	if err != nil {
-		return "", err
-	}
-
-	return props.Name, nil
 }
 
 func (this *VirtualMachine) Description() (string, error) {
@@ -162,7 +161,7 @@ func (obj *VirtualMachine) ConvertToTemplate() error {
 		return err
 	}
 
-	obj.isTemplate = true
+	obj.template = true
 	return nil
 }
 
@@ -266,9 +265,6 @@ func (obj *QEMUVirtualMachine) Memory() (qemu.MemoryProperties, error) {
 type LXCVirtualMachine struct {
 	VirtualMachine
 	props *lxc.Properties
-
-	cpu    lxc.CPUProperties
-	memory lxc.MemoryProperties
 }
 
 func NewLXC(
@@ -285,7 +281,7 @@ func NewLXC(
 			return nil, err
 		}
 
-		lxcObj.props = props
+		lxcObj.props = &props
 	}
 
 	return lxcObj, nil
@@ -350,7 +346,7 @@ func (obj *LXCVirtualMachine) CPU() (lxc.CPUProperties, error) {
 		return lxc.CPUProperties{}, err
 	}
 
-	return obj.cpu, nil
+	return obj.props.CPU, nil
 }
 
 func (obj *LXCVirtualMachine) Memory() (lxc.MemoryProperties, error) {
@@ -358,7 +354,7 @@ func (obj *LXCVirtualMachine) Memory() (lxc.MemoryProperties, error) {
 		return lxc.MemoryProperties{}, err
 	}
 
-	return obj.memory, nil
+	return obj.props.Memory, nil
 }
 
 func (virtualMachine *VirtualMachine) getHighAvailabilitySID() string {

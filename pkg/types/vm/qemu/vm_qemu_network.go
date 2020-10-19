@@ -7,6 +7,8 @@ import (
 )
 
 type NetworkInterfaceProperties struct {
+	DeviceNumber int
+
 	Model      NetworkModel
 	MACAddress string
 
@@ -21,8 +23,11 @@ type NetworkInterfaceProperties struct {
 }
 
 func NewNetworkInterfaceProperties(
+	deviceNumber int,
 	media string,
 ) (obj NetworkInterfaceProperties, err error) {
+	obj.DeviceNumber = deviceNumber
+
 	props := internal_types.PVEDictionary{
 		ListSeparator:     ",",
 		KeyValueSeparator: "=",

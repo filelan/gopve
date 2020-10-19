@@ -1,6 +1,8 @@
 package vm
 
 import (
+	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 	"github.com/xabinapal/gopve/pkg/types/firewall"
 	"github.com/xabinapal/gopve/pkg/types/task"
 )
@@ -9,11 +11,12 @@ type VirtualMachine interface {
 	VMID() uint
 	Kind() Kind
 	Node() string
-	IsTemplate() bool
+
+	Name() string
+	Template() bool
 
 	GetProperties() (Properties, error)
 
-	Name() (string, error)
 	Description() (string, error)
 
 	Digest() (string, error)
@@ -57,8 +60,98 @@ type VirtualMachine interface {
 }
 
 type Properties struct {
-	Name        string
 	Description string
+	Protected   bool
+
+	StartOnBoot     bool
+	StartupOrder    int
+	StartDelay      int
+	ShutdownTimeout int
 
 	Digest string
+}
+
+const (
+	mkPropertyDescription = "description"
+	mkPropertyProtected   = "protection"
+
+	mkPropertyStartOnBoot        = "onboot"
+	mkDictPropertyStartup        = "startup"
+	mkKeyPropertyStartupOrder    = "order"
+	mkKeyPropertyStartDelay      = "up"
+	mkKeyPropertyShutdownTimeout = "down"
+
+	mkPropertyDigest = "digest"
+)
+
+const (
+	DefaultPropertyDescription string = ""
+	DefaultPropertyProtected   bool   = false
+
+	DefaultPropertyStartOnBoot     bool = false
+	DefaultPropertyStartupOrder    int  = -1
+	DefaultPropertyStartDelay      int  = -1
+	DefaultPropertyShutdownTimeout int  = -1
+)
+
+func NewProperties(props types.Properties) (obj Properties, err error) {
+	return obj, errors.ChainUntilFail(
+		func() (err error) {
+			return props.SetString(
+				mkPropertyDescription,
+				&obj.Description,
+				DefaultPropertyDescription,
+				nil,
+			)
+		},
+		func() (err error) {
+			return props.SetBool(
+				mkPropertyProtected,
+				&obj.Protected,
+				DefaultPropertyProtected,
+				nil,
+			)
+		},
+		func() (err error) {
+			startupOptions, err := props.GetAsDict(
+				mkDictPropertyStartup,
+				",",
+				"=",
+				false,
+			)
+			if err != nil && !errors.ErrMissingProperty.IsBase(err) {
+				return err
+			}
+
+			return errors.ChainUntilFail(
+				func() error {
+					return startupOptions.InjectInt(
+						mkKeyPropertyStartupOrder,
+						&obj.StartupOrder,
+						DefaultPropertyStartupOrder,
+						nil,
+					)
+				},
+				func() error {
+					return startupOptions.InjectInt(
+						mkKeyPropertyStartDelay,
+						&obj.StartDelay,
+						DefaultPropertyStartDelay,
+						nil,
+					)
+				},
+				func() error {
+					return startupOptions.InjectInt(
+						mkKeyPropertyShutdownTimeout,
+						&obj.ShutdownTimeout,
+						DefaultPropertyShutdownTimeout,
+						nil,
+					)
+				},
+			)
+		},
+		func() (err error) {
+			return props.SetRequiredString(mkPropertyDigest, &obj.Digest, nil)
+		},
+	)
 }

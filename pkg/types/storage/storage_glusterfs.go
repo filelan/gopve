@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageGlusterFS interface {
@@ -49,23 +50,38 @@ func NewStorageGlusterFSProperties(
 ) (*StorageGlusterFSProperties, error) {
 	obj := new(StorageGlusterFSProperties)
 
-	if err := props.SetRequiredString(mkGlusterFSMainServer, &obj.MainServer, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkGlusterFSBackupServer, &obj.BackupServer, DefaultStorageGlusterFSBackupServer, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetFixedValue(mkGlusterFSTransport, &obj.Transport, DefaultStorageGlusterFSTransport, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkGlusterFSVolume, &obj.Volume, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkGlusterFSMainServer,
+				&obj.MainServer,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkGlusterFSBackupServer,
+				&obj.BackupServer,
+				DefaultStorageGlusterFSBackupServer,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetFixedValue(
+				mkGlusterFSTransport,
+				&obj.Transport,
+				DefaultStorageGlusterFSTransport,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkGlusterFSVolume,
+				&obj.Volume,
+				nil,
+			)
+		},
+	)
 }
 
 type GlusterFSTransport string

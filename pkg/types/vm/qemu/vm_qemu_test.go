@@ -12,14 +12,15 @@ import (
 
 func TestGlobalProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
-		"ostype":     "l26",
-		"protection": 1,
-		"onboot":     1,
+		"ostype": "l26",
+		"acpi":   0,
+		"kvm":    0,
+		"tablet": 0,
 	})
 
 	requiredProps := []string{"ostype"}
 
-	defaultProps := []string{"protection", "onboot"}
+	defaultProps := []string{"acpi", "kvm", "tablet"}
 
 	factoryFunc := func(props types.Properties) (interface{}, error) {
 		obj, err := qemu.NewGlobalProperties(props)
@@ -32,8 +33,9 @@ func TestGlobalProperties(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, qemu.OSTypeLinux26, globalProps.OSType)
-			assert.Equal(t, true, globalProps.Protected)
-			assert.Equal(t, true, globalProps.StartOnBoot)
+			assert.Equal(t, false, globalProps.ACPI)
+			assert.Equal(t, false, globalProps.KVMVirtualization)
+			assert.Equal(t, false, globalProps.USBTabletDevice)
 		})
 
 	t.Run(
@@ -55,18 +57,18 @@ func TestGlobalProperties(t *testing.T) {
 
 				assert.Equal(
 					t,
-					qemu.DefaultGlobalPropertyProtected,
-					globalProps.Protected,
+					qemu.DefaultGlobalPropertiesACPI,
+					globalProps.ACPI,
 				)
 				assert.Equal(
 					t,
-					qemu.DefaultGlobalPropertyProtected,
-					globalProps.Protected,
+					qemu.DefaultGlobalPropertiesKVMVirtualization,
+					globalProps.KVMVirtualization,
 				)
 				assert.Equal(
 					t,
-					qemu.DefaultGlobalPropertyStartOnBoot,
-					globalProps.StartOnBoot,
+					qemu.DefaultGlobalPropertiesUSBTabletDevice,
+					globalProps.USBTabletDevice,
 				)
 			},
 		),

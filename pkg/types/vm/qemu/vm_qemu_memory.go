@@ -6,6 +6,7 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/schema"
 )
 
 type MemoryProperties struct {
@@ -29,52 +30,70 @@ func NewMemoryProperties(
 ) (MemoryProperties, error) {
 	obj := MemoryProperties{}
 
-	if err := props.SetRequiredUint(mkMemoryPropertyMemory, &obj.Memory, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= 4178944
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredUint(
+				mkMemoryPropertyMemory,
+				&obj.Memory,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= 4178944
+					},
+				},
+			)
 		},
-	}); err != nil {
-		return obj, err
-	}
+		func() error {
+			var balloon uint
 
-	if v, ok := props[mkMemoryPropertyBalloon].(float64); ok {
-		if v != float64(int(v)) || v < 0 || uint(v) > obj.Memory {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkMemoryPropertyBalloon)
-			err.AddKey("value", v)
-			return obj, err
-		} else if v == 0 {
-			obj.Ballooning = false
-			obj.MinimumMemory = obj.Memory
-			obj.Shares = 0
-		} else if uint(v) == obj.Memory {
-			obj.Ballooning = true
-			obj.MinimumMemory = obj.Memory
-			obj.Shares = 0
-		} else {
-			obj.Ballooning = true
-			obj.MinimumMemory = uint(v)
+			err := props.SetRequiredUint(
+				mkMemoryPropertyBalloon,
+				&balloon,
+				&schema.UintFunctions{
+					ValidateFunc: func(v uint) bool {
+						return v <= obj.Memory
+					},
+				},
+			)
 
-			if v, ok := props[mkMemoryPropertyShares].(float64); ok {
-				if v != float64(int(v)) || v < 0 || v > 50000 {
-					err := errors.ErrInvalidProperty
-					err.AddKey("name", mkMemoryPropertyShares)
-					err.AddKey("value", v)
-					return obj, err
-				}
-
-				obj.Shares = uint(v)
-			} else {
-				obj.Shares = DefaultMemoryShares
+			if errors.ErrMissingProperty.IsBase(err) {
+				obj.Ballooning = true
+				obj.MinimumMemory = obj.Memory
+				obj.Shares = 0
+				return nil
 			}
-		}
-	} else {
-		obj.Ballooning = true
-		obj.MinimumMemory = obj.Memory
-		obj.Shares = 0
-	}
 
-	return obj, nil
+			if err != nil {
+				return err
+			}
+
+			switch balloon {
+			case 0:
+				obj.Ballooning = false
+				obj.MinimumMemory = obj.Memory
+				obj.Shares = 0
+			case obj.Memory:
+				obj.Ballooning = true
+				obj.MinimumMemory = obj.Memory
+				obj.Shares = 0
+			default:
+				obj.Ballooning = true
+				obj.MinimumMemory = balloon
+
+				return props.SetUint(
+					mkMemoryPropertyShares,
+					&obj.Shares,
+					DefaultMemoryShares,
+					&schema.UintFunctions{
+						ValidateFunc: func(v uint) bool {
+							return v <= 50000
+						},
+					},
+				)
+			}
+
+			return nil
+		},
+	)
 }
 
 func (obj MemoryProperties) MapToValues() (request.Values, error) {

@@ -15,6 +15,7 @@ func NewVirtualMachine() (*vm.VirtualMachine, *test.API, *mocks.Executor) {
 		100,
 		types.Kind("test_kind"),
 		"test_node",
+		"test_name",
 		false,
 		nil,
 	), api, exc
@@ -28,6 +29,7 @@ func NewQEMU() (*vm.QEMUVirtualMachine, *test.API, *mocks.Executor) {
 		100,
 		types.KindQEMU,
 		"test_node",
+		"test_name",
 		false,
 		nil,
 		nil,
@@ -44,6 +46,7 @@ func NewLXC() (*vm.LXCVirtualMachine, *test.API, *mocks.Executor) {
 		100,
 		types.KindLXC,
 		"test_node",
+		"test_name",
 		false,
 		nil,
 		nil,

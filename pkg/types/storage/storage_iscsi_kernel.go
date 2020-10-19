@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageISCSIKernel interface {
@@ -34,13 +35,19 @@ func NewStorageISCSIKernelProperties(
 ) (*StorageISCSIKernelProperties, error) {
 	obj := new(StorageISCSIKernelProperties)
 
-	if err := props.SetRequiredString(mkISCSIKernelPortal, &obj.Portal, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkISCSIKernelTarget, &obj.Target, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkISCSIKernelPortal,
+				&obj.Portal,
+				nil)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkISCSIKernelTarget,
+				&obj.Target,
+				nil,
+			)
+		},
+	)
 }

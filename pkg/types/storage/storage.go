@@ -6,7 +6,7 @@ type Storage interface {
 
 	Content() Content
 	Shared() bool
-	Disabled() bool
+	Enabled() bool
 
 	ImageFormat() ImageFormat
 	MaxBackupsPerVM() uint
@@ -17,9 +17,9 @@ type Storage interface {
 }
 
 type Properties struct {
-	Content  Content
-	Shared   bool
-	Disabled bool
+	Content Content
+	Shared  bool
+	Enabled bool
 
 	ImageFormat     ImageFormat
 	MaxBackupsPerVM uint

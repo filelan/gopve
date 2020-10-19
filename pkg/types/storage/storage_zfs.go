@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageZFS interface {
@@ -48,21 +49,37 @@ func NewStorageZFSProperties(
 ) (*StorageZFSProperties, error) {
 	obj := new(StorageZFSProperties)
 
-	if err := props.SetRequiredString(mkZFSPoolName, &obj.PoolName, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkZFSBlockSize, &obj.BlockSize, DefaultStorageZFSBlockSize, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkZFSUseSparse, &obj.UseSparse, DefaultStorageZFSUseSparse, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetString(mkZFSLocalPath, &obj.LocalPath, DefaultStorageZFSMountPoint, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetRequiredString(
+				mkZFSPoolName,
+				&obj.PoolName,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkZFSBlockSize,
+				&obj.BlockSize,
+				DefaultStorageZFSBlockSize,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkZFSUseSparse,
+				&obj.UseSparse,
+				DefaultStorageZFSUseSparse,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetString(
+				mkZFSLocalPath,
+				&obj.LocalPath,
+				DefaultStorageZFSMountPoint,
+				nil,
+			)
+		},
+	)
 }

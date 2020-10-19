@@ -7,6 +7,7 @@ import (
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
 	"github.com/xabinapal/gopve/pkg/types/errors"
+	"github.com/xabinapal/gopve/pkg/types/schema"
 )
 
 type CPUProperties struct {
@@ -28,8 +29,8 @@ type CPUProperties struct {
 }
 
 const (
-	mkCPUPropertyCPU   = "cpu"
-	mkCPUPropertyFlags = "flags"
+	mkCPUDictPropertyCPU  = "cpu"
+	mkCPUKeyPropertyFlags = "flags"
 
 	mkCPUPropertyArchitecture = "arch"
 
@@ -55,118 +56,140 @@ const (
 func NewCPUProperties(props types.Properties) (CPUProperties, error) {
 	obj := CPUProperties{}
 
-	if err := props.SetFixedValue(mkCPUPropertyCPU, &obj.Kind, DefaultCPUPropertyKind, nil); err != nil {
-		return obj, err
-	}
-
-	obj.Flags = []CPUFlags{}
-	if v, ok := props[mkCPUPropertyCPU].(string); ok {
-		cpuOptions := internal_types.PVEDictionary{
-			ListSeparator:     ",",
-			KeyValueSeparator: "=",
-			AllowNoValue:      true,
-		}
-
-		if err := (&cpuOptions).Unmarshal(v); err != nil {
-			err := errors.ErrInvalidProperty
-			err.AddKey("name", mkCPUPropertyCPU)
-			err.AddKey("value", v)
-			return obj, err
-		}
-
-		for _, vv := range cpuOptions.List() {
-			if !vv.HasValue() {
-				if err := (&obj.Kind).Unmarshal(vv.Key()); err != nil {
-					err := errors.ErrInvalidProperty
-					err.AddKey("name", mkCPUPropertyCPU)
-					err.AddKey("value", v)
-					return obj, err
+	return obj, errors.ChainUntilFail(
+		func() error {
+			obj.Flags = []CPUFlags{}
+			cpuOptions, err := props.GetAsDict(
+				mkCPUDictPropertyCPU,
+				",",
+				"=",
+				true,
+			)
+			if err != nil {
+				if errors.ErrMissingProperty.IsBase(err) {
+					obj.Kind = DefaultCPUPropertyKind
+					return nil
 				}
-			} else {
-				switch vv.Key() {
-				case mkCPUPropertyFlags:
-					flags := internal_types.PVEList{
-						Separator: ";",
-					}
 
-					if err := (&flags).Unmarshal(vv.Value()); err != nil {
-						err := errors.ErrInvalidProperty
-						err.AddKey("name", mkCPUPropertyCPU)
-						err.AddKey("value", v)
-						return obj, err
-					}
+				return err
+			}
 
-					for _, v := range flags.List() {
-						var flag CPUFlags
-						if err := (&flag).Unmarshal(v); err != nil {
-							err := errors.ErrInvalidProperty
-							err.AddKey("name", mkCPUPropertyCPU)
-							err.AddKey("value", v)
-							return obj, err
+			for _, vv := range cpuOptions.List() {
+				if !vv.HasValue() {
+					if err := (&obj.Kind).Unmarshal(vv.Key()); err != nil {
+						return errors.NewErrInvalidProperty(
+							mkCPUDictPropertyCPU,
+							vv.Key(),
+						)
+					}
+				} else {
+					switch vv.Key() {
+					case mkCPUKeyPropertyFlags:
+						flags := internal_types.PVEList{
+							Separator: ";",
 						}
 
-						obj.Flags = append(obj.Flags, flag)
+						if err := (&flags).Unmarshal(vv.Value()); err != nil {
+							return errors.NewErrInvalidProperty(mkCPUKeyPropertyFlags, vv.Value())
+						}
+
+						for _, v := range flags.List() {
+							var flag CPUFlags
+							if err := (&flag).Unmarshal(v); err != nil {
+								return errors.NewErrInvalidProperty(mkCPUKeyPropertyFlags, vv.Value())
+							}
+
+							obj.Flags = append(obj.Flags, flag)
+						}
 					}
 				}
 			}
-		}
-	} else {
-		obj.Kind = DefaultCPUPropertyKind
-	}
 
-	if err := props.SetFixedValue(mkCPUPropertyArchitecture, &obj.Architecture, DefaultCPUPropertyArchitecture, nil); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetRequiredUint(mkCPUPropertySockets, &obj.Sockets, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= 4
+			return nil
 		},
-	}); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetRequiredUint(mkCPUPropertyCores, &obj.Cores, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= 128
+		func() error {
+			return props.SetFixedValue(
+				mkCPUPropertyArchitecture,
+				&obj.Architecture,
+				DefaultCPUPropertyArchitecture,
+				nil,
+			)
 		},
-	}); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetUint(mkCPUPropertyVCPUs, &obj.VCPUs, obj.Sockets*obj.Cores, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= obj.Sockets*obj.Cores
+		func() error {
+			return props.SetRequiredUint(
+				mkCPUPropertySockets,
+				&obj.Sockets,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= 4
+					},
+				},
+			)
 		},
-	}); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetUintFromString(mkCPUPropertyLimit, &obj.Limit, DefaultCPUPropertyLimit, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val <= 128
+		func() error {
+			return props.SetRequiredUint(
+				mkCPUPropertyCores,
+				&obj.Cores,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= 128
+					},
+				},
+			)
 		},
-	}); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetUint(mkCPUPropertyUnits, &obj.Units, DefaultCPUPropertyUnits, &types.PropertyUintFunctions{
-		ValidateFunc: func(val uint) bool {
-			return val >= 8 && val <= 500000
+		func() error {
+			return props.SetUint(
+				mkCPUPropertyVCPUs,
+				&obj.VCPUs,
+				obj.Sockets*obj.Cores,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= obj.Sockets*obj.Cores
+					},
+				},
+			)
 		},
-	}); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetBool(mkCPUPropertyNUMA, &obj.NUMA, DefaultCPUPropertyNUMA, nil); err != nil {
-		return obj, err
-	}
-
-	if err := props.SetBool(mkCPUPropertyFreezeAtStartup, &obj.FreezeAtStartup, DefaultCPUPropertyFreezeAtStartup, nil); err != nil {
-		return obj, err
-	}
-
-	return obj, nil
+		func() error {
+			return props.SetUintFromString(
+				mkCPUPropertyLimit,
+				&obj.Limit,
+				DefaultCPUPropertyLimit,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val <= 128
+					},
+				},
+			)
+		},
+		func() error {
+			return props.SetUint(
+				mkCPUPropertyUnits,
+				&obj.Units,
+				DefaultCPUPropertyUnits,
+				&schema.UintFunctions{
+					ValidateFunc: func(val uint) bool {
+						return val >= 8 && val <= 500000
+					},
+				},
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkCPUPropertyNUMA,
+				&obj.NUMA,
+				DefaultCPUPropertyNUMA,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkCPUPropertyFreezeAtStartup,
+				&obj.FreezeAtStartup,
+				DefaultCPUPropertyFreezeAtStartup,
+				nil,
+			)
+		},
+	)
 }
 
 func (obj CPUProperties) MapToValues() (request.Values, error) {

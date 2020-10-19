@@ -14,11 +14,11 @@ import (
 )
 
 type listResponseJSON struct {
-	VMID uint    `json:"vmid"`
-	Kind vm.Kind `json:"type"`
-	Node string  `json:"node"`
-
-	IsTemplate internal_types.PVEBool `json_"template"`
+	VMID     uint                   `json:"vmid"`
+	Kind     vm.Kind                `json:"type"`
+	Node     string                 `json:"node"`
+	Name     string                 `json:"name"`
+	Template internal_types.PVEBool `json:"template"`
 }
 
 func (res listResponseJSON) Map(svc *Service) (vm.VirtualMachine, error) {
@@ -27,7 +27,8 @@ func (res listResponseJSON) Map(svc *Service) (vm.VirtualMachine, error) {
 		res.VMID,
 		res.Kind,
 		res.Node,
-		res.IsTemplate.Bool(),
+		res.Name,
+		res.Template.Bool(),
 		nil,
 		nil,
 	)
@@ -88,12 +89,8 @@ func (svc *Service) ListByKind(kind vm.Kind) ([]vm.VirtualMachine, error) {
 }
 
 type getResponseJSON struct {
-	IsTemplate internal_types.PVEBool `json:"template"`
-
-	Name        string `json:"name"`
-	Description string `json:"description"`
-
-	Digest string `json:"digest"`
+	Name     string                 `json:"name"`
+	Template internal_types.PVEBool `json:"template"`
 
 	ExtraProperties types.Properties `json:"-"`
 }
@@ -111,11 +108,6 @@ func (res *getResponseJSON) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	props := []string{"name", "description", "template", "digest"}
-	for _, prop := range props {
-		delete(x.ExtraProperties, prop)
-	}
-
 	*res = getResponseJSON(x)
 
 	return nil
@@ -127,11 +119,9 @@ func (res getResponseJSON) Map(
 	kind vm.Kind,
 	node string,
 ) (vm.VirtualMachine, error) {
-	props := &vm.Properties{
-		Name:        res.Name,
-		Description: res.Description,
-
-		Digest: res.Digest,
+	props, err := vm.NewProperties(res.ExtraProperties)
+	if err != nil {
+		return nil, err
 	}
 
 	return NewDynamicVirtualMachine(
@@ -139,8 +129,9 @@ func (res getResponseJSON) Map(
 		vmid,
 		kind,
 		node,
-		res.IsTemplate.Bool(),
-		props,
+		res.Name,
+		res.Template.Bool(),
+		&props,
 		res.ExtraProperties,
 	)
 }

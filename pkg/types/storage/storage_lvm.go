@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 )
 
 type StorageLVM interface {
@@ -59,25 +60,45 @@ func NewStorageLVMProperties(
 ) (*StorageLVMProperties, error) {
 	obj := new(StorageLVMProperties)
 
-	if err := props.SetString(mkLVMBaseStorage, &obj.BaseStorage, DefaultStorageLVMBaseStorage, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetRequiredString(mkLVMVolumeGroup, &obj.VolumeGroup, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkLVMSafeRemove, &obj.SafeRemove, DefaultStorageLVMSafeRemove, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetInt(mkLVMSafeRemoveThroughput, &obj.SafeRemoveThroughput, DefaultStorageLVMSafeRemoveThroughput, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkLVMTaggedOnly, &obj.TaggedOnly, DefaultStorageLVMTaggedOnly, nil); err != nil {
-		return nil, err
-	}
-
-	return obj, nil
+	return obj, errors.ChainUntilFail(
+		func() error {
+			return props.SetString(
+				mkLVMBaseStorage,
+				&obj.BaseStorage,
+				DefaultStorageLVMBaseStorage,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetRequiredString(
+				mkLVMVolumeGroup,
+				&obj.VolumeGroup,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkLVMSafeRemove,
+				&obj.SafeRemove,
+				DefaultStorageLVMSafeRemove,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetInt(
+				mkLVMSafeRemoveThroughput,
+				&obj.SafeRemoveThroughput,
+				DefaultStorageLVMSafeRemoveThroughput,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkLVMTaggedOnly,
+				&obj.TaggedOnly,
+				DefaultStorageLVMTaggedOnly,
+				nil,
+			)
+		},
+	)
 }

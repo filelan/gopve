@@ -37,6 +37,7 @@ func (obj CreateOptions) MapToValues() (request.Values, error) {
 
 type Properties struct {
 	GlobalProperties
+
 	CPU     CPUProperties
 	Memory  MemoryProperties
 	Storage StorageProperties
@@ -47,10 +48,8 @@ const (
 	maxNetworkInterfacePropertiesArrayCapacity = 32
 )
 
-func NewProperties(props types.Properties) (Properties, error) {
-	obj := Properties{}
-
-	err := errors.ChainUntilFail(
+func NewProperties(props types.Properties) (obj Properties, err error) {
+	return obj, errors.ChainUntilFail(
 		func() (err error) {
 			obj.GlobalProperties, err = NewGlobalProperties(props)
 			return err
@@ -83,7 +82,7 @@ func NewProperties(props types.Properties) (Properties, error) {
 					return err
 				}
 
-				if network, err := NewNetworkInterfaceProperties(x); err == nil {
+				if network, err := NewNetworkInterfaceProperties(i, x); err == nil {
 					obj.Network = append(obj.Network, network)
 				} else {
 					return err
@@ -93,25 +92,26 @@ func NewProperties(props types.Properties) (Properties, error) {
 			return nil
 		},
 	)
-
-	return obj, err
 }
 
 type GlobalProperties struct {
 	OSType OSType
 
-	Protected bool
-
-	StartOnBoot bool
+	ACPI              bool
+	KVMVirtualization bool
+	USBTabletDevice   bool
 }
 
 const (
-	mkGlobalPropertyOSType      = "ostype"
-	mkGlobalPropertyProtected   = "protection"
-	mkGlobalPropertyStartOnBoot = "onboot"
+	mkGlobalPropertyOSType = "ostype"
 
-	DefaultGlobalPropertyProtected   bool = false
-	DefaultGlobalPropertyStartOnBoot bool = false
+	mkGlobalPropertyACPI              = "acpi"
+	mkGlobalPropertyKVMVirtualization = "kvm"
+	mkGlobalPropertyUSBTabletDevice   = "tablet"
+
+	DefaultGlobalPropertiesACPI              bool = true
+	DefaultGlobalPropertiesKVMVirtualization bool = true
+	DefaultGlobalPropertiesUSBTabletDevice   bool = true
 )
 
 func NewGlobalProperties(
@@ -129,17 +129,25 @@ func NewGlobalProperties(
 		},
 		func() error {
 			return props.SetBool(
-				mkGlobalPropertyProtected,
-				&obj.Protected,
-				DefaultGlobalPropertyProtected,
+				mkGlobalPropertyACPI,
+				&obj.ACPI,
+				DefaultGlobalPropertiesACPI,
 				nil,
 			)
 		},
 		func() error {
 			return props.SetBool(
-				mkGlobalPropertyStartOnBoot,
-				&obj.StartOnBoot,
-				DefaultGlobalPropertyStartOnBoot,
+				mkGlobalPropertyKVMVirtualization,
+				&obj.KVMVirtualization,
+				DefaultGlobalPropertiesKVMVirtualization,
+				nil,
+			)
+		},
+		func() error {
+			return props.SetBool(
+				mkGlobalPropertyUSBTabletDevice,
+				&obj.USBTabletDevice,
+				DefaultGlobalPropertiesUSBTabletDevice,
 				nil,
 			)
 		},

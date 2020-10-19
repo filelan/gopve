@@ -87,8 +87,8 @@ func (obj *Storage) Shared() bool {
 	return obj.props.Shared
 }
 
-func (obj *Storage) Disabled() bool {
-	return obj.props.Disabled
+func (obj *Storage) Enabled() bool {
+	return obj.props.Enabled
 }
 
 func (obj *Storage) ImageFormat() storage.ImageFormat {

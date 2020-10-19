@@ -5,6 +5,7 @@ import (
 
 	"github.com/xabinapal/gopve/pkg/request"
 	"github.com/xabinapal/gopve/pkg/types"
+	"github.com/xabinapal/gopve/pkg/types/errors"
 	"github.com/xabinapal/gopve/pkg/types/vm"
 )
 
@@ -43,31 +44,28 @@ func (obj CreateOptions) MapToValues() (request.Values, error) {
 }
 
 type Properties struct {
+	vm.Properties
 	GlobalProperties
+
 	CPU    CPUProperties
 	Memory MemoryProperties
 }
 
-func NewProperties(props types.Properties) (*Properties, error) {
-	obj := new(Properties)
-
-	if v, err := NewGlobalProperties(props); err != nil {
-		return nil, err
-	} else {
-		obj.GlobalProperties = *v
-	}
-
-	if v, err := NewCPUProperties(props); err != nil {
-		return nil, err
-	} else {
-		obj.CPU = *v
-	}
-
-	if v, err := NewMemoryProperties(props); err != nil {
-		return nil, err
-	} else {
-		obj.Memory = *v
-	}
+func NewProperties(props types.Properties) (obj Properties, err error) {
+	return obj, errors.ChainUntilFail(
+		func() (err error) {
+			obj.GlobalProperties, err = NewGlobalProperties(props)
+			return err
+		},
+		func() (err error) {
+			obj.CPU, err = NewCPUProperties(props)
+			return err
+		},
+		func() (err error) {
+			obj.Memory, err = NewMemoryProperties(props)
+			return err
+		},
+	)
 
 	return obj, nil
 }
@@ -75,38 +73,19 @@ func NewProperties(props types.Properties) (*Properties, error) {
 type GlobalProperties struct {
 	OSType OSType
 
-	Protected bool
-
-	StartAtBoot bool
-
 	RootFSStorage string
 	RootFSSize    uint
 }
 
 const (
-	mkGlobalPropertyOSType      = "ostype"
-	mkGlobalPropertyProtected   = "protection"
-	mkGlobalPropertyStartAtBoot = "onboot"
-
-	DefaultGlobalPropertyProtected   bool = false
-	DefaultGlobalPropertyStartAtBoot bool = false
+	mkGlobalPropertyOSType = "ostype"
 )
 
 func NewGlobalProperties(
 	props types.Properties,
-) (*GlobalProperties, error) {
-	obj := new(GlobalProperties)
-
+) (obj GlobalProperties, err error) {
 	if err := props.SetRequiredFixedValue(mkGlobalPropertyOSType, &obj.OSType, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkGlobalPropertyProtected, &obj.Protected, DefaultGlobalPropertyProtected, nil); err != nil {
-		return nil, err
-	}
-
-	if err := props.SetBool(mkGlobalPropertyStartAtBoot, &obj.StartAtBoot, DefaultGlobalPropertyStartAtBoot, nil); err != nil {
-		return nil, err
+		return obj, err
 	}
 
 	return obj, nil

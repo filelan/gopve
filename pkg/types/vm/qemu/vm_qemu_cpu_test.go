@@ -1,7 +1,6 @@
 package qemu_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,7 +10,7 @@ import (
 	"github.com/xabinapal/gopve/test"
 )
 
-func TestStorageCPUProperties(t *testing.T) {
+func TestCPUProperties(t *testing.T) {
 	props := test.HelperCreatePropertiesMap(types.Properties{
 		"cpu":      "pentium,flags=+md-clear;-spec-ctrl",
 		"arch":     "aarch64",
@@ -77,7 +76,6 @@ func TestStorageCPUProperties(t *testing.T) {
 				require.IsType(t, qemu.CPUProperties{}, obj)
 
 				cpuProps := obj.(qemu.CPUProperties)
-				fmt.Printf("%+v\n", cpuProps)
 
 				assert.Equal(
 					t,
@@ -90,7 +88,6 @@ func TestStorageCPUProperties(t *testing.T) {
 					cpuProps.Architecture,
 				)
 
-				fmt.Printf("%+v\n", cpuProps)
 				assert.Equal(
 					t,
 					cpuProps.Sockets*cpuProps.Cores,

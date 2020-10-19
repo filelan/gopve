@@ -9,7 +9,7 @@ import (
 )
 
 func postStatus(obj *VirtualMachine, command string) (task.Task, error) {
-	if obj.isTemplate {
+	if obj.template {
 		return nil, fmt.Errorf("unsupported action on template virtual machine")
 	}
 
